@@ -1,0 +1,136 @@
+#body-row {
+  margin-left:0;
+  margin-right:0;
+}
+#sidebar-container {
+  min-height: 100vh;   
+  background-color: #727dc2;
+  padding: 0;
+}
+
+/* Sidebar sizes when expanded and expanded */
+.sidebar-expanded {
+  width: 270px;
+}
+.sidebar-collapsed {
+  width: 60px;
+}
+
+/* Menu item*/
+#sidebar-container .list-group a {
+  height: 50px;
+  color: white;
+}
+
+/* Submenu item*/
+#sidebar-container .list-group .sidebar-submenu a {
+  height: 45px;
+  padding-left: 30px;
+}
+.sidebar-submenu {
+  font-size: 0.9rem;
+}
+
+/* Separators */
+.sidebar-separator-title {
+  background-color: #727dc2;
+  height: 35px;
+}
+.sidebar-separator {
+  background-color: #727dc2;
+  height: 25px;
+}
+.logo-separator {
+  background-color: #727dc2;    
+  height: 60px;
+}
+
+/* Closed submenu icon */
+#sidebar-container .list-group .list-group-item[aria-expanded="false"] .submenu-icon::after {
+content: " \f0d7";
+font-family: FontAwesome;
+display: inline;
+text-align: right;
+padding-left: 10px;
+}
+/* Opened submenu icon */
+#sidebar-container .list-group .list-group-item[aria-expanded="true"] .submenu-icon::after {
+content: " \f0da";
+font-family: FontAwesome;
+display: inline;
+text-align: right;
+padding-left: 10px;
+}
+
+.custom-sidebar-separator {
+  background-color: #4a517f; /* Background color for the li */
+}
+
+.custom-sidebar-separator small {
+  color: #fff; /* Text color for the small element */
+}
+
+.custom-sidebar-separator a {
+  color: #fff; /* Text color for the small element */
+}
+
+.custom-sidebar-item {
+  background-color: #7783cc; /* Background color for the li */
+}
+
+.custom-sidebar-item small {
+  color: #fff; /* Text color for the small element */
+}
+
+.custom-sidebar-item a {
+  color: #fff; /* Text color for the small element */
+}
+
+/* Disable hover effects for separators */
+.custom-sidebar-separator:hover {
+  background-color: #4a517f; /* Same as non-hovered state */
+}
+
+/* Disable hover effects for items */
+.custom-sidebar-item:hover {
+  background-color: #7783cc; /* Same as non-hovered state */
+}
+
+.custom-navbar {
+  background-color: #7783cc; /* Background color for the li */
+}
+
+.custom-navbar small {
+  color: #fff; /* Text color for the small element */
+}
+
+.custom-navbar a {
+  color: #fff; /* Text color for the small element */
+}
+
+/* Centered section inside the top navigation */
+.topnav-centered a {
+  float: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.navbar-light-custom {
+  background-color: #a4aad9; /* Lighter shade for the background */
+}
+
+.navbar-light-custom .navbar-nav .nav-link {
+  color: #fff; /* Darker shade for the items */
+}
+
+.navbar-light-custom .navbar-nav .nav-link:hover,
+.navbar-light-custom .navbar-nav .nav-link.active {
+  color: #fff; /* Original color on hover or active state */
+}
+
+.navbar .dropdown-toggle::after {
+  display: none;
+}
+

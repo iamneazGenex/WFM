@@ -1,0 +1,181 @@
+from django.urls import path
+from .views import *
+from rms.page_info_collection import PageInfoCollection
+
+urlpatterns = [
+    path("uploadExcel", import_from_excel, name="import_from_excel"),
+    ################################################################
+    #   Roster Management
+    ################################################################
+    path(
+        "viewRosterManagement",
+        viewRosterManagement,
+        name=PageInfoCollection.ROSTERMANAGEMENT.urlName,
+    ),
+    ################################################################
+    #   Roster
+    ################################################################
+    path("viewRoster", viewRoster, name=PageInfoCollection.ROSTER_VIEW.urlName),
+    path("createRoster", createRoster, name=PageInfoCollection.ROSTER_CREATE.urlName),
+    path(
+        "viewRosterJson/",
+        viewRosterJson.as_view(),
+        name=PageInfoCollection.ROSTER_JSON.urlName,
+    ),
+    path(
+        "createBulkRoster",
+        createBulkRoster,
+        name=PageInfoCollection.ROSTER_BULK.urlName,
+    ),
+    path(
+        "deleteRoster/<int:id>/",
+        deleteRoster,
+        name=PageInfoCollection.ROSTER_DELETE.urlName,
+    ),
+    path(
+        "editRoster/<int:id>/",
+        editRoster,
+        name=PageInfoCollection.ROSTER_EDIT.urlName,
+    ),
+    ################################################################
+    #   Roster Count
+    ################################################################
+    path(
+        "viewRosterCount",
+        viewRosterCount,
+        name=PageInfoCollection.ROSTERCOUNT_VIEW.urlName,
+    ),
+    path(
+        "viewRosterCountJson/",
+        viewRosterCountJson.as_view(),
+        name=PageInfoCollection.ROSTERCOUNT_JSON.urlName,
+    ),
+    ################################################################
+    #   Roster Seat Count
+    ################################################################
+    path(
+        "viewRosterSeatCount",
+        viewRosterSeatCount,
+        name=PageInfoCollection.ROSTERSEATCOUNT_VIEW.urlName,
+    ),
+    path(
+        "createRosterSeatCount",
+        createRosterSeatCount,
+        name=PageInfoCollection.ROSTERSEATCOUNT_CREATE.urlName,
+    ),
+    path(
+        "viewRosterSeatCountJson/",
+        viewRosterSeatCountJson.as_view(),
+        name="viewRosterSeatCountJson",
+    ),
+    path(
+        "createBulkRosterSeatCount",
+        createBulkRosterSeatCount,
+        name=PageInfoCollection.ROSTERSEATCOUNT_BULK.urlName,
+    ),
+    path(
+        "deleteRosterSeatCount/<int:id>/",
+        deleteRosterSeatCount,
+        name=PageInfoCollection.ROSTERSEATCOUNT_DELETE.urlName,
+    ),
+    path(
+        "editRosterSeatCount/<int:id>/",
+        editRosterSeatCount,
+        name=PageInfoCollection.ROSTERSEATCOUNT_EDIT.urlName,
+    ),
+    ################################################################
+    #   Work Rule
+    ################################################################
+    path("viewWorkRule/", viewWorkRule, name=PageInfoCollection.WORKRULE_VIEW.urlName),
+    path(
+        "createWorkRule/",
+        createWorkRule,
+        name=PageInfoCollection.WORKRULE_CREATE.urlName,
+    ),
+    path(
+        "editWorkRule/<int:id>/",
+        editWorkRule,
+        name=PageInfoCollection.WORKRULE_EDIT.urlName,
+    ),
+    ################################################################
+    #   Forecasting
+    ################################################################
+    path(
+        "viewForecasting/",
+        viewForecasting,
+        name=PageInfoCollection.FORECASTING_VIEW.urlName,
+    ),
+    path(
+        "createForecasting",
+        createForecasting,
+        name=PageInfoCollection.FORECASTING_CREATE.urlName,
+    ),
+    path(
+        "editForecasting/<int:id>/",
+        editForecasting,
+        name=PageInfoCollection.FORECASTING_EDIT.urlName,
+    ),
+    path(
+        "createBulkForecasting",
+        createBulkForcasting,
+        name=PageInfoCollection.FORECASTING_BULK.urlName,
+    ),
+    path(
+        "viewForecastingListJson/",
+        viewForecastingListJson.as_view(),
+        name=PageInfoCollection.FORECASTING_JSON.urlName,
+    ),
+    path(
+        "deleteForecasting/<int:id>/",
+        deleteForecasting,
+        name=PageInfoCollection.FORECASTING_DELETE.urlName,
+    ),
+    path(
+        "createBulkForcasting",
+        createBulkForcasting,
+        name=PageInfoCollection.FORECASTING_BULK.urlName,
+    ),
+    ################################################################
+    #   Shift Legend
+    ################################################################
+    path(
+        "viewShiftLegend/",
+        viewShiftLegend,
+        name=PageInfoCollection.SHIFTLEGEND_VIEW.urlName,
+    ),
+    path(
+        "createShiftLegend",
+        createShiftLegend,
+        name=PageInfoCollection.SHIFTLEGEND_CREATE.urlName,
+    ),
+    path(
+        "editShiftLegend/<int:id>/",
+        editShiftLegend,
+        name=PageInfoCollection.SHIFTLEGEND_EDIT.urlName,
+    ),
+    path(
+        "viewShiftLegendListJson/",
+        viewShiftLegendListJson.as_view(),
+        name=PageInfoCollection.SHIFTLEGEND_JSON.urlName,
+    ),
+    path(
+        "deleteShiftLegend/<int:id>/",
+        deleteShiftLegend,
+        name=PageInfoCollection.SHIFTLEGEND_DELETE.urlName,
+    ),
+    path(
+        "createBulkShiftLegend",
+        createBulkShiftLegend,
+        name=PageInfoCollection.SHIFTLEGEND_BULK.urlName,
+    ),
+    path(
+        "get_employee_schedule/<int:id>",
+        get_employee_schedule,
+        name="get_employee_schedule",
+    ),
+    path(
+        "get_employee_schedule/<int:id>/<str:start_date>/<str:end_date>/",
+        get_employee_schedule,
+        name="get_employee_schedule_date",
+    ),
+]

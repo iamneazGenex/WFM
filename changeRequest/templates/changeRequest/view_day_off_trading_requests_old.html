@@ -1,0 +1,61 @@
+{% extends 'base.html' %} {% load crispy_forms_tags static %} {% block main %}
+
+<div class="card">
+  <div class="card-body">
+    <h4 class="card-title">Day Off Trading Requests</h4>
+    {% include 'messages.html' %} {% load render_table from django_tables2 %}
+    <table id="my-table" class="table">
+      {% render_table table %}
+    </table>
+  </div>
+</div>
+<div>{% include 'modals/reject_request_modal.html' %}</div>
+<div>{% include 'modals/accept_request_modal.html' %}</div>
+<script>
+  // Function to open the accept modal
+  function openAcceptModal(acceptUrl) {
+    var confirmModal = document.getElementById("confirmModal");
+    var confirmButton = confirmModal.querySelector(".btn-success");
+
+    // Set the "Confirm" button's href attribute to the accept URL
+    confirmButton.setAttribute("href", acceptUrl);
+
+    // Open the accept modal
+    confirmModal.style.display = "block";
+  }
+
+  // Function to open the reject modal
+  function openRejectModal(rejectUrl) {
+    var rejectModal = document.getElementById("rejectModal");
+    var rejectButton = rejectModal.querySelector(".btn-danger");
+
+    // Set the "Confirm" button's href attribute to the reject URL
+    rejectButton.setAttribute("href", rejectUrl);
+
+    // Open the reject modal
+    rejectModal.style.display = "block";
+  }
+
+  document.addEventListener("click", function (e) {
+    console.log(e.target);
+    if (e.target.getAttribute("data-target") == "#confirmModal") {
+      e.preventDefault();
+      console.log("here");
+      var acceptUrl = e.target.getAttribute("href");
+      openAcceptModal(acceptUrl);
+    } else if (e.target.getAttribute("data-target") == "#rejectModal") {
+      e.preventDefault();
+      var rejectUrl = e.target.getAttribute("href");
+      openRejectModal(rejectUrl);
+    }
+  });
+
+  // Close the modals if the user clicks outside of them
+  window.addEventListener("click", function (event) {
+    if (event.target.classList.contains("modal")) {
+      event.target.style.display = "none";
+    }
+  });
+</script>
+
+{% endblock %}

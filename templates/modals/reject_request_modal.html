@@ -1,0 +1,87 @@
+<div
+  class="modal animate__animated animate__fadeInUp animate__faster"
+  id="rejectModal"
+  tabindex="-1"
+  role="dialog"
+  data-backdrop="false"
+  data-toggle="modal"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Are you sure?</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Do you want to {{ details.name }} this {{ details.type }}?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          Cancel
+        </button>
+        <a href="#" class="btn btn-danger" id="rejectButton_rejectModal" data-dismiss="modal"
+          >Confirm</a
+        >
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  
+  // Function to open the reject modal
+  function openRejectModal(rejectUrl) {
+    var rejectModal = document.getElementById("rejectModal");
+    var rejectButton = rejectModal.querySelector(".btn-danger");
+
+    // Set the "Confirm" button's href attribute to the reject URL
+    rejectButton.setAttribute("href", rejectUrl);
+
+    // Open the reject modal
+    rejectModal.style.display = "block";
+  }
+
+  document.addEventListener("click", function (e) {
+    //e.preventDefault();
+    console.log(e.target.getAttribute("id"));
+
+    if (e.target.getAttribute("data-target") == "#rejectModal") {
+      e.preventDefault();
+      var rejectUrl = e.target.getAttribute("href");
+      openRejectModal(rejectUrl);
+    } else if (e.target.getAttribute("id") == "rejectButton_rejectModal") {
+      e.preventDefault();
+      href = e.target.getAttribute("href");
+      $.ajax({
+        url: href, // Use the href attribute as the URL
+        type: "GET",
+        success: function (response) {
+          // Hide loading indicator on success
+          $("#loading").hide();
+          $("#rejectModal").modal("hide");
+          showSweetAlert(response.message, "success");
+          console.log(response);
+          $("#myTable").DataTable().ajax.reload();
+        },
+        error: function (error) {
+          // Hide loading indicator on error
+          $("#loading").hide();
+          $("#rejectModal").modal("hide");
+          showSweetAlert(response.message, "error");
+          $("#loading").hide();
+
+          console.log("Error:", error);
+        },
+      });
+     
+      
+    }
+  });
+</script>

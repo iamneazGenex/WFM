@@ -1,0 +1,49 @@
+<nav class="navbar navbar-expand-lg navbar-light navbar-light-custom">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  
+    <div class="collapse navbar-collapse text-center" id="navbarSupportedContent">
+      <ul class="navbar-nav mx-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="{% url 'home' %}">Home <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <div class="d-flex w-100 justify-content-start align-items-center">
+                    <i class="fa-solid fa-ellipsis-vertical ml-2 mr-2"></i>
+                    <span class="fa fa-user fa-fw mr-3"></span>
+                    <span class="menu-collapsed">User</span>
+                    <i class="fa-solid fa-caret-down ml-2 mr-2"></i>
+                    <i class="fa-solid fa-ellipsis-vertical ml-2 mr-2 bg-primary"></i>
+                </div>
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="dropdown-item" href="{% url 'viewEmployee' %}">Employee</a>
+              <div class="dropdown-divider"></div>
+            </div>
+          </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <div class="d-flex w-100 justify-content-start align-items-center">
+                <span class="fa fa-cog fa-fw mr-3"></span> 
+                <span class="menu-collapsed">Settings</span>
+                <span class="submenu-icon ml-auto"></span>
+            </div>
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="{% url 'viewProcess' %}">Process</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="{% url 'viewSite' %}">Site</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="{% url 'viewLOB' %}">LOB</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="{% url 'viewWorkRole' %}">Work Role</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="{% url 'viewWorkRole' %}">Work Rule</a>
+          </div>
+        </li>
+
+      </ul>
+    </div>
+  </nav>

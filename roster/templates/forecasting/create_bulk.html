@@ -1,0 +1,18 @@
+{% extends 'base.html' %} {% load crispy_forms_tags %} {% block main %}
+{% include 'breadcrumb.html' %}
+{% include 'messages.html' %}
+{% include 'messages.html' %}
+<div class="card">
+  <div class="card-body">
+    <form
+      method="post"
+      action="{% url formUrl %}"
+      enctype="multipart/form-data"
+    >
+      {% csrf_token %}
+      <input type="file" name="excel_file" />
+      <button type="submit" class="btn btn-primary btn-block mt-3">Import</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+<input
+    type="text"
+    id="{{ widget.attrs.id }}"
+    name="{{ widget.name }}"
+    value="{{ widget.value }}"
+    class="tagify-input"
+    placeholder="Type to search employees"
+    list="employee-list"
+    {% include "django/forms/widgets/attrs.html" %}
+>
+<datalist id="employee-list">
+    {% for employee in employees %}
+        <option value="{{ employee.name }}" data-value="{{ employee.id }}"></option>
+    {% endfor %}
+</datalist>
+<script>
+    var employeeSelectUrl = "{{ employee_select_url }}";
+</script>

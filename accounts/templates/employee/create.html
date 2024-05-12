@@ -1,0 +1,24 @@
+s{% extends 'base.html' %} {% load crispy_forms_tags %} {% block main %}
+{% include 'breadcrumb.html' %}
+{% include 'messages.html' %}
+<div class="card">
+  <div class="card-body">
+    <form method="post" action="{% url 'createEmployee' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}" />
+      {{ form|crispy }}
+      <button type="submit" class="btn btn-primary btn-block">Log in</button>
+    </form>
+  </div>
+</div>
+
+<script type="text/javascript">
+ 
+  $("#id_site").select2();
+  $("#id_work_role").select2();
+  $("#id_gender").select2();
+  $("#id_lob").select2();
+  $("#id_supervisor_1").select2();
+  $("#id_supervisor_2").select2();
+</script>
+{% endblock %}

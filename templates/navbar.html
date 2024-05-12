@@ -1,0 +1,163 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a href="#" data-target="#sidebar" data-toggle="collapse"
+      ><img
+        src="{% static '/images/burger-menu.svg' %}"
+        alt="My Happy SVG"
+        width="40"
+        height="40"
+    /></a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="#">
+      <img
+        src="{% static '/images/Genex-Logo.png' %}"
+        alt="Logo"
+        height="30"
+        class="d-inline-block align-top"
+      />
+      Navbar
+    </a>
+    <a class="navbar-brand" href="#">Navbar</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="#"
+            >Home <span class="sr-only">(current)</span></a
+          >
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Link</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            id="navbarDropdown"
+            role="button"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            Dropdown
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="#">Action</a>
+            <a class="dropdown-item" href="#">Another action</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#">Something else here</a>
+          </div>
+        </li>
+      </ul>
+      <ul class="navbar-nav ml-auto profile-menu">
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            id="navbarDropdown"
+            role="button"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <div class="profile-pic">
+              <img
+                src="https://source.unsplash.com/250x250?girl"
+                alt="Profile Picture"
+              />
+            </div>
+            <!-- You can also use an icon as follows: -->
+            <!-- <i class="fas fa-user"></i> -->
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="#"
+              ><i class="fas fa-sliders-h fa-fw"></i> Account</a
+            >
+            <a class="dropdown-item" href="#"
+              ><i class="fas fa-cog fa-fw"></i> Settings</a
+            >
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#"
+              ><i class="fas fa-sign-out-alt fa-fw"></i> Log Out</a
+            >
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<style type="text/css">
+  /* Profile Picture */
+  .profile-pic {
+    display: inline-block;
+    vertical-align: middle;
+    width: 50px;
+    height: 50px;
+    overflow: hidden;
+    border-radius: 50%;
+  }
+
+  .profile-pic img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+  .profile-menu .dropdown-menu {
+    right: 0;
+    left: unset;
+  }
+  .profile-menu .fa-fw {
+    margin-right: 10px;
+  }
+
+  .toggle-change::after {
+    border-top: 0;
+    border-bottom: 0.3em solid;
+  }
+</style>
+<script type="text/javascript">
+  document.querySelectorAll(".dropdown-toggle").forEach((item) => {
+    item.addEventListener("click", (event) => {
+      if (event.target.classList.contains("dropdown-toggle")) {
+        event.target.classList.toggle("toggle-change");
+      } else if (
+        event.target.parentElement.classList.contains("dropdown-toggle")
+      ) {
+        event.target.parentElement.classList.toggle("toggle-change");
+      }
+    });
+  });
+
+  // Toggle the side navigation
+  function toggleSideNav() {
+    $(".sidenav").toggleClass("sidenav-open");
+  }
+
+  // Close the side navigation when clicking outside of it
+  $(document).on("click", function (e) {
+    if (!$(e.target).closest(".sidenav, .navbar-toggler").length) {
+      $(".sidenav").removeClass("sidenav-open");
+    }
+  });
+</script>

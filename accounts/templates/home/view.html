@@ -1,0 +1,909 @@
+{% extends "base.html" %} 
+{% load static %} 
+{% block main %} 
+<h6 id="employeeID" hidden>{{user.id}}</h6>
+{% if user.is_WFM %}
+<div class="card ">
+  <div class="card-body">
+      <div class="row">
+        <div class="col-md-3">
+          <label for="skillSelect">Skill:</label>
+          
+          <select class="select2 form-select form-select-lg customselect2 form-control" id="skillSelect" name="skillSelect">
+            <option value="0"></option>
+            {% for skill in skills %}
+            <option value="{{ skill.id }}">{{ skill.name| title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="toggleIntervalType">Type:</label>
+          <select class="form-control" id="toggleIntervalType">
+              <option value="date">Daily</option>
+              <option value="month">Monthly</option>
+          </select>
+        </div>
+        <div id="dateInput" class="col-md-4">
+          <label for="searchDate">Search Date:</label>
+          <input
+            type="date"
+            class="form-control"
+            id="search_date"
+            name="search_date"
+            placeholder="Select Date"
+          />
+        </div>
+        <div id="monthInput" class="col-md-4" style="display:none;">
+          <label for="searchDateMonth">Search Month:</label>
+              <input
+                type="month"
+                class="form-control"
+                id="search_month"
+                name="search_month"
+                placeholder="Select Month"
+              />
+        </div>
+        <div class="col-md-2">
+          <label for="searchButton">&nbsp;</label>
+          <button type="button" class="btn btn-primary btn-block" id="searchButton">
+            Search
+          </button>
+        </div>
+      </div>
+  </div>
+</div>
+<!-- Forecast Chart -->
+<div class="col-12 mb-4 mt-4">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between">
+      <div>
+        <h5 class="card-title mb-0">Forecast</h5>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="forecastNewChart"></div>
+    </div>
+  </div>
+</div>
+<!-- /Forecast Chart -->
+<!-- HeadCount Chart -->
+<div class="col-12 mb-4 mt-4">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between">
+      <div>
+        <h5 class="card-title mb-0">Head Count</h5>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="headCountChart"></div>
+    </div>
+  </div>
+</div>
+<!-- HeadCount Chart -->
+{% else %}
+<!-- HeadCount Chart -->
+
+<div class="col-12 mb-4 mt-4">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between">
+      <div>
+        <h5 class="card-title mb-0">Roster Timeline</h5>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="schedule-chart"></div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+    
+ 
+
+
+  
+  <script src="{% static 'demo/assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
+  <script src="{% static 'demo/assets/vendor/libs/chartjs/chartjs.js' %}"></script>
+  <script type="text/javascript">
+    
+    $(document).ready(function () {
+      
+
+      const employeeId = document.getElementById('employeeID').textContent.trim(); // Replace with actual employee ID
+      function getHourIn12Format(index) {
+        if (index === 0) {
+            return '12:00 AM';
+        } else if (index < 12) {
+            return index + ':00 AM';
+        } else if (index === 12) {
+            return '12:00 PM';
+        } else {
+            return (index - 12) + ':00 PM';
+            
+        }
+    }
+
+      // Fetch schedule data from Django backend using AJAX or similar
+      $.ajax({
+        url: `http://127.0.0.1:8000/get_employee_schedule/${employeeId}/2024-01-01/2024-01-31/`,
+        type: 'GET',
+        success: function(data) {
+          console.log(data);
+          const chartOptions = {
+            series: [  
+            {
+              data: data.map(item => {
+                
+                const hourStart = item.start_time ? parseInt(item.start_time.split(':')[0]) : null;
+                const hourEnd = item.end_time ? parseInt(item.end_time.split(':')[0]) : null;
+                return {
+                    x: item.start_date,
+                    y: [hourStart, hourEnd]
+                };
+            })
+            }
+          ],
+            chart: {
+            height: 1000,
+            type: 'rangeBar',
+            zoom: {
+              enabled: false
+            }
+          },
+          colors: ['#EC7D31'],
+          plotOptions: {
+            bar: {
+              horizontal: true,
+            }
+          },
+          title: {
+            text: ''
+          },
+          legend: {
+            show: false,
+            showForSingleSeries: true,
+            position: 'top',
+            horizontalAlign: 'left',
+            customLegendItems: ['Female', 'Male']
+          },
+          fill: {
+            type: 'gradient',
+            gradient: {
+              gradientToColors: ['#36BDCB'],
+              inverseColors: false,
+              stops: [0, 100]
+            }
+          },
+          grid: {
+            xaxis: {
+              lines: {
+                show: true
+              }
+            },
+            yaxis: {
+              lines: {
+                show: false
+              }
+            }
+          },
+          xaxis: {
+            labels: {
+              show:true,
+              trim: false, // Do not trim labels
+              maxWidth: 10, // Adjust maxWidth as needed
+              style: {
+                  fontSize: '12px' // Adjust fontSize as needed
+              },
+              formatter: function(value, timestamp, opts) {
+                return getHourIn12Format(value); // Display the hour in 24-hour format
+            }
+          }
+          },
+          };
+          
+            console.log(chartOptions);
+            const chartContainer = document.getElementById('schedule-chart');
+            const chartA = new ApexCharts(chartContainer, chartOptions);
+            chartA.render();
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching schedule data:', error);
+        }
+    });
+
+
+
+
+
+      let forecastChartElement = document.querySelector("#forecastNewChart");
+      let headCountChartElement = document.querySelector("#headCountChart");
+      var forecastChartOptions = {
+        series: [{
+          name: "Desktops",
+          data: [10, 41, 35, 51, 49, 62, 69, 91, 148]
+      }],
+        chart: {
+        height: 0,
+        type: 'line',
+        zoom: {
+          enabled: false
+        }
+      },
+      dataLabels: {
+        enabled: false
+      },
+      stroke: {
+        curve: 'straight'
+      },
+      title: {
+        text: 'Product Trends by Month',
+        align: 'left'
+      },
+      grid: {
+        row: {
+          colors: ['#f3f3f3', 'transparent'], // takes an array which will be repeated on columns
+          opacity: 0.5
+        },
+      },
+      xaxis: {
+        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+      }
+      };
+  
+      var forecastChart = new ApexCharts(forecastChartElement, forecastChartOptions);
+      forecastChart.render();
+      var headCountChart = new ApexCharts(headCountChartElement, forecastChartOptions);
+      headCountChart.render();
+      
+      function getDatesInMonth(year, month) {
+        var startDate = new Date(year, month - 1, 1); // Month is 0-indexed in JavaScript
+        var endDate = new Date(year, month, 0); // Get the last day of the month
+    
+        var dates = [];
+        for (var date = startDate; date <= endDate; date.setDate(date.getDate() + 1)) {
+            dates.push(String(date.getDate())); // Push a copy of the date object to the array
+        }
+        return dates;
+      }
+      // Function to parse the year and month from the string "YYYY-MM"
+      function parseYearMonthFromString(yearMonthString) {
+        var yearMonthParts = yearMonthString.split('-');
+        var year = parseInt(yearMonthParts[0]);
+        var month = parseInt(yearMonthParts[1]);
+        return { year: year, month: month };
+      }
+      function getXAxisCategories(toggleIntervalType){
+        if (toggleIntervalType === "date") {
+          return ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13","14","15","16","17","18","19","20","21","22","23"]
+        } else {
+          var yearMonthString = $('#search_month').val();
+          var { year, month } = parseYearMonthFromString(yearMonthString);
+          var dates = getDatesInMonth(year, month);
+          return dates
+        }
+      }
+
+      function getForecastSeiesData(toggleIntervalType,data){
+        if (toggleIntervalType === "date") {
+          console.log(data)
+          return [{
+                  name: "Forecast Calls",
+                  type: 'column',
+                  data: data.map(item => item.forecast)
+              },{
+                  name: "Offered Calls",
+                  type: 'column',
+                  data: data.map(item => item.offeredCalls)
+              },{
+                name: "Answered Calls",
+                type: 'column',
+                data: data.map(item => item.answeredCalls)
+              },{
+                name: "FD%",
+                type: 'line',
+                data: data.map(item =>  (item.offeredCalls / item.forecast * 100).toFixed(2))
+              } 
+              ]
+        } else {
+          console.log(`data:`)
+          console.log(data)
+          var groupedData = {};
+          data.forEach(item => {
+              var dayOfMonth = new Date(item.date).getDate();
+              if (!groupedData[dayOfMonth]) {
+                  groupedData[dayOfMonth] = [];
+              }
+              groupedData[dayOfMonth].push(item);
+          });
+          console.log(`groupedData:`)
+          console.log(groupedData)
+          var processedData = Object.keys(groupedData).map(day => ({
+              forecast: groupedData[day].reduce((acc, curr) => acc + curr.forecast, 0),
+              offeredCalls: groupedData[day].reduce((acc, curr) => acc + curr.offeredCalls, 0),
+              answeredCalls: groupedData[day].reduce((acc, curr) => acc + curr.answeredCalls, 0),
+          }));
+          console.log(`processedData:`)
+          console.log(processedData)
+          var forecastData = processedData.map(item => item.forecast);
+          var offeredCallsData = processedData.map(item => item.offeredCalls);
+          var answeredCallsData = processedData.map(item => item.answeredCalls);
+          var fdPercentageData = processedData.map(item => ((item.offeredCalls / item.forecast) * 100).toFixed(2));
+          
+          return [
+              {
+                  name: "Forecast Calls",
+                  type: 'column',
+                  data: forecastData
+              },
+              {
+                  name: "Offered Calls",
+                  type: 'column',
+                  data: offeredCallsData
+              },
+              {
+                  name: "Answered Calls",
+                  type: 'column',
+                  data: answeredCallsData
+              },
+              {
+                  name: "FD%",
+                  type: 'line',
+                  data: fdPercentageData
+              }
+          ];
+        }
+      }
+
+      function getMaxValueForecastChart(data){
+        // Initialize variables to store maximum values
+        let maxForecast = Number.MIN_SAFE_INTEGER;
+        let maxOfferedCalls = Number.MIN_SAFE_INTEGER;
+        let maxAnsweredCalls = Number.MIN_SAFE_INTEGER;
+
+        // Iterate through each object in the data array
+        data.forEach(item => {
+            // Update maxForecast
+            maxForecast = Math.max(maxForecast, item.forecast);
+
+            // Update maxOfferedCalls
+            maxOfferedCalls = Math.max(maxOfferedCalls, item.offeredCalls);
+
+            // Update maxAnsweredCalls
+            maxAnsweredCalls = Math.max(maxAnsweredCalls, item.answeredCalls);
+        });
+
+        // Find the highest among the maximum values
+        return Math.max(maxForecast, maxOfferedCalls, maxAnsweredCalls);
+      }
+
+      function getMaxValueHeadCountChart(data){
+        // Initialize variables to store maximum values for head counts
+        let maxActualHeadCount = Number.MIN_SAFE_INTEGER;
+        let maxPlannedHeadCount = Number.MIN_SAFE_INTEGER;
+        let maxRequiredHC = Number.MIN_SAFE_INTEGER;
+
+        // Iterate through each object in the data array
+        data.forEach(item => {
+            // Update maxActualHeadCount
+            maxActualHeadCount = Math.max(maxActualHeadCount, item.actualHeadCount);
+
+            // Update maxPlannedHeadCount
+            maxPlannedHeadCount = Math.max(maxPlannedHeadCount, item.plannedHeadCount);
+
+            // Update maxRequiredHC
+            maxRequiredHC = Math.max(maxRequiredHC, item.required_hc);
+        });
+
+        // Find the highest among the maximum values for head counts
+        return Math.max(maxActualHeadCount, maxPlannedHeadCount, maxRequiredHC);
+
+      }
+
+      $('#searchButton').on('click', function () {
+          console.log("clicked");
+          console.log(forecastChart);
+
+
+          // Get the selected skill and search date values
+          var intervalType = $('#toggleIntervalType').val();
+          var selectedSkill = $('#skillSelect').val();
+          var searchDate = $('#search_date').val();
+          var searchMonth = $('#search_month').val();
+          console.log(`intervalType: ${intervalType} selectedSkill: ${selectedSkill} searchDate: ${searchDate} searchMonth: ${searchMonth}`);
+          // Check if both skill and date are selected
+          var checkIfSelected = false
+          if(intervalType == "date"){
+            if (selectedSkill && searchDate){
+              checkIfSelected = true
+            }
+          } else {
+            if (selectedSkill && searchMonth){
+              checkIfSelected = true
+            }
+          }
+          if (checkIfSelected) {
+
+              // Perform AJAX call
+              $.ajax({
+                  url: '{% url reportingOneUrl %}',  // Replace with your actual endpoint
+                  method: 'POST',
+                  data: {
+                      intervalType: intervalType,
+                      skill: selectedSkill,
+                      date: searchDate,
+                      month: searchMonth
+                  },
+                  dataType: 'json',
+                  success: function (data) {
+                      const toggleIntervalType = document.getElementById("toggleIntervalType").value;
+                      maxValueForecast = getMaxValueForecastChart(data)
+                      let categories = getXAxisCategories(toggleIntervalType);
+                      let forecastSeriesData = getForecastSeiesData(toggleIntervalType,data);
+                      console.log(forecastSeriesData)
+                      renderForecastChart(forecastSeriesData,categories,maxValueForecast,forecastChart)
+                      let headCountSeriesData = [{
+                          name: "Required",
+                          type: 'column',
+                          data: data.map(item => item.required_hc)
+                      },{
+                          name: "Planned",
+                          type: 'column',
+                          data: data.map(item => item.plannedHeadCount)
+                      },{
+                        name: "Actual",
+                        type: 'column',
+                        data: data.map(item => item.actualHeadCount)
+                      },{
+                        name: "Planned HC Gap",
+                        type: 'line',
+                        data: data.map(item => item.plannedHeadCountGap)
+                      },{
+                        name: "Actual HC Gap",
+                        type: 'line',
+                        data: data.map(item => item.actualHeadCountGap)
+                      }
+                    ];
+                    maxValueHeadCount = getMaxValueHeadCountChart(data)
+                    renderHeadCountChart(headCountSeriesData,categories,maxValueHeadCount,headCountChart); 
+                      
+                  },
+                  error: function (error) {
+                      console.error('Error fetching data:', error);
+                  }
+              });
+          } else {
+              // Show an alert or perform any other handling if skill and date are not selected
+              alert('Please select both Skill and Search Date');
+          }
+      });
+    });
+    const e = ["#826af9", "#d2b0ff", "#f8d3ff"];
+    const a = ["#fee802", "#3fd0bd", "#826bf8", "#2b9bf4"];
+    const i = ["#29dac7", "#60f2ca", "#a5f8cd"];
+
+    function n(e, o) {
+        let r = 0, s = [];
+
+        for (; r < e;) {
+            let e = "w" + (r + 1).toString();
+            let t = Math.floor(Math.random() * (o.max - o.min + 1)) + o.min;
+            s.push({ x: e, y: t });
+            r++;
+        }
+
+        return s;
+    }
+
+    const c = document.querySelector("#forecastChart");
+    
+
+    const z = { series1: "#826af9", series2: "#d2b0ff", bg: "#f8d3ff" };
+    const r = ["#29dac7", "#60f2ca", "#a5f8cd"];
+
+    const h = document.querySelector("#headCountChart");
+    
+    function renderHeadCountChart(seriesData,categories,maxValue,headCountChart){
+      var options = {
+        series: seriesData,
+        chart: {
+        height: 350,
+        type: 'line',
+        stacked: false
+      },
+      dataLabels: {
+        enabled: false
+      },
+      stroke: {
+        width: [1, 1, 4]
+      },
+      title: {
+        text: '',
+        align: 'left',
+        offsetX: 110
+      },
+      xaxis: {
+        categories: categories,
+      },
+      yaxis: [
+        {
+          min:0,
+          max: maxValue,
+          axisTicks: {
+            show: true,
+          },
+          axisBorder: {
+            show: true,
+            color: '#008FFB'
+          },
+          labels: {
+            style: {
+              colors: '#008FFB',
+            }
+          },
+          title: {
+            text: "",
+            style: {
+              color: '#008FFB',
+            }
+          },
+          tooltip: {
+            enabled: true
+          }
+        },
+        {
+          min:0,
+          max: maxValue,
+          seriesName: seriesData[1].name,
+          axisTicks: {
+            show: true,
+          },
+          axisBorder: {
+            show: false,
+            color: '#00E396'
+          },
+          labels: {
+            style: {
+              colors: '#00E396',
+            },
+            show: false
+          },
+          title: {
+            text: "",
+            style: {
+              color: '#00E396',
+            }
+          },
+        },
+        {
+          min:0,
+          max: maxValue,
+          seriesName: seriesData[2].name,
+          axisTicks: {
+            show: true,
+          },
+          axisBorder: {
+            show: false,
+            color: '#FEB019'
+          },
+          labels: {
+            style: {
+              colors: '#FEB019',
+            },
+            show: false
+          },
+          title: {
+            text: "",
+            style: {
+              color: '#FEB019',
+            }
+          }
+        },
+        {
+          seriesName: seriesData[3].name,
+          opposite: true,
+          axisTicks: {
+            show: true,
+          },
+          axisBorder: {
+            show: true,
+            color: '#f6536b'
+          },
+          labels: {
+            style: {
+              colors: '#f6536b',
+            },
+          },
+          title: {
+            text: seriesData[3].name,
+            style: {
+              color: '#f6536b',
+            }
+          }
+        },
+        {
+          seriesName: seriesData[4].name,
+          opposite: true,
+          axisTicks: {
+            show: true,
+          },
+          axisBorder: {
+            show: true,
+            color: '#9689c3'
+          },
+          labels: {
+            style: {
+              colors: '#9689c3',
+            },
+          },
+          title: {
+            text: seriesData[4].name,
+            style: {
+              color: '#9689c3',
+            }
+          }
+        },
+      ],
+      tooltip: {
+        fixed: {
+          enabled: true,
+          position: 'topLeft', // topRight, topLeft, bottomRight, bottomLeft
+          offsetY: 30,
+          offsetX: 60
+        },
+      },
+      legend: {
+        horizontalAlign: 'left',
+        offsetX: 40
+      }
+      };
+  
+      headCountChart.updateOptions(options)
+    }
+    function renderForecastChart(seriesData,categories,maxValue,forecastChart){
+      
+      
+      var options = {
+        series: seriesData,
+        chart: {
+        height: 350,
+        type: 'line',
+        stacked: false
+      },
+      dataLabels: {
+        enabled: false
+      },
+      stroke: {
+        width: [1, 1, 4]
+      },
+      title: {
+        text: '',
+        align: 'left',
+        offsetX: 110
+      },
+      xaxis: {
+        categories: categories,
+      },
+      yaxis: [
+      
+        {
+          min:0,
+          max: maxValue,
+          axisTicks: {
+            show: true,
+          },
+          axisBorder: {
+            show: true,
+            color: '#008FFB'
+          },
+          labels: {
+            style: {
+              colors: '#008FFB',
+            }
+          },
+          title: {
+            text: "",
+            style: {
+              color: '#008FFB',
+            }
+          },
+          tooltip: {
+            enabled: true
+          }
+        },
+        {
+          min:0,
+          max: maxValue,
+          seriesName: seriesData[1].name,
+          axisTicks: {
+            show: true,
+          },
+          axisBorder: {
+            show: false,
+            color: '#00E396'
+          },
+          labels: {
+            style: {
+              colors: '#00E396',
+            },
+            show: false
+          },
+          title: {
+            text: "",
+            style: {
+              color: '#00E396',
+            }
+          },
+        },
+        {
+          min:0,
+          max: maxValue,
+          seriesName: seriesData[2].name,
+          axisTicks: {
+            show: true,
+          },
+          axisBorder: {
+            show: false,
+            color: '#FEB019'
+          },
+          labels: {
+            style: {
+              colors: '#FEB019',
+            },
+            show: false
+          },
+          title: {
+            text: "",
+            style: {
+              color: '#FEB019',
+            }
+          }
+        },
+        {
+          seriesName: seriesData[3].name,
+          opposite: true,
+          axisTicks: {
+            show: true,
+          },
+          axisBorder: {
+            show: true,
+            color: '#f6536b'
+          },
+          labels: {
+            style: {
+              colors: '#f6536b',
+            },
+          },
+          title: {
+            text: seriesData[3].name,
+            style: {
+              color: '#f6536b',
+            }
+          }
+        },
+      ],
+      tooltip: {
+        fixed: {
+          enabled: true,
+          position: 'topLeft', // topRight, topLeft, bottomRight, bottomLeft
+          offsetY: 30,
+          offsetX: 60
+        },
+      },
+      legend: {
+        horizontalAlign: 'left',
+        offsetX: 40
+      }
+      };
+      
+      forecastChart.updateOptions(options)
+
+    }
+    //----------------------------------------------------------------
+    // Call the Django view via AJAX to get the chart data
+    {% comment %} $.ajax({
+      url: '/get_roster_duration_chart_data/',
+      type: 'GET',
+      success: function(data) {
+          // Render the chart using ApexCharts
+          console.log(data)
+          renderChart(data);
+      },
+      error: function(xhr, status, error) {
+          console.error(error);
+      }
+  });
+
+  // Function to render the chart using ApexCharts
+  // Function to render the chart using ApexCharts
+  function renderChart(data) {
+    var rosterData = [
+    { date: '2022-01-01', startTime: '09:00', endTime: '17:00' },
+    { date: '2022-01-02', startTime: '10:00', endTime: '18:00' },
+    { date: '2022-01-03', startTime: '08:00', endTime: '16:00' }
+    // Add more data as needed
+];
+
+// Function to convert time string to milliseconds
+function timeToMillis(timeString) {
+  // Split the time string into hours and minutes
+  const [hours, minutes] = timeString.split(':');
+  // Check for invalid time format (optional)
+  if (isNaN(hours) || isNaN(minutes)) {
+    console.error("Invalid time format:", timeString);
+    return null; // Handle invalid time strings (e.g., return a default value)
+  }
+  // Convert hours and minutes to milliseconds and add them
+  return (parseInt(hours) * 60 * 60 * 1000) + (parseInt(minutes) * 60 * 1000);
+}
+
+// Transforming the roster data into series data for ApexCharts
+var seriesData = rosterData.map(function(roster) {
+  // Convert start and end times to milliseconds
+  const startTimeMillis = timeToMillis(roster.startTime);
+  const endTimeMillis = timeToMillis(roster.endTime);
+
+  // Validate start and end time order (optional)
+  if (startTimeMillis >= endTimeMillis) {
+    console.error("Start time must be before end time:", roster);
+    return null; // Handle invalid data (e.g., skip this entry)
+  }
+
+  console.log("startTimeMillis:", startTimeMillis);
+  console.log("endTimeMillis:", endTimeMillis);
+
+  return {
+    x: {
+      start: startTimeMillis,
+      end: endTimeMillis
+    },
+    y: roster.date  // This represents the date for the y-axis (category)
+  };
+});
+
+// ApexCharts options (rest remains the same)
+var options = {
+  series: [{ data: seriesData }],
+  chart: {
+    height: 350,
+    type: 'rangeBar'
+  },
+  plotOptions: {
+    bar: {
+      horizontal: true,
+      columnWidth: '50%'  // Adjust column width as needed
+    }
+  },
+  xaxis: {
+    type: 'category',  // Change to 'datetime' if you want time labels on x-axis
+    categories: seriesData.map(item => item.y)  // Use dates as x-axis labels
+  },
+  yaxis: {
+    // Optional: Customize y-axis labels if needed
+  }
+};
+    // Initialize and render the chart
+    var chart = new ApexCharts(document.querySelector("#roster-chart"), options);
+    chart.render();
+} {% endcomment %}
+  //----------------------------------------------------------------
+   
+    document.addEventListener("DOMContentLoaded", function() {
+      const toggleIntervalType = document.getElementById("toggleIntervalType");
+      const date = document.getElementById("dateInput");
+      const month = document.getElementById("monthInput");
+  
+      toggleIntervalType.addEventListener("change", function() {
+          if (toggleIntervalType.value === "date") {
+            date.style.display = "block";
+            month.style.display = "none";
+          } else {
+            date.style.display = "none";
+            month.style.display = "block";
+            
+          }
+      });
+  });
+    
+</script>
+{% endblock %}

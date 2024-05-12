@@ -1,0 +1,46 @@
+{% extends 'base.html' %} {% load crispy_forms_tags %} {% block main %}
+
+<div class="card">
+  <div class="card-body">
+    <h4 class="card-title">Shift Time Trading</h4>
+    {% include 'messages.html' %}
+    <form method="post" action="{% url 'shiftTimeTrading' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}" />
+      {{ form1|crispy }}
+      <button type="submit" class="btn btn-primary btn-block" name="btnform1">
+        Submit
+      </button>
+    </form>
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectRequesteeForm = document.querySelector(
+      "#select-requestee-form"
+    );
+    const requesteeField = document.querySelector("#id_requestee");
+    const submitButton = document.querySelector('button[name="btnform2"]');
+
+    // Disable the "Submit" button initially
+    submitButton.disabled = true;
+
+    requesteeField.addEventListener("change", function () {
+      // Check if the requestee field has a selected value
+      if (requesteeField.value) {
+        submitButton.disabled = false;
+      } else {
+        submitButton.disabled = true;
+      }
+    });
+
+    selectRequesteeForm.addEventListener("submit", function (event) {
+      // Prevent form submission if the "Submit" button is disabled
+      if (submitButton.disabled) {
+        event.preventDefault();
+      }
+    });
+  });
+</script>
+
+{% endblock %}

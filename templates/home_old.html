@@ -1,0 +1,59 @@
+{% extends "base.html" %} {% block main %} {% if user.is_authenticated %}
+<p>Hi {{ user.id }}!</p>
+<p><a href="{% url 'logout' %}">Log Out</a></p>
+{% include 'messages.html' %}  {% if user.is_WFM %}
+<h3>WFM</h3>
+<h4>Main</h4>
+<p><a href="{% url 'viewProcess' %}">Process</a></p>
+<h4>Create</h4>
+<p><a href="{% url 'createProcess' %}">Create Process</a></p>
+<p><a href="{% url 'createSite' %}">Create Site</a></p>
+<p><a href="{% url 'createLOB' %}">Create LOB</a></p>
+<p><a href="{% url 'createWorkRole' %}">Create Work Role</a></p>
+<p><a href="{% url 'createSupervisor' %}">Create Supervisor</a></p>
+<p><a href="{% url 'bulkAddSupervisors' %}">Bulk Add Supervisor</a></p>
+<p><a href="{% url 'viewSupervisor' %}">View Supervisor</a></p>
+<p><a href="{% url 'createEmployee' %}">Create Employee</a></p>
+<p><a href="{% url 'bulkAddEmployees' %}">Bulk Add Employee</a></p>
+<p><a href="{% url 'createRoster' %}">Create Roster</a></p>
+<p><a href="{% url 'createBulkRoster' %}">Create Bulk Roster</a></p>
+<h4>Edit</h4>
+<p><a href="{% url 'editWorkRule' %}">Edit Workrule</a></p>
+<h4>View</h4>
+<p><a href="{% url 'viewRosterCount' %}">View Roster Count</a></p>
+<p><a href="{% url 'viewTotalRosterCount' %}">View Total Roster Count</a></p>
+{% endif %} {% if user.is_Employee %}
+<h3>Employee</h3>
+<h4>Create</h4>
+<p><a href="{% url 'dayOffTrading' %}">Day Off Trading</a></p>
+<p><a href="{% url 'shiftTimeTrading' %}">Shift Time Trading</a></p>
+<h4>View</h4>
+<p>
+  <a href="{% url 'viewDayOffTradingRequests' %}">Day Off Trading Requests</a>
+</p>
+<p>
+  <a href="{% url 'viewShiftTimeTradingRequests' %}"
+    >Shift Time Trading Requests</a
+  >
+</p>
+{% endif %} {% if user.is_Supervisor %}
+<div>
+  <h3>Supervisor</h3>
+  <h4>View</h4>
+  <p>
+    <a href="{% url 'viewDayOffTradingRequests' %}"
+      >View Day Off Trading Requests</a
+    >
+  </p>
+  <p>
+    <a href="{% url 'viewShiftTimeTradingRequests' %}"
+      >Shift Time Trading Requests</a
+    >
+  </p>
+</div>
+{% endif %} {% else %}
+<p>You are not logged in</p>
+<a href="{% url 'login' %}">Log In</a>
+{% endif %}
+<p><a href="{% url 'viewRoster' %}">View Roster</a></p>
+{% endblock %}

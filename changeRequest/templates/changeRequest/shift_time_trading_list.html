@@ -1,0 +1,123 @@
+{% extends 'base.html' %} {% load crispy_forms_tags static %} {% block main %}
+
+<div class="card">
+  <div class="card-body">
+    <h4 class="card-title">Day Off Trading Requests</h4>
+    {% include 'messages.html' %}
+    <table id="shift-time-trading-datatable" class="display">
+      <thead>
+        <tr>
+          <th>Site</th>
+          <th>Employee ID</th>
+          <th>System ID</th>
+          <th>Name</th>
+          <th>Process</th>
+          <th>LOB</th>
+          <th>Work Role</th>
+          <th>Supervisor 1</th>
+          <th>Supervisor 2</th>
+          <th>Gender</th>
+          <th>Pick Drop Location</th>
+          <th>Shift Start Date</th>
+          <th>Shift Start Time</th>
+          <th>Shift End Date</th>
+          <th>Shift End Time</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+  <div>{% include 'modals/reject_request_modal.html' %}</div>
+  <div>{% include 'modals/accept_request_modal.html' %}</div>
+  <script>
+    new DataTable("#example");
+    $(document).ready(function () {
+      $("#shift-time-trading-datatable").DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+          url: "{% url 'viewRosterJson' %}",
+          type: "GET",
+          error: function (xhr, error, thrown) {
+            // Handle errors here
+            console.log("DataTables error:", error, thrown);
+          },
+        },
+        columns: [
+          { data: "employee__site__name" },
+          { data: "employee__user__employee_id" },
+          { data: "employee__user__system_id" },
+          { data: "employee__user__name" },
+          { data: "employee__process__name" },
+          { data: "employee__lob__name" },
+          { data: "employee__work_role__name" },
+          { data: "employee__supervisor_1__user__name" },
+          { data: "employee__supervisor_2__user__name" },
+          { data: "employee__gender" },
+          { data: "employee__pick_drop_location" },
+          { data: "start_date" },
+          { data: "start_time" },
+          { data: "end_date" },
+          { data: "end_time" },
+          {
+            data: "actions",
+            orderable: false,
+            searchable: false,
+            render: function (data, type, full, meta) {
+              // Assuming 'actions' is HTML content, use render to display it as HTML
+              console.log(data);
+              return data;
+            }, // Actions column
+          },
+          // ... add more columns as needed
+        ],
+      });
+    });
+    // Function to open the accept modal
+    function openAcceptModal(acceptUrl) {
+      var confirmModal = document.getElementById("confirmModal");
+      var confirmButton = confirmModal.querySelector(".btn-success");
+
+      // Set the "Confirm" button's href attribute to the accept URL
+      confirmButton.setAttribute("href", acceptUrl);
+
+      // Open the accept modal
+      confirmModal.style.display = "block";
+    }
+
+    // Function to open the reject modal
+    function openRejectModal(rejectUrl) {
+      var rejectModal = document.getElementById("rejectModal");
+      var rejectButton = rejectModal.querySelector(".btn-danger");
+
+      // Set the "Confirm" button's href attribute to the reject URL
+      rejectButton.setAttribute("href", rejectUrl);
+
+      // Open the reject modal
+      rejectModal.style.display = "block";
+    }
+
+    document.addEventListener("click", function (e) {
+      console.log(e.target);
+      if (e.target.getAttribute("data-target") == "#confirmModal") {
+        e.preventDefault();
+        console.log("here");
+        var acceptUrl = e.target.getAttribute("href");
+        openAcceptModal(acceptUrl);
+      } else if (e.target.getAttribute("data-target") == "#rejectModal") {
+        e.preventDefault();
+        var rejectUrl = e.target.getAttribute("href");
+        openRejectModal(rejectUrl);
+      }
+    });
+
+    // Close the modals if the user clicks outside of them
+    window.addEventListener("click", function (event) {
+      if (event.target.classList.contains("modal")) {
+        event.target.style.display = "none";
+      }
+    });
+  </script>
+
+  {% endblock %}
+</div>

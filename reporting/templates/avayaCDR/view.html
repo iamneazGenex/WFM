@@ -1,0 +1,212 @@
+{% extends 'base.html' %} {% block main %}
+
+<h6 id="usertype" class="invisible">{{ user.userType }}</h6>
+<h6 id="userName" class="invisible">{{ user.name }}</h6>
+{% include 'breadcrumb.html' %}
+{% include 'messages.html' %}
+{% if user.is_WFM %}
+<div class="card ">
+  <div class="card-body">
+    <ul class="nav justify-content-end">
+      <li class="nav-item mr-2">
+        <a class="btn btn-primary" href="{% url createUrl %}" role="button"
+          >Create</a
+        >
+      </li>
+      <li class="nav-item">
+        <a class="btn btn-primary" href="{% url bulkUrl %}" role="button"
+          >Bulk</a
+        >
+      </li>
+    </ul>
+  </div>
+</div>
+{% endif %}
+<div class="card mt-3" style="overflow-x:auto;">
+  <div class="card-body">
+    <!-- Dropdown for column selection -->
+
+    <table
+      class="table table-striped table-bordered display nowrap mt-4"
+      id="myTable"
+      style="text-align: center"
+    >
+      <thead>
+        <tr>
+          <th>Shift Name</th>
+          <th>Shift Count</th>
+          <th>Shift Start Time</th>
+          <th>Shift End Time</th>
+          <th>Login Start Hour</th>
+          <th>Duty Hour</th>
+          <th>Target Break</th>
+          <th>Target Ready</th>
+          <th>Hour 0</th>
+          <th>Hour 1</th>
+          <th>Hour 2</th>
+          <th>Hour 3</th>
+          <th>Hour 4</th>
+          <th>Hour 5</th>
+          <th>Hour 6</th>
+          <th>Hour 7</th>
+          <th>Hour 8</th>
+          <th>Hour 9</th>
+          <th>Hour 10</th>
+          <th>Hour 11</th>
+          <th>Hour 12</th>
+          <th>Hour 13</th>
+          <th>Hour 14</th>
+          <th>Hour 15</th>
+          <th>Hour 16</th>
+          <th>Hour 17</th>
+          <th>Hour 18</th>
+          <th>Hour 19</th>
+          <th>Hour 20</th>
+          <th>Hour 21</th>
+          <th>Hour 22</th>
+          <th>Hour 23</th>
+          <th>Created By</th>
+          <th>Created At</th>
+          <th>Updated By</th>
+          <th>Created At</th>
+          {% if user.is_WFM %}
+          <th>Actions</th>
+          {% endif %}
+        </tr>
+      </thead>
+    </table>
+  </div>
+</div>
+<div>{% include 'modals/reject_request_modal.html' with details=details %}</div>
+
+<!-- END: Page JS-->
+<script>
+  $(document).ready(function () {
+    // Get the h6 tag by its ID
+    var userTypeTag = document.querySelector("#usertype");
+
+    // Get the text content of the h6 tag
+    var userTypeValue = userTypeTag.textContent || userTypeTag.innerText;
+    //$('#myTable tfoot tr').appendTo('#myTable thead');
+    var table = $("#myTable").DataTable({
+      processing: true,
+      serverSide: true,
+      paging: true,
+      ajax: {
+        url: "{% url ajaxUrl %}",
+        type: "GET",
+        data: function (dtParms) {
+        
+          return dtParms;
+        },
+        error: function (xhr, error, thrown) {
+          // Handle errors here
+          console.log("DataTables error:", error, thrown);
+        },
+      },
+      columns: [
+        { data: "shift_name" },
+        { data: "shift_count" },
+        { data: "shift_start_time" },
+        { data: "shift_end_time" },
+        { data: "login_start_hour" },
+        { data: "duty_hour" },
+        { data: "target_break" },
+        { data: "target_ready" },
+        { data: "hour_0" },
+        { data: "hour_1" },
+        { data: "hour_2" },
+        { data: "hour_3" },
+        { data: "hour_4" },
+        { data: "hour_5" },
+        { data: "hour_6" },
+        { data: "hour_7" },
+        { data: "hour_8" },
+        { data: "hour_9" },
+        { data: "hour_10" },
+        { data: "hour_11" },
+        { data: "hour_12" },
+        { data: "hour_13" },
+        { data: "hour_14" },
+        { data: "hour_15" },
+        { data: "hour_16" },
+        { data: "hour_17" },
+        { data: "hour_18" },
+        { data: "hour_19" },
+        { data: "hour_20" },
+        { data: "hour_21" },
+        { data: "hour_22" },
+        { data: "hour_23" },
+        { data: "created_by" },
+        { data: "created_at" },
+        { data: "updated_by" },
+        { data: "updated_at" },
+        { data: "actions" },
+      ],
+      // Conditionally add the "actions" column based on userTypeValue
+      columnDefs: [
+        {
+          targets: -1, // The last column
+          visible: userTypeValue == "WFM",
+          data: "actions",
+          orderable: false,
+          searchable: false,
+          render: function (data, type, full, meta) {
+            // Assuming 'actions' is HTML content, use render to display it as HTML
+            console.log(data);
+            return data;
+          },
+        },
+      ],
+      dom: 'PQlBfritp',
+      buttons: [
+      {
+        extend: 'colvis',
+        className: 'ml-4',
+        text: 'Column Visibility'
+      }
+      ],
+      
+    });
+  });
+  // Function to open the accept modal
+  function openAcceptModal(acceptUrl) {
+    var confirmModal = document.getElementById("confirmModal");
+    var confirmButton = confirmModal.querySelector(".btn-success");
+
+    // Set the "Confirm" button's href attribute to the accept URL
+    confirmButton.setAttribute("href", acceptUrl);
+
+    // Open the accept modal
+    confirmModal.style.display = "block";
+  }
+
+  // Function to open the reject modal
+  function openRejectModal(rejectUrl) {
+    var rejectModal = document.getElementById("rejectModal");
+    var rejectButton = rejectModal.querySelector(".btn-danger");
+
+    // Set the "Confirm" button's href attribute to the reject URL
+    rejectButton.setAttribute("href", rejectUrl);
+
+    // Open the reject modal
+    rejectModal.style.display = "block";
+  }
+
+  document.addEventListener("click", function (e) {
+    //console.log(e.target);
+    if (e.target.getAttribute("data-target") == "#rejectModal") {
+      e.preventDefault();
+      var rejectUrl = e.target.getAttribute("href");
+      openRejectModal(rejectUrl);
+    }
+  });
+
+  // Close the modals if the user clicks outside of them
+  window.addEventListener("click", function (event) {
+    if (event.target.classList.contains("modal")) {
+      event.target.style.display = "none";
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+<div
+  class="modal animate__animated animate__fadeInUp animate__faster"
+  id="confirmModal"
+  tabindex="-1"
+  role="dialog"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content custom-modal">
+      <div class="modal-header">
+        <h5 class="modal-title">Are you sure?</h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Do you want to accept this request?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          Cancel
+        </button>
+        <a href="#" class="btn btn-success" id="confirmButton_confirmModal"
+          >Confirm</a
+        >
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// Function to open the accept modal
+function openAcceptModal(acceptUrl) {
+  var confirmModal = $('#confirmModal');
+  var confirmButton = confirmModal.find('.btn-success');
+
+  // Set the "Confirm" button's href attribute to the accept URL
+  confirmButton.attr('href', acceptUrl);
+
+  // Open the accept modal using Bootstrap's modal method
+  confirmModal.modal('show');
+}
+$(document).ready(function () {
+  // Add event listener for the modal's hidden.bs.modal event
+  $('#confirmModal').on('hidden.bs.modal', function (e) {
+      // Remove the modal backdrop when the modal is fully hidden
+      $('.modal-backdrop').remove();
+  });
+});
+document.addEventListener('click', function (e) {
+  if (e.target.getAttribute('data-target') == '#confirmModal') {
+      e.preventDefault();
+      var acceptUrl = e.target.getAttribute('href');
+      openAcceptModal(acceptUrl);
+  } else if (e.target.getAttribute('id') == 'confirmButton_confirmModal') {
+      $('#loading').show();
+      e.preventDefault();
+      href = e.target.getAttribute('href');
+      $.ajax({
+          url: href, // Use the href attribute as the URL
+          type: 'GET',
+          success: function (response) {
+              // Hide loading indicator on success
+              console.log(response);
+              $('#loading').hide();
+              $('#confirmModal').modal('hide'); // Hide the modal
+              showSweetAlert(response.message, 'success');
+              $('#myTable').DataTable().ajax.reload();
+          },
+          error: function (error) {
+              // Hide loading indicator on error
+              $('#loading').hide();
+              $('#confirmModal').modal('hide'); // Hide the modal
+              showSweetAlert(response.message, 'error');
+          },
+      });
+  }
+});
+</script>

@@ -1,0 +1,138 @@
+{% extends 'base.html' %} {% block main %}
+<h6 id="usertype" class="invisible">{{ user.userType }}</h6>
+{% include 'breadcrumb.html'%}
+{% include 'messages.html' %}
+<div class="card">
+  <div class="card-body">
+    <ul class="nav justify-content-end">
+      <li class="nav-item">
+        <a class="btn btn-primary" href="{% if workRule == None %} {% url createUrl %} {% else %} {% url editUrl id=1 %} {% endif%}" role="button"
+          >{% if workRule == None %} Create {% else %} Edit {% endif%}</a
+        >
+      </li>
+    </ul>
+  </div>
+</div>
+{% if workRule != None %} 
+<!-- single card  -->
+<div class="col-12 mt-3">
+  <div class="card mb-4">
+    <div class="card-widget-separator-wrapper">
+      <div class="card-body card-widget-separator">
+        <div class="row gy-4 gy-sm-1">
+          <div class="col-sm-6 col-lg-3">
+            <div class="d-flex justify-content-between align-items-start card-widget-1 border-end pb-3 pb-sm-0">
+              <div>
+                <h3 class="mb-1">{{ workRule.consecutive_working_days}}</h3>
+                <p class="mb-0">Consecutive Working Days</p>
+              </div>
+              <span class="badge bg-label-secondary rounded p-2 me-sm-4">
+                <i class='bx bxs-briefcase'></i>
+              </span>
+            </div>
+            <hr class="d-none d-sm-block d-lg-none me-4">
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="d-flex justify-content-between align-items-start card-widget-2 border-end pb-3 pb-sm-0">
+              <div>
+                <h3 class="mb-1">{{ workRule.maximum_regular_shift_duration}} hours</h3>
+                <p class="mb-0">Maximum Regular Shift Duration</p>
+              </div>
+              <span class="badge bg-label-secondary rounded p-2 me-lg-4">
+                <i class='bx bxs-hourglass-top'></i>
+              </span>
+            </div>
+            <hr class="d-none d-sm-block d-lg-none">
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="d-flex justify-content-between align-items-start border-end pb-3 pb-sm-0 card-widget-3">
+              <div>
+                <h3 class="mb-1">{{ workRule.minimum_regular_shift_duration}} hours</h3>
+                <p class="mb-0">Minimum Regular Shift Duration</p>
+              </div>
+              <span class="badge bg-label-secondary rounded p-2 me-sm-4">
+                <i class='bx bxs-hourglass-bottom'></i>
+              </span>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h3 class="mb-1">{{ workRule.gap_between_shift_end_to_the_next_shift_start_time}} hours</h3>
+                <p class="mb-0">Gap Between Shift End To The Next Shift Start Time</p>
+              </div>
+              <span class="badge bg-label-secondary rounded p-2">
+                <i class='bx bx-space-bar'></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /single card  -->
+<!-- single card  -->
+<div class="col-12 mt-3">
+  <div class="card mb-4">
+    <div class="card-widget-separator-wrapper">
+      <div class="card-body card-widget-separator">
+        <div class="row gy-4 gy-sm-1">
+          <div class="col-sm-6 col-lg-3">
+            <div class="d-flex justify-content-between align-items-start card-widget-1 border-end pb-3 pb-sm-0">
+              <div>
+                <h3 class="mb-1">{{ workRule.female_shift_start_time}}</h3>
+                <p class="mb-0">Female Shift Start Time</p>
+              </div>
+              <span class="badge bg-label-secondary rounded p-2 me-sm-4">
+                <i class='bx bx-female'></i>
+              </span>
+            </div>
+            <hr class="d-none d-sm-block d-lg-none me-4">
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="d-flex justify-content-between align-items-start card-widget-2 border-end pb-3 pb-sm-0">
+              <div>
+                <h3 class="mb-1">{{ workRule.female_shift_end_time}}</h3>
+                <p class="mb-0">Female Shift End Time</p>
+              </div>
+              <span class="badge bg-label-secondary rounded p-2 me-lg-4">
+                <i class='bx bx-female'></i>
+              </span>
+            </div>
+            <hr class="d-none d-sm-block d-lg-none">
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="d-flex justify-content-between align-items-start border-end pb-3 pb-sm-0 card-widget-3">
+              <div>
+                <h3 class="mb-1">{{ workRule.prohibited_time_for_end_of_a_shift_start_time}}</h3>
+                <p class="mb-0">Prohibited Time For End Of A Shift Start Time</p>
+              </div>
+              <span class="badge bg-label-secondary rounded p-2 me-sm-4">
+                <i class='bx bxs-hand'></i>
+              </span>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h3 class="mb-1">{{ workRule.prohibited_time_for_end_of_a_shift_end_time}}</h3>
+                <p class="mb-0">Prohibited Time For End Of A Shift End Time</p>
+              </div>
+              <span class="badge bg-label-secondary rounded p-2">
+                <i class='bx bxs-hand'></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /single card  -->
+{% endif%}
+
+
+<div>{% include 'modals/reject_request_modal.html' with details=details %}</div>
+
+{% endblock %}

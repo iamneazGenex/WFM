@@ -1,0 +1,115 @@
+{% extends 'base.html' %} {% load crispy_forms_tags static %} {% block main %}
+<h6 id="usertype" hidden>{{ user.userType }}</h6>
+{% include 'breadcrumb.html' %}
+{% include 'messages.html' %}
+<div class="card ">
+  <div class="card-body">
+    <ul class="nav justify-content-end">
+      <li class="nav-item">
+        <a class="btn btn-primary" href="{% url createUrl %}" role="button"
+          >Create</a
+        >
+      </li>
+    </ul>
+  </div>
+</div>
+<div class="card mt-3">
+  <div class="card-body">
+    <table
+      id="myTable"
+      class="table table-striped table-bordered display nowrap"
+      style="width: 100%; text-align: center"
+    >
+      <thead>
+        <tr>
+          <th>Requestor</th>
+          <th>Requerstor<br />Swap<br />Date</th>
+          <th>Requerstor<br />Trade<br />Date</th>
+          <th>Requestee</th>
+          <th>Requestee<br />Swap<br />Date</th>
+          <th>Requestee<br />Trade<br />Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+</div>
+<div>{% include 'modals/reject_request_modal.html' %}</div>
+<div>{% include 'modals/accept_request_modal.html' %}</div>
+<script>
+  $(document).ready(function () {
+    // Get the h6 tag by its ID
+    var userTypeTag = document.querySelector("#usertype");
+
+    // Get the text content of the h6 tag
+    var userTypeValue = userTypeTag.textContent || userTypeTag.innerText;
+
+    $("#myTable").DataTable({
+      processing: true,
+      serverSide: true,
+      paging: true,
+      ajax: {
+        url: "{% url ajaxUrl %}",
+        type: "GET",
+        /*
+        success: function (data) {
+          // Handle success here, if needed
+          console.log("DataTables success:", data);
+        },*/
+        error: function (xhr, error, thrown) {
+          // Handle errors here
+          console.log("DataTables error:", error, thrown);
+        },
+      },
+      columns: [
+        { data: "requestor" },
+        { data: "requestor_swap_roster" },
+        { data: "requestor_trade_roster" },
+        { data: "requestee" },
+        { data: "requestee_swap_roster" },
+        { data: "requestee_trade_roster" },
+        {
+          data: "actions",
+          orderable: false,
+          searchable: false,
+          render: function (data, type, full, meta) {
+            // Assuming 'actions' is HTML content, use render to display it as HTML
+            //console.log(data);
+            return data;
+          }, // Actions column
+        },
+      ],
+      dom: 'PQlBfritp',
+      buttons: [
+      {
+        extend: 'colvis',
+        className: 'ml-4',
+        text: 'Column Visibility'
+      },
+      {
+        text: 'button1',
+        action: function ( e, dt, node, config ) {
+          /*isButton1Pressed = !isButton1Pressed;
+          this.text( isButton1Pressed ? "All" : "My Roster");
+          table.draw();*/
+        },
+        attr: {
+          id: 'button1'  // Assign an ID to the button
+        }
+      }
+      ],
+      initComplete: function () {
+        // Check the condition based on userTypeValue
+      if (userTypeValue === "Supervisor") {
+        // Show the button
+        $('#button1').show();
+      } else {
+        // Hide the button
+        $('#button1').hide();
+      }
+      }
+    });
+  });
+</script>
+
+{% endblock %}

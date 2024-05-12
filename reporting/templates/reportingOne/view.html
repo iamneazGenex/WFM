@@ -1,0 +1,243 @@
+{% extends 'base.html' %} {% block main %}
+
+<h6 id="usertype" class="invisible">{{ user.userType }}</h6>
+<h6 id="userName" class="invisible">{{ user.name }}</h6>
+{% include 'breadcrumb.html' %}
+{% include 'messages.html' %}
+{% if user.is_WFM %}
+<div class="card ">
+  <div class="card-body">
+      <div class="row">
+        <div class="col-md-3">
+          <label for="skillSelect">Skill:</label>
+          <select class="select2 form-select form-select-lg customselect2 form-control" id="skillSelect" name="skillSelect">
+            <option value="0"></option>
+            {% for skill in skills %}
+            <option value="{{ skill.id }}">{{ skill.name| title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="toggleIntervalType">Type:</label>
+          <select class="form-control" id="toggleIntervalType">
+              <option value="date">Daily</option>
+              <option value="month">Monthly</option>
+          </select>
+        </div>
+        <div id="dateInput" class="col-md-4">
+          <label for="searchDate">Search Date:</label>
+          <input
+            type="date"
+            class="form-control"
+            id="search_date"
+            name="search_date"
+            placeholder="Select Date"
+          />
+        </div>
+        <div id="monthInput" class="col-md-4" style="display:none;">
+          <label for="searchDateMonth">Search Month:</label>
+              <input
+                type="month"
+                class="form-control"
+                id="search_month"
+                name="search_month"
+                placeholder="Select Month"
+              />
+        </div>
+        <div class="col-md-2">
+          <label for="searchButton">&nbsp;</label>
+          <button type="button" class="btn btn-primary btn-block" id="searchButton">
+            Search
+          </button>
+        </div>
+      </div>
+  </div>
+</div>
+{% endif %}
+<div class="card mt-3" style="overflow-x:auto;">
+  <div class="card-body">
+    <!-- Dropdown for column selection -->
+
+    <table
+      class="table table-striped table-bordered display nowrap mt-4"
+      id="myTable"
+      style="text-align: center"
+    >
+      <thead>
+        <tr>
+          <th>Interval</th>
+          <th>Hour</th>
+          <th>Forecast Calls</th>
+          <th>Offered Calls</th>
+          <th>Answered Calls</th>
+          <th>Average Handle Time</th>
+          <th>FD%</th>
+          <th>Required HC</th>
+          <th>Planned HC</th>
+          <th>Actual HC</th>
+          <th>Planned HC Gap</th>
+          <th>Actual HC Gap</th>
+        </tr>
+      </thead>
+      
+    </table>
+  </div>
+</div>
+
+
+<!-- END: Page JS-->
+<script>
+  
+  $(document).ready(function () {
+    const toggleIntervalType = document.getElementById("toggleIntervalType");
+    const date = document.getElementById("dateInput");
+    const month = document.getElementById("monthInput");
+    const hourHeader = document.querySelector('th:nth-child(2)');
+    // Get the h6 tag by its ID
+    var userTypeTag = document.querySelector("#usertype");
+
+    // Get the text content of the h6 tag
+    var userTypeValue = userTypeTag.textContent || userTypeTag.innerText;
+    let tableColumns = [
+      { data: 'interval' },
+      { data: "hour" },
+      { data: "forecast" },
+      { data: "offeredCalls" },
+      { data: "answeredCalls" },
+      { data: "aht" },
+      { data: "fd" },
+      { data: "required_hc" },
+      { data: "plannedHeadCount" },
+      { data: "actualHeadCount" },
+      { data: "plannedHeadCountGap" },
+      { data: "actualHeadCountGap" }
+    ];
+    
+    
+    //$('#myTable tfoot tr').appendTo('#myTable thead');
+    var table = $("#myTable").DataTable({
+      lengthMenu: [24],
+      columns: tableColumns,
+      // Conditionally add the "actions" column based on userTypeValue
+      columnDefs: [
+        {
+          targets: 0, // The first column (assuming "interval" is the first column)
+          orderable: true,
+          visible: false,
+        },
+      ],
+      dom: 'lBfrtip',
+      layout: {
+        topStart: {
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Save current page',
+                    exportOptions: {
+                        modifier: {
+                            page: 'current'
+                        }
+                    }
+                }
+            ]
+        }
+    }
+      
+    });
+    toggleIntervalType.addEventListener("change", function() {
+        if (toggleIntervalType.value === "date") {
+          date.style.display = "block";
+          month.style.display = "none";
+          hourHeader.textContent = 'Hour';
+          tableColumns[1] = { data: "hour" };
+          
+        } else {
+          date.style.display = "none";
+          month.style.display = "block";
+          hourHeader.textContent = 'Day';
+          tableColumns[1] = { data: "date" };
+        }
+        // Destroy the existing DataTable instance
+        table.destroy();
+        table = $("#myTable").DataTable({
+          lengthMenu: [24],
+          columns: tableColumns,
+          // Conditionally add the "actions" column based on userTypeValue
+          columnDefs: [
+            {
+              targets: 0, // The first column (assuming "interval" is the first column)
+              orderable: true,
+              visible: false,
+            },
+          ],
+          layout: {
+            topStart: {
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: 'Save current page',
+                        exportOptions: {
+                            modifier: {
+                                page: 'current'
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+          
+        });
+    }); 
+    // Attach a click event handler to the search button
+    $('#searchButton').on('click', function () {
+      console.log("clicked");
+      // Get the selected skill and search date values
+      var intervalType = $('#toggleIntervalType').val();
+      var selectedSkill = $('#skillSelect').val();
+      var searchDate = $('#search_date').val();
+      var searchMonth = $('#search_month').val();
+      var checkIfSelected = false
+      if(intervalType == "date"){
+        if (selectedSkill && searchDate){
+          checkIfSelected = true
+        }
+      } else {
+        if (selectedSkill && searchMonth){
+          checkIfSelected = true
+        }
+      }
+      // Check if both skill and date are selected
+      if (checkIfSelected) {
+          // Perform AJAX call
+          $.ajax({
+              url: '{% url ajaxUrl %}',  // Replace with your actual endpoint
+              method: 'POST',
+              data: {
+                intervalType: intervalType,
+                skill: selectedSkill,
+                date: searchDate,
+                month: searchMonth
+              },
+              dataType: 'json',
+              success: function (data) {
+                  // Clear existing DataTable data
+                  
+                  table.clear();
+
+                  // Add new data to DataTable
+                  table.rows.add(data).draw();
+                  
+              },
+              error: function (error) {
+                  console.error('Error fetching data:', error);
+              }
+          });
+      } else {
+          // Show an alert or perform any other handling if skill and date are not selected
+          alert('Please select both Skill and Search Date');
+      }
+  });
+  
+});
+</script>
+{% endblock %}
