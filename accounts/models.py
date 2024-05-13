@@ -262,19 +262,35 @@ class Employee(BaseModel):
         related_name="employee",
     )
     process = models.ForeignKey(
-        Process, on_delete=models.SET_NULL, null=True, related_name="employeeProcess"
+        Process,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="employeeProcess",
     )
     gender = models.CharField(
         default="N/A", max_length=50, null=True, choices=GENDER_CHOICES
     )
     site = models.ForeignKey(
-        Site, on_delete=models.SET_NULL, null=True, related_name="employeeSite"
+        Site,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="employeeSite",
     )
     work_role = models.ForeignKey(
-        WorkRole, on_delete=models.SET_NULL, null=True, related_name="employeeWorkRole"
+        WorkRole,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="employeeWorkRole",
     )
     lob = models.ForeignKey(
-        LOB, on_delete=models.SET_NULL, null=True, related_name="employeeLOB"
+        LOB,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="employeeLOB",
     )
     pick_drop_location = models.CharField(max_length=255)
     vdi = models.CharField(max_length=255, default="", blank=True, null=True)
