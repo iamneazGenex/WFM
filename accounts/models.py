@@ -292,7 +292,7 @@ class Employee(BaseModel):
         blank=True,
         related_name="employeeLOB",
     )
-    pick_drop_location = models.CharField(max_length=255)
+    pick_drop_location = models.CharField(max_length=255, blank=True, null=True)
     vdi = models.CharField(max_length=255, default="", blank=True, null=True)
     avaya_id = models.IntegerField(default=0, blank=True, null=True)
     doj = models.DateField(null=True, blank=True)
