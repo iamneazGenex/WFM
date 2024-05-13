@@ -1690,14 +1690,16 @@ class ViewEmployeeJson(BaseDatatableView):
         for item in qs:
             # Fetch the related field and use it directly in the data dictionary
             row = {
-                "user__name": item.user.name.title(),
+                "user__name": "" if item.user.name is None else item.user.name.title(),
                 "user__email": item.user.email,
                 "user__employee_id": item.user.employee_id,
                 "user__system_id": item.user.system_id,
                 "avaya_id": "" if item.avaya_id is None else item.avaya_id,
                 "vdi": "" if item.vdi is None else item.vdi,
                 "doj": "" if item.doj is None else item.doj.strftime("%d-%m-%Y"),
-                "process__name": item.process.name.title(),
+                "process__name": (
+                    "" if item.process is None else item.process.name.title()
+                ),
                 "gender": "Male" if item.gender is "M" else "Female",
                 "site__name": item.site.name.capitalize() if item.site else "",
                 "work_role__name": (
@@ -1798,27 +1800,6 @@ def bulkAddEmployees(request):
                     if not flagEmptyFields:
                         logger.info(f"Employee Name: {row[0]}")
                         try:
-                            process = (
-                                None
-                                if row[5] is None
-                                else Process.objects.get(name=row[5].lower())
-                            )
-                            site = (
-                                None
-                                if row[6] is None
-                                else Site.objects.get(name=row[6].lower())
-                            )
-                            workRole = (
-                                None
-                                if row[7] is None
-                                else WorkRole.objects.get(name=row[7].lower())
-                            )
-                            lob = (
-                                None
-                                if row[8] is None
-                                else LOB.objects.get(name=str(row[8]).lower())
-                            )
-
                             pick_drop_location = row[9]
 
                             supervisor1_email = row[11]
@@ -1842,10 +1823,10 @@ def bulkAddEmployees(request):
                             password = 123456
                             tempLob = str(row[8])
                             employeeData = {
-                                "process": row[5].lower(),
-                                "site": row[6].lower(),
-                                "work_role": row[7].lower(),
-                                "lob": tempLob.lower(),
+                                "process": row[5],
+                                "site": row[6],
+                                "work_role": row[7],
+                                "lob": row[8],
                                 "pick_drop_location": pick_drop_location,
                                 "supervisor_1": supervisor1,
                                 "supervisor_2": supervisor2,
@@ -1863,9 +1844,9 @@ def bulkAddEmployees(request):
                                 else:
                                     failedList.append(row[0])
 
-                        except ObjectDoesNotExist as e:
-                            logging.error(f"{e}")
-                            flagEmptyFields = True
+                        # except ObjectDoesNotExist as e:
+                        #     logging.error(f"|ObjectDoesNotExist| {e}")
+                        #     flagEmptyFields = True
                         except Exception as e:
                             logging.error(
                                 f"|Failed| Create A Employee in bulk |id:{row[2]}| Exception:{e}"

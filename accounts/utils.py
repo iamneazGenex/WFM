@@ -120,27 +120,27 @@ def employeeCreation(data, request, bulk, group="Employee"):
     userCreationResult, user = customUserCreation(request, data, group)
 
     if userCreationResult == True:
+        process = (
+            None
+            if data["process"] is None
+            else Process.objects.get(name=data["process"].lower())
+        )
+        site = (
+            None
+            if data["site"] is None
+            else Site.objects.get(name=data["site"].lower())
+        )
+        workRole = (
+            None
+            if data["work_role"] is None
+            else WorkRole.objects.get(name=data["work_role"].lower())
+        )
+        lob = (
+            None
+            if data["lob"] is None
+            else LOB.objects.get(name=str(data["lob"]).lower())
+        )
         try:
-            process = (
-                None
-                if data["process"] is None
-                else Process.objects.get(name=data["process"].lower())
-            )
-            site = (
-                None
-                if data["site"] is None
-                else Site.objects.get(name=data["site"].lower())
-            )
-            workRole = (
-                None
-                if data["work_role"] is None
-                else WorkRole.objects.get(name=data["work_role"].lower())
-            )
-            lob = (
-                None
-                if data["lob"] is None
-                else LOB.objects.get(name=str(data["lob"]).lower())
-            )
             employee = Employee(
                 user=user,
                 process=process,
@@ -155,8 +155,11 @@ def employeeCreation(data, request, bulk, group="Employee"):
             )
             employee.save()
             if bulk == False:
+                logger.info(request, "Employee Created successfully.")
                 messages.success(request, "Employee Created successfully.")
             success = True
         except Exception as e:
+            user.delete()
+            logging.error("Exception:{exception}".format(exception=e))
             messages.error(request, "Exception:{exception}".format(exception=e))
     return success
