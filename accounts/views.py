@@ -1706,7 +1706,9 @@ class ViewEmployeeJson(BaseDatatableView):
                     item.work_role.name.title() if item.work_role else ""
                 ),
                 "lob__name": item.lob.name.title() if item.lob else "",
-                "pick_drop_location": item.pick_drop_location.title(),
+                "pick_drop_location": (
+                    item.pick_drop_location.title() if item.pick_drop_location else ""
+                ),
                 "supervisor_1__user__name": (
                     item.supervisor_1.user.name.title() if item.supervisor_1 else ""
                 ),
