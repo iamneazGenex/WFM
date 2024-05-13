@@ -121,10 +121,26 @@ def employeeCreation(data, request, bulk, group="Employee"):
 
     if userCreationResult == True:
         try:
-            process = Process.objects.get(name=data["process"])
-            site = Site.objects.get(name=data["site"])
-            workRole = WorkRole.objects.get(name=data["work_role"])
-            lob = LOB.objects.get(name=data["lob"])
+            process = (
+                None
+                if data["process"] is None
+                else Process.objects.get(name=data["process"].lower())
+            )
+            site = (
+                None
+                if data["site"] is None
+                else Site.objects.get(name=data["site"].lower())
+            )
+            workRole = (
+                None
+                if data["work_role"] is None
+                else WorkRole.objects.get(name=data["work_role"].lower())
+            )
+            lob = (
+                None
+                if data["lob"] is None
+                else LOB.objects.get(name=str(data["lob"]).lower())
+            )
             employee = Employee(
                 user=user,
                 process=process,

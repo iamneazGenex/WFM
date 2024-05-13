@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class CustomPasswordChangeView(PasswordChangeView):
-    #print("cpcv")
+    # print("cpcv")
     template_name = (
         "registration/password_change.html"  # Change this to your desired template
     )
@@ -36,23 +36,23 @@ class CustomPasswordChangeView(PasswordChangeView):
     )  # Change 'home' to the name of your home page URL
 
     def form_valid(self, form):
-        #print("form valid")
+        # print("form valid")
         response = super().form_valid(form)
         messages.success(
             self.request, "Your password has been successfully changed."
         )  # Add success message
-        #print(self.request.user.id)
+        # print(self.request.user.id)
         try:
             employee = Employee.objects.get(user=self.request.user.id)
             employee.is_previously_logged_in = True
             employee.save()
         except Exception as e:
             pass
-            #print(f"Exception : {e}")
+            # print(f"Exception : {e}")
         return response
 
     def form_invalid(self, form):
-        #print("form invalid")
+        # print("form invalid")
         response = super().form_invalid(form)
         messages.error(
             self.request, "There was an error changing your password. Please try again."
@@ -1197,7 +1197,7 @@ def createSupervisor(request):
         form = CreateEditSupervisorForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            #print(data)
+            # print(data)
             result = supervisorCreation(data, request, False)
             if result == True:
                 return redirect(PageInfoCollection.SUPERVISOR_VIEW.urlName)
@@ -1242,7 +1242,7 @@ def editSupervisor(request, id):
                 messages.error(request, error)
             except Supervisor.DoesNotExist:
                 # Update the existing supervisor with the new data
-                #print(data)
+                # print(data)
                 customUser = CustomUser.objects.get(id=supervisor.user.id)
                 process = Process.objects.get(name=data["process"])
                 site = Site.objects.get(name=data["site"])
@@ -1420,7 +1420,7 @@ def bulkAddSupervisors(request):
         failedList = []
         for row in ws.iter_rows(min_row=2, values_only=True):
             if row[0] is not None:
-                #print("row:{name}".format(name=row[0]))
+                # print("row:{name}".format(name=row[0]))
                 data = {
                     "name": row[0].lower(),
                     "email": row[1].lower(),
@@ -1491,7 +1491,7 @@ def createEmployee(request):
         form = CreateEditEmployeeForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            #print(data)
+            # print(data)
             result = employeeCreation(data, request, False)
             if result == True:
                 return redirect(PageInfoCollection.EMPLOYEE_VIEW.urlName)
@@ -1541,7 +1541,7 @@ def editEmployee(request, id):
                 messages.error(request, error)
             except Employee.DoesNotExist:
                 # Update the existing Employee with the new data
-                #print(data)
+                # print(data)
                 try:
                     customUser = CustomUser.objects.get(id=employee.user.id)
                     process = Process.objects.get(name=data["process"])
@@ -1756,9 +1756,9 @@ def bulkAddEmployees(request):
     if request.method == "POST":
         excel_file = request.FILES.get("excel_file")
         if "supervisor" in request.POST:
-            GroupEnum = "Supervisor"
+            selectedGroup = "Supervisor"
         else:
-            GroupEnum = "Employee"
+            selectedGroup = "Employee"
         if excel_file:
             wb = load_workbook(excel_file)
             ws = wb["Sheet1"]
@@ -1768,7 +1768,7 @@ def bulkAddEmployees(request):
                 )
                 - 1
             )
-            #print(count)
+            # print(count)
             successCount = 0
             failedList = []
             for row in ws.iter_rows(min_row=2, values_only=True):
@@ -1798,10 +1798,26 @@ def bulkAddEmployees(request):
                     if not flagEmptyFields:
                         logger.info(f"Employee Name: {row[0]}")
                         try:
-                            process = Process.objects.get(name=row[5].lower())
-                            site = Site.objects.get(name=row[6].lower())
-                            workRole = WorkRole.objects.get(name=row[7].lower())
-                            lob = LOB.objects.get(name=str(row[8]).lower())
+                            process = (
+                                None
+                                if row[5] is None
+                                else Process.objects.get(name=row[5].lower())
+                            )
+                            site = (
+                                None
+                                if row[6] is None
+                                else Site.objects.get(name=row[6].lower())
+                            )
+                            workRole = (
+                                None
+                                if row[7] is None
+                                else WorkRole.objects.get(name=row[7].lower())
+                            )
+                            lob = (
+                                None
+                                if row[8] is None
+                                else LOB.objects.get(name=str(row[8]).lower())
+                            )
 
                             pick_drop_location = row[9]
 
@@ -1839,7 +1855,7 @@ def bulkAddEmployees(request):
                             if not flagEmptyFields:
                                 data = {**customUserData, **employeeData}
                                 result = employeeCreation(
-                                    data, request, True, GroupEnum
+                                    data, request, True, selectedGroup
                                 )
 
                                 if result:
@@ -1892,7 +1908,7 @@ def bulkAddEmployeesOtherInfo(request):
                 )
                 - 1
             )
-            #print(count)
+            # print(count)
             successCount = 0
             failedList = []
             for row in ws.iter_rows(min_row=2, values_only=True):
@@ -1918,7 +1934,7 @@ def bulkAddEmployeesOtherInfo(request):
                         # Handle the case where the employee is not found
                     except Exception as e:
                         logger.info(f"{row[3]}.Exception: {e}")
-            #print(f"succes count:{successCount}")
+            # print(f"succes count:{successCount}")
             if count == successCount:
                 messages.success(request, "Employees Created successfully.")
             else:
