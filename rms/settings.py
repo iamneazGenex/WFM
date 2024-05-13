@@ -19,6 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 import logging.config
 import os
 from django.utils.log import DEFAULT_LOGGING
+from dotenv import load_dotenv
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -37,6 +38,9 @@ ALLOWED_HOSTS = ["172.22.26.199", "172.22.26.200", "127.0.0.1", "localhost"]
 
 
 # Application definition
+# Load environment variables from .env file
+load_dotenv()
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -98,13 +102,30 @@ WSGI_APPLICATION = "rms.wsgi.application"
 # }
 # -------------------------------------------------------------
 # For MySQL
+Production_Type = os.getenv("Production_Type")
+
+# Define the default database settings
+ubuntu_mysql_database_settings = {
+    "ENGINE": "django.db.backends.mysql",
+    "OPTIONS": {
+        "read_default_file": "/etc/mysql/my.cnf",
+    },
+}
+windows_mysql_database_settings = {
+    "ENGINE": "django.db.backends.mysql",
+    "NAME": "wfm",
+    "USER": "root",
+    "PASSWORD": "neaz24x7!",
+    "HOST": "",
+    "PORT": "3306",
+}
+# Set DATABASES based on Production_Type
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "OPTIONS": {
-            "read_default_file": "/etc/mysql/my.cnf",
-        },
-    }
+    "default": (
+        windows_mysql_database_settings
+        if Production_Type == "local"
+        else ubuntu_mysql_database_settings
+    )
 }
 
 
@@ -147,7 +168,6 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 STATIC_ROOT = os.path.join(PROJECT_ROOT, "static")
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
-    "/home/wfmuser/WFM/static/",
 ]
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
