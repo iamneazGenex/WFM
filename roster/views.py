@@ -335,6 +335,7 @@ def createBulkRoster(request):
 
         for index, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
             if row[0] is not None:
+                logging.info(f"index:{index}")
                 failedRow.append({"index": index})
                 # #print(row)
                 employeeExists = False
@@ -355,7 +356,7 @@ def createBulkRoster(request):
                     logging.error(f"Employee Does not exist. Creating a new employee.")
 
                     supervisor1_name = row[8].strip()
-                    supervisor1_email = row[9].strip()
+                    supervisor1_email = row[9].strip() if row[9] is not None else None
                     if supervisor1_email:
                         supervisor1 = Employee.objects.get(
                             user__email=supervisor1_email, user__in=supervisors
@@ -416,7 +417,6 @@ def createBulkRoster(request):
                     ]
                     if row[14] not in noneShiftNames:
                         endTime = time(23, 59)
-
                         data = {
                             "employee": employee,
                             "start_date": row[13],
@@ -439,7 +439,7 @@ def createBulkRoster(request):
                         }
                     else:
                         try:
-                            shiftLegend = ShiftLegend.objects.get(shift_name=row[12])
+                            shiftLegend = ShiftLegend.objects.get(shift_name=row[14])
                             data = {
                                 "employee": employee,
                                 "start_date": row[13],
