@@ -28,29 +28,29 @@ def customUserCreation(request, data, groupName):
             logger.error(error)
             messages.error(request, error)
         except CustomUser.DoesNotExist:
-            try:
-                CustomUser.objects.get(system_id=data["system_id"])
-                user = None
-                error = "User with this System Id: {system_id} already exist".format(
-                    system_id=data["system_id"]
-                )
-                logger.error(error)
-                messages.error(request, error)
-            except CustomUser.DoesNotExist:
-                user = CustomUser(
-                    email=data["email"],
-                    name=data["name"],
-                    employee_id=data["employee_id"],
-                    system_id=data["system_id"],
-                )
-                user.set_password(str(data["password1"]))
-                user.is_active = True
-                user.created_by = CustomUser.objects.get(id=request.user.id)
-                user.save()
-                employeeGroup = Group.objects.get(name=groupName)
-                user.groups.add(employeeGroup)
-                success = True
-                logger.info("User Created Successfully")
+            # try:
+            #     CustomUser.objects.get(system_id=data["system_id"])
+            #     user = None
+            #     error = "User with this System Id: {system_id} already exist".format(
+            #         system_id=data["system_id"]
+            #     )
+            #     logger.error(error)
+            #     messages.error(request, error)
+            # except CustomUser.DoesNotExist:
+            user = CustomUser(
+                email=data["email"],
+                name=data["name"],
+                employee_id=data["employee_id"],
+                system_id=data["system_id"],
+            )
+            user.set_password(str(data["password1"]))
+            user.is_active = True
+            user.created_by = CustomUser.objects.get(id=request.user.id)
+            user.save()
+            employeeGroup = Group.objects.get(name=groupName)
+            user.groups.add(employeeGroup)
+            success = True
+            logger.info("User Created Successfully")
     return success, user
 
 
