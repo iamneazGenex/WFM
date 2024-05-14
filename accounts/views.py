@@ -1814,13 +1814,15 @@ def bulkAddEmployees(request):
                                 if supervisor1_email
                                 else None
                             )
-                            supervisor2 = (
-                                Employee.objects.get(
-                                    user__email=supervisor2_email.lower()
-                                )
-                                if supervisor2_email
-                                else None
-                            )
+                            logger.info(f"supervisor1: {supervisor1}")
+                            # supervisor2 = (
+                            #     Employee.objects.get(
+                            #         user__email=supervisor2_email.lower()
+                            #     )
+                            #     if supervisor2_email
+                            #     else None
+                            # )
+                            supervisor2 = None
 
                             password = 123456
                             tempLob = str(row[8])
