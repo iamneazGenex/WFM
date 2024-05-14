@@ -1777,10 +1777,11 @@ def bulkAddEmployees(request):
             # print(count)
             successCount = 0
             failedList = []
+            logger.info(f"Trying to insert data")
             for index, row in enumerate(
                 ws.iter_rows(min_row=2, values_only=True), start=2
             ):
-                logger.info(f"Trying to insert data")
+                logger.info(f"--------------------------------")
                 if row[0] is not None:
                     logger.info(f"Index:{index}")
                     flagEmptyFields = False
@@ -1813,14 +1814,18 @@ def bulkAddEmployees(request):
 
                             supervisor1_email = row[11]
                             supervisor2_email = row[13]
+                            logger.info(f"supervisor1 email: {supervisor1_email}")
+                            supervisor1 = None
+                            if supervisor1_email is not None:
+                                try:
+                                    supervisor1 = Employee.objects.get(
+                                        user__email=supervisor1_email.lower().strip()
+                                    )
+                                except Employee.DoesNotExist:
+                                    logger.error(
+                                        f"Supervisor [{supervisor1_email}] does not exist"
+                                    )
 
-                            supervisor1 = (
-                                Employee.objects.get(
-                                    user__email=supervisor1_email.lower()
-                                )
-                                if supervisor1_email
-                                else None
-                            )
                             logger.info(f"supervisor1: {supervisor1}")
                             # supervisor2 = (
                             #     Employee.objects.get(
@@ -1866,6 +1871,7 @@ def bulkAddEmployees(request):
                         logger.error(
                             f"|Failed| [Index:{index}] Empty Fields in customUserData"
                         )
+                logger.info(f"--------------------------------")
             if count == successCount:
                 logger.info(f"|Success| All Employees Created successfully")
                 messages.success(request, "Employees Created successfully.")
