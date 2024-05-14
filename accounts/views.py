@@ -1763,6 +1763,8 @@ def bulkAddEmployees(request):
             selectedGroup = "Supervisor"
         else:
             selectedGroup = "Employee"
+
+        logger.info(f"Selected Group: {selectedGroup}")
         if excel_file:
             wb = load_workbook(excel_file)
             ws = wb["Sheet1"]
@@ -1778,7 +1780,9 @@ def bulkAddEmployees(request):
             for index, row in enumerate(
                 ws.iter_rows(min_row=2, values_only=True), start=2
             ):
+                logger.info(f"Trying to insert data")
                 if row[0] is not None:
+                    logger.info(f"Index:{index}")
                     flagEmptyFields = False
                     customUserData = {
                         "name": row[0],
@@ -1802,6 +1806,7 @@ def bulkAddEmployees(request):
                             flagEmptyFields = True
 
                     if not flagEmptyFields:
+                        logger.info(f"No Empty Fields in customUserData")
                         logger.info(f"Employee Name: {row[0]}")
                         try:
                             pick_drop_location = row[9]
@@ -1857,10 +1862,15 @@ def bulkAddEmployees(request):
                             logging.error(
                                 f"|Failed| [Index:{index}] Create A Employee in bulk |id:{row[2]}| Exception:{e}"
                             )
-
+                    else:
+                        logger.error(
+                            f"|Failed| [Index:{index}] Empty Fields in customUserData"
+                        )
             if count == successCount:
+                logger.info(f"|Success| All Employees Created successfully")
                 messages.success(request, "Employees Created successfully.")
             else:
+                logger.error(f"|Failed| {','.join(failedList)}")
                 messages.error(request, f"Failed : {','.join(failedList)}")
 
     context = {
