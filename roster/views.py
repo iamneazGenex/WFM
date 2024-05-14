@@ -414,7 +414,7 @@ def createBulkRoster(request):
                         "Transfer",
                         "Withdraw",
                     ]
-                    if row[12] not in noneShiftNames:
+                    if row[14] not in noneShiftNames:
                         endTime = time(23, 59)
 
                         data = {
