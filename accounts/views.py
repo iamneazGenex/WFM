@@ -1775,7 +1775,9 @@ def bulkAddEmployees(request):
             # print(count)
             successCount = 0
             failedList = []
-            for row in ws.iter_rows(min_row=2, values_only=True):
+            for index, row in enumerate(
+                ws.iter_rows(min_row=2, values_only=True), start=2
+            ):
                 if row[0] is not None:
                     flagEmptyFields = False
                     customUserData = {
@@ -1853,7 +1855,7 @@ def bulkAddEmployees(request):
                         #     flagEmptyFields = True
                         except Exception as e:
                             logging.error(
-                                f"|Failed| Create A Employee in bulk |id:{row[2]}| Exception:{e}"
+                                f"|Failed| [Index:{index}] Create A Employee in bulk |id:{row[2]}| Exception:{e}"
                             )
 
             if count == successCount:
@@ -1896,7 +1898,9 @@ def bulkAddEmployeesOtherInfo(request):
             # print(count)
             successCount = 0
             failedList = []
-            for row in ws.iter_rows(min_row=2, values_only=True):
+            for index, row in enumerate(
+                ws.iter_rows(min_row=2, values_only=True), start=2
+            ):
                 if row[0] is not None:
                     try:
                         employee = Employee.objects.get(user__employee_id=row[0])
@@ -1914,11 +1918,11 @@ def bulkAddEmployeesOtherInfo(request):
                         )
                     except Employee.DoesNotExist:
                         logger.error(
-                            f"{row[3]} {row[0]}.Exception: Employee does not exist"
+                            f"|Failed| [Index:{index}] Exception: [Employee ID:{row[0]}] [Employee:{row[1]}] [Avaya ID:{row[2]}] [VDI ID:{row[3]}] does not exist"
                         )
                         # Handle the case where the employee is not found
                     except Exception as e:
-                        logger.info(f"{row[3]}.Exception: {e}")
+                        logger.error(f"|Failed| [Index:{index}] Exception: {e}")
             # print(f"succes count:{successCount}")
             if count == successCount:
                 messages.success(request, "Employees Created successfully.")
