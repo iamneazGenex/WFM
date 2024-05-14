@@ -354,33 +354,42 @@ def createBulkRoster(request):
                     # break
                     logging.error(f"Employee Does not exist. Creating a new employee.")
 
-                    supervisor1_name = row[7].strip()
-
-                    if supervisor1_name:
+                    supervisor1_name = row[8].strip()
+                    supervisor1_email = row[9].strip()
+                    if supervisor1_email:
                         supervisor1 = Employee.objects.get(
-                            user__name=supervisor1_name, user__in=supervisors
+                            user__email=supervisor1_email, user__in=supervisors
                         )
-                        logging.info(f"Supervisor found")
+                        logging.info(f"Supervisor found by email")
                     else:
-                        supervisor1 = None
-                        logging.info(f"Supervisor Not found")
-                    print(supervisor1)
+                        if supervisor1_name:
+                            supervisor1 = Employee.objects.get(
+                                user__name=supervisor1_name, user__in=supervisors
+                            )
+                            logging.info(f"Supervisor found by name")
+                        else:
+                            supervisor1 = None
+                            logging.error(f"Supervisor Not found")
                     data = {
                         "name": row[3].strip(),
                         # "email": row[1],
-                        "email": f"{row[3].lower().replace(' ','')}{row[1]}@zohomail.com",
+                        "email": (
+                            f"{row[3].lower().replace(' ','')}{row[1]}@zohomail.com"
+                            if row[4] is None
+                            else row[4]
+                        ),
                         "employee_id": row[1],
                         "system_id": row[2],
-                        "gender": row[9].strip(),
-                        "process": row[4].lower().strip(),
+                        "gender": row[11].strip(),
+                        "process": row[5].lower().strip(),
                         "site": row[0].lower().strip(),
-                        "work_role": row[6].lower().strip(),
+                        "work_role": row[7].lower().strip(),
                         "lob": (
-                            row[5].lower().strip()
-                            if isinstance(row[5], str)
-                            else row[5]
+                            row[6].lower().strip()
+                            if isinstance(row[6], str)
+                            else row[6]
                         ),
-                        "pick_drop_location": row[10].strip(),
+                        "pick_drop_location": row[12].strip(),
                         "supervisor_1": supervisor1,
                         "supervisor_2": None,
                         "password1": "123456",
@@ -410,21 +419,21 @@ def createBulkRoster(request):
 
                         data = {
                             "employee": employee,
-                            "start_date": row[11],
-                            "start_time": row[12],
-                            "end_date": row[13],
-                            "end_time": (row[14] if row[14] != endTime else time(0, 0)),
+                            "start_date": row[13],
+                            "start_time": row[14],
+                            "end_date": row[15],
+                            "end_time": (row[16] if row[16] != endTime else time(0, 0)),
                             "shiftLegend": None,
-                            "gender": row[9].strip(),
-                            "process": row[4].lower().strip(),
+                            "gender": row[11].strip(),
+                            "process": row[5].lower().strip(),
                             "site": row[0].lower().strip(),
-                            "work_role": row[6].lower().strip(),
+                            "work_role": row[7].lower().strip(),
                             "lob": (
-                                row[5].lower().strip()
-                                if isinstance(row[5], str)
-                                else row[5]
+                                row[6].lower().strip()
+                                if isinstance(row[6], str)
+                                else row[6]
                             ),
-                            "pick_drop_location": row[10],
+                            "pick_drop_location": row[12],
                             "supervisor_1": supervisor1,
                             "supervisor_2": None,
                         }
@@ -433,26 +442,26 @@ def createBulkRoster(request):
                             shiftLegend = ShiftLegend.objects.get(shift_name=row[12])
                             data = {
                                 "employee": employee,
-                                "start_date": row[11],
+                                "start_date": row[13],
                                 "start_time": None,
-                                "end_date": row[13],
+                                "end_date": row[15],
                                 "end_time": None,
                                 "shiftLegend": shiftLegend,
-                                "gender": row[9].strip(),
-                                "process": row[4].lower().strip(),
+                                "gender": row[11].strip(),
+                                "process": row[5].lower().strip(),
                                 "site": row[0].lower().strip(),
-                                "work_role": row[6].lower().strip(),
+                                "work_role": row[7].lower().strip(),
                                 "lob": (
-                                    row[5].lower().strip()
-                                    if isinstance(row[5], str)
-                                    else row[5]
+                                    row[6].lower().strip()
+                                    if isinstance(row[6], str)
+                                    else row[6]
                                 ),
-                                "pick_drop_location": row[10].strip(),
+                                "pick_drop_location": row[12].strip(),
                                 "supervisor_1": supervisor1,
                                 "supervisor_2": None,
                             }
                         except ShiftLegend.DoesNotExist:
-                            errorMessage = f"Shift Legend :{row[12]} does not exist"
+                            errorMessage = f"Shift Legend :{row[14]} does not exist"
                             messages.error(request, errorMessage)
                     result = rosterCreation(data, request)
                     # print(result)
