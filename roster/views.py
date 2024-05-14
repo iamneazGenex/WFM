@@ -335,6 +335,7 @@ def createBulkRoster(request):
 
         for index, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
             if row[0] is not None:
+                logging.info(f"--------------------------------")
                 logging.info(f"index:{index}")
                 failedRow.append({"index": index})
                 # #print(row)
@@ -475,11 +476,13 @@ def createBulkRoster(request):
                 #     logging.error(
                 #         f"|Failed| Create A Roster |index:{index}| Exception:{e}"
                 #     )
+                logging.info(f"--------------------------------")
         # print("failedRows:")
         for item in failedRow:
             pass
             # print(item)
         if count == successCount:
+            logging.info("All Roster Imported Successfully")
             messages.success(request, "Roster Imported Successfully")
     context = {
         "title": "Create",
