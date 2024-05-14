@@ -424,7 +424,7 @@ def createBulkRoster(request):
                                 if isinstance(row[5], str)
                                 else row[5]
                             ),
-                            "pick_drop_location": row[10].strip(),
+                            "pick_drop_location": row[10],
                             "supervisor_1": supervisor1,
                             "supervisor_2": None,
                         }
