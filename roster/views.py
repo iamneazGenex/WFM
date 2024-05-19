@@ -254,25 +254,21 @@ class viewRosterJson(BaseDatatableView):
         for item in qs:
             # Fetch the related field and use it directly in the data dictionary
             row = {
-                "employee__site__name": item.employee.site.name.title(),
+                "employee__site__name": item.site.name.title(),
                 "employee__user__employee_id": item.employee.user.employee_id,
                 "employee__user__system_id": item.employee.user.system_id,
                 "employee__user__name": item.employee.user.name,
-                "employee__process__name": item.employee.process.name.title(),
-                "employee__lob__name": item.employee.lob.name.title(),
-                "employee__work_role__name": item.employee.work_role.name.title(),
+                "employee__process__name": item.process.name.title(),
+                "employee__lob__name": item.lob.name.title(),
+                "employee__work_role__name": item.work_role.name.title(),
                 "employee__supervisor_1__user__name": (
-                    ""
-                    if item.employee.supervisor_1 is None
-                    else item.employee.supervisor_1.user.name
+                    "" if item.supervisor_1 is None else item.supervisor_1.user.name
                 ),
                 "employee__supervisor_2__user__name": (
-                    ""
-                    if item.employee.supervisor_2 is None
-                    else item.employee.supervisor_2.user.name
+                    "" if item.supervisor_2 is None else item.supervisor_2.user.name
                 ),
-                "employee__gender": item.employee.gender,
-                "employee__pick_drop_location": item.employee.pick_drop_location.title(),
+                "employee__gender": item.gender,
+                "employee__pick_drop_location": item.pick_drop_location.title(),
                 "start_date": (
                     item.start_date.strftime("%d-%m-%Y") if item.start_date else "-"
                 ),
@@ -716,9 +712,13 @@ class viewRosterCountJson(BaseDatatableView):
             # Fetch the related field and use it directly in the data dictionary
             row = {
                 "site__name": item.site.name.title(),
-                "process__name": item.process.name.title(),
-                "lob__name": item.lob.name.title(),
-                "work_role__name": item.workRole.name.title(),
+                "process__name": (
+                    "" if item.process is None else item.process.name.title()
+                ),
+                "lob__name": "" if item.lob is None else item.lob.name.title(),
+                "work_role__name": (
+                    "" if item.workRole is None else item.workRole.name.title()
+                ),
                 "start_date": item.start_date.strftime("%d-%m-%Y"),
                 "start_time": item.start_time.strftime("%H:%M %p"),
                 "end_date": item.end_date.strftime("%d-%m-%Y"),
