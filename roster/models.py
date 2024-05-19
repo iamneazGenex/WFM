@@ -214,14 +214,14 @@ class Roster(BaseModel):
     end_date = models.DateField()
     end_time = models.TimeField(null=True, blank=True)
     supervisor_1 = models.ForeignKey(
-        "self",
+        Employee,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="rosterSupervisor1",
     )
     supervisor_2 = models.ForeignKey(
-        "self",
+        Employee,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
