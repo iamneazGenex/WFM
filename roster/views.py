@@ -391,7 +391,7 @@ def createBulkRoster(request):
                             if isinstance(row[6], str)
                             else row[6]
                         ),
-                        "pick_drop_location": row[12].strip(),
+                        "pick_drop_location": str(row[12]).strip(),
                         "supervisor_1": supervisor1,
                         "supervisor_2": None,
                         "password1": "123456",
@@ -434,7 +434,7 @@ def createBulkRoster(request):
                                 if isinstance(row[6], str)
                                 else row[6]
                             ),
-                            "pick_drop_location": row[12],
+                            "pick_drop_location": str(row[12]).strip(),
                             "supervisor_1": supervisor1,
                             "supervisor_2": None,
                         }
@@ -457,7 +457,7 @@ def createBulkRoster(request):
                                     if isinstance(row[6], str)
                                     else row[6]
                                 ),
-                                "pick_drop_location": row[12].strip(),
+                                "pick_drop_location": str(row[12]).strip(),
                                 "supervisor_1": supervisor1,
                                 "supervisor_2": None,
                             }
