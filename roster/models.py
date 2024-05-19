@@ -182,16 +182,14 @@ class Roster(BaseModel):
         Employee,
         on_delete=models.CASCADE,
         null=True,
-        blank=True,
         related_name="rosterEmployee",
     )
     shiftLegend = models.ForeignKey(
         ShiftLegend,
         on_delete=models.CASCADE,
         null=True,
-        blank=True,
         related_name="rosterShiftLegend",
-        editable=False,  # Make it non-editable
+        editable=True,  # Make it non-editable
     )
     process = models.ForeignKey(
         Process, on_delete=models.SET_NULL, null=True, related_name="rosterProcess"

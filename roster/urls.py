@@ -178,4 +178,5 @@ urlpatterns = [
         get_employee_schedule,
         name="get_employee_schedule_date",
     ),
+     path('get-shift-legend-details/', get_shift_legend_details, name='get_shift_legend_details'),
 ]

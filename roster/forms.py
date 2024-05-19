@@ -5,6 +5,8 @@ from django.db.models import Q
 from rms.global_utilities import *
 from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
+from .utils import *
+from django.contrib.auth.models import Group
 
 # class CreateRosterForm(forms.Form):
 #     dateWidget = widget = forms.widgets.DateInput(
@@ -30,9 +32,31 @@ from django.core.exceptions import ValidationError
 
 
 class RosterForm(forms.ModelForm):
+    shiftLegend = forms.ModelChoiceField(
+        queryset=ShiftLegend.objects.all(),
+        empty_label="Select Shift Legend",
+        required=False,
+        widget=forms.Select(attrs={"class": "form-control select2"}),
+    )
+
     class Meta:
         model = Roster
-        fields = ["employee", "start_date", "start_time", "end_date", "end_time"]
+        fields = [
+            "employee",
+            "process",
+            "gender",
+            "site",
+            "work_role",
+            "lob",
+            "pick_drop_location",
+            "shiftLegend",
+            "start_date",
+            "start_time",
+            "end_date",
+            "end_time",
+            "supervisor_1",
+            "supervisor_2",
+        ]
 
     def __init__(self, *args, **kwargs):
         super(RosterForm, self).__init__(*args, **kwargs)
@@ -40,7 +64,19 @@ class RosterForm(forms.ModelForm):
         # customselect2
         dateWidget = getDateWidget()
         timeWidget = getTimeWidget()
+        # Get the Supervisor group
+        supervisorGroup = Group.objects.get(name="Supervisor")
+        # Filter supervisors based on the group
+        supervisors = Employee.objects.filter(user__groups=supervisorGroup)
         self.fields["employee"].widget.attrs.update({"class": "form-control"})
+        self.fields["process"].widget.attrs.update({"class": "form-control"})
+        self.fields["gender"].widget.attrs.update({"class": "form-control"})
+        self.fields["site"].widget.attrs.update({"class": "form-control"})
+        self.fields["work_role"].widget.attrs.update({"class": "form-control"})
+        self.fields["lob"].widget.attrs.update({"class": "form-control"})
+        self.fields["pick_drop_location"].widget.attrs.update({"class": "form-control"})
+        self.fields["supervisor_1"].widget.attrs.update({"class": "form-control"})
+        self.fields["supervisor_2"].widget.attrs.update({"class": "form-control"})
         self.fields["start_date"].widget.attrs.update(
             {"class": "form-control datepicker"}
         )
@@ -55,13 +91,43 @@ class RosterForm(forms.ModelForm):
         )
         self.fields["start_date"].widget = dateWidget
         self.fields["start_time"].widget = timeWidget
+        self.fields["start_time"].widget.attrs["readonly"] = True
         self.fields["end_date"].widget = dateWidget
         self.fields["end_time"].widget = timeWidget
-        self.fields["employee"].label_from_instance = self.employee_label_from_instance
+        self.fields["end_time"].widget.attrs["readonly"] = True
+
         self.fields["employee"].widget.attrs.update({"class": "select2"})
+        self.fields["process"].widget.attrs.update({"class": "select2"})
+        self.fields["gender"].widget.attrs.update({"class": "select2"})
+        self.fields["site"].widget.attrs.update({"class": "select2"})
+        self.fields["work_role"].widget.attrs.update({"class": "select2"})
+        self.fields["lob"].widget.attrs.update({"class": "select2"})
+        self.fields["supervisor_1"].widget.attrs.update({"class": "select2"})
+        self.fields["supervisor_2"].widget.attrs.update({"class": "select2"})
+
+        # Set Custom label from instance
+        self.fields["employee"].label_from_instance = self.employee_label_from_instance
+        self.fields["process"].label_from_instance = self.make_title_case
+        self.fields["gender"].label_from_instance = self.make_title_case
+        self.fields["site"].label_from_instance = self.make_title_case
+        self.fields["work_role"].label_from_instance = self.make_title_case
+        self.fields["lob"].label_from_instance = self.make_title_case
+        self.fields["shiftLegend"].label_from_instance = (
+            self.shift_Legend_label_from_instance
+        )
+
+        # Update Supervisor Fields to only show supervisors
+        self.fields["supervisor_1"].queryset = supervisors
+        self.fields["supervisor_2"].queryset = supervisors
 
     def employee_label_from_instance(self, obj):
         return f"{obj.user.name} | {obj.user.email} | {obj.user.employee_id}"
+
+    def shift_Legend_label_from_instance(self, obj):
+        return formatShiftLegend(obj.shift_name)
+
+    def make_title_case(self, obj):
+        return obj.name.title()
 
 
 class EditRosterForm(forms.ModelForm):

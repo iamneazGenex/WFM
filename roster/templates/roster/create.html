@@ -14,6 +14,24 @@
   </div>
 </div>
 <script type="text/javascript">
- 
+  $(document).ready(function() {
+      $('.select2').select2();
+
+      $('#id_shiftLegend').change(function() {
+          var shiftLegendId = $(this).val();
+          if (shiftLegendId) {
+              $.ajax({
+                  url: '{% url "get_shift_legend_details" %}',  // Create this URL to handle the AJAX request
+                  data: {
+                      'shiftLegendId': shiftLegendId
+                  },
+                  success: function(data) {
+                      $('#id_start_time').val(data.shift_start_time);
+                      $('#id_end_time').val(data.shift_end_time);
+                  }
+              });
+          }
+      });
+  });
 </script>
 {% endblock %}

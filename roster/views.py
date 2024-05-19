@@ -115,6 +115,7 @@ def createRoster(request):
         form = RosterForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            print(data)
             result = rosterCreation(data, request)
             if result == True:
                 messages.success(request, "Roster created successfully.")
@@ -399,6 +400,30 @@ def createBulkRoster(request):
                         # print(employee)
                 if employeeExists is True:
                     # try:
+                    givenProcess = row[5].lower().strip()
+                    givenSite = row[0].lower().strip()
+                    givenWorkRole = row[7].lower().strip()
+                    givenLob = row[6].lower().strip()
+                    process = (
+                        None
+                        if givenProcess is None
+                        else Process.objects.get(name=givenProcess)
+                    )
+                    site = (
+                        None
+                        if givenSite is None
+                        else Site.objects.get(name=givenSite.lower())
+                    )
+                    workRole = (
+                        None
+                        if givenWorkRole is None
+                        else WorkRole.objects.get(name=givenWorkRole.lower())
+                    )
+                    lob = (
+                        None
+                        if givenLob is None
+                        else LOB.objects.get(name=givenLob.lower())
+                    )
                     noneShiftNames = [
                         "Dayoff",
                         "LWP",
@@ -422,14 +447,10 @@ def createBulkRoster(request):
                             "end_time": (row[16] if row[16] != endTime else time(0, 0)),
                             "shiftLegend": None,
                             "gender": row[11].strip(),
-                            "process": row[5].lower().strip(),
-                            "site": row[0].lower().strip(),
-                            "work_role": row[7].lower().strip(),
-                            "lob": (
-                                row[6].lower().strip()
-                                if isinstance(row[6], str)
-                                else row[6]
-                            ),
+                            "process": process,
+                            "site": site,
+                            "work_role": workRole,
+                            "lob": lob,
                             "pick_drop_location": str(row[12]).strip(),
                             "supervisor_1": supervisor1,
                             "supervisor_2": None,
@@ -445,14 +466,10 @@ def createBulkRoster(request):
                                 "end_time": None,
                                 "shiftLegend": shiftLegend,
                                 "gender": row[11].strip(),
-                                "process": row[5].lower().strip(),
-                                "site": row[0].lower().strip(),
-                                "work_role": row[7].lower().strip(),
-                                "lob": (
-                                    row[6].lower().strip()
-                                    if isinstance(row[6], str)
-                                    else row[6]
-                                ),
+                                "process": process,
+                                "site": site,
+                                "work_role": workRole,
+                                "lob": lob,
                                 "pick_drop_location": str(row[12]).strip(),
                                 "supervisor_1": supervisor1,
                                 "supervisor_2": None,
@@ -1923,3 +1940,13 @@ def get_employee_schedule(request, *args, **kwargs):
         return JsonResponse(rosters_list, safe=False)
     except Employee.DoesNotExist:
         return JsonResponse({"error": "Employee not found"}, status=404)
+
+
+def get_shift_legend_details(request):
+    shiftLegendId = request.GET.get("shiftLegendId")
+    shiftLegend = ShiftLegend.objects.get(pk=shiftLegendId)
+    data = {
+        "shift_start_time": shiftLegend.shift_start_time,
+        "shift_end_time": shiftLegend.shift_end_time,
+    }
+    return JsonResponse(data)

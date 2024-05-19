@@ -5,6 +5,8 @@ from accounts.models import CustomUser
 import logging
 import traceback
 from accounts.models import *
+from django.utils.dateparse import parse_time
+from django.utils.dateformat import time_format
 
 logger = logging.getLogger(__name__)
 
@@ -87,35 +89,16 @@ def rosterCreation(data, request):
             logger.info(f"|Failed| {message}")
             messages.error(request, message)
         except Roster.DoesNotExist:
-            process = (
-                None
-                if data["process"] is None
-                else Process.objects.get(name=data["process"].lower())
-            )
-            site = (
-                None
-                if data["site"] is None
-                else Site.objects.get(name=data["site"].lower())
-            )
-            workRole = (
-                None
-                if data["work_role"] is None
-                else WorkRole.objects.get(name=data["work_role"].lower())
-            )
-            lob = (
-                None
-                if data["lob"] is None
-                else LOB.objects.get(name=str(data["lob"]).lower())
-            )
+            
             try:
                 roster = Roster(
                     employee=data["employee"],
                     shiftLegend=data["shiftLegend"],
-                    process=process,
+                    process=data["process"],
                     gender=data["gender"],
-                    site=site,
-                    work_role=workRole,
-                    lob=lob,
+                    site=data["site"],
+                    work_role=data["work_role"],
+                    lob=data["lob"],
                     pick_drop_location=data["pick_drop_location"],
                     start_date=data["start_date"],
                     start_time=data["start_time"],
@@ -388,3 +371,23 @@ def shiftLegendModification(id, data):
     except Exception as e:
         logger.info(f"|Failed| Exception: {e}")
     return success
+
+
+def isTimeRange(value):
+    return "-" in value and len(value.split("-")) == 2
+
+
+def formatTimeToAmPm(timeString):
+    timeObject = parse_time(timeString)
+    if timeObject:
+        return time_format(timeObject, "g:i A")
+    return timeString
+
+
+def formatShiftLegend(value):
+    if isTimeRange(value):
+        startTime, endTime = value.split("-")
+        formattedStart = formatTimeToAmPm(startTime)
+        formattedEnd = formatTimeToAmPm(endTime)
+        return f"{formattedStart} - {formattedEnd}"
+    return value
