@@ -116,7 +116,7 @@ def rosterCreation(data, request):
                     site=site,
                     work_role=workRole,
                     lob=lob,
-                    pick_drop_location=["pick_drop_location"],
+                    pick_drop_location=data["pick_drop_location"],
                     start_date=data["start_date"],
                     start_time=data["start_time"],
                     end_date=data["end_date"],
