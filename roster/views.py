@@ -343,6 +343,22 @@ def createBulkRoster(request):
                 supervisor_Group = Group.objects.get(name="Supervisor")
                 supervisors = supervisor_Group.user_set.all()
                 supervisor1 = None
+                supervisor1_name = row[8].strip()
+                supervisor1_email = row[9].strip() if row[9] is not None else None
+                if supervisor1_email:
+                    supervisor1 = Employee.objects.get(
+                        user__email=supervisor1_email, user__in=supervisors
+                    )
+                    logging.info(f"Supervisor found by email")
+                else:
+                    if supervisor1_name:
+                        supervisor1 = Employee.objects.get(
+                            user__name=supervisor1_name, user__in=supervisors
+                        )
+                        logging.info(f"Supervisor found by name")
+                    else:
+                        supervisor1 = None
+                        logging.error(f"Supervisor Not found")
                 try:
                     employee = Employee.objects.get(user__employee_id=row[1])
                     employeeExists = True
@@ -356,22 +372,6 @@ def createBulkRoster(request):
                     # break
                     logging.error(f"Employee Does not exist. Creating a new employee.")
 
-                    supervisor1_name = row[8].strip()
-                    supervisor1_email = row[9].strip() if row[9] is not None else None
-                    if supervisor1_email:
-                        supervisor1 = Employee.objects.get(
-                            user__email=supervisor1_email, user__in=supervisors
-                        )
-                        logging.info(f"Supervisor found by email")
-                    else:
-                        if supervisor1_name:
-                            supervisor1 = Employee.objects.get(
-                                user__name=supervisor1_name, user__in=supervisors
-                            )
-                            logging.info(f"Supervisor found by name")
-                        else:
-                            supervisor1 = None
-                            logging.error(f"Supervisor Not found")
                     data = {
                         "name": row[3].strip(),
                         # "email": row[1],
