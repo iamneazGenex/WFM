@@ -4,6 +4,7 @@ from django.contrib import messages
 from accounts.models import CustomUser
 import logging
 import traceback
+from accounts.models import *
 
 logger = logging.getLogger(__name__)
 
@@ -86,14 +87,41 @@ def rosterCreation(data, request):
             logger.info(f"|Failed| {message}")
             messages.error(request, message)
         except Roster.DoesNotExist:
+            process = (
+                None
+                if data["process"] is None
+                else Process.objects.get(name=data["process"].lower())
+            )
+            site = (
+                None
+                if data["site"] is None
+                else Site.objects.get(name=data["site"].lower())
+            )
+            workRole = (
+                None
+                if data["work_role"] is None
+                else WorkRole.objects.get(name=data["work_role"].lower())
+            )
+            lob = (
+                None
+                if data["lob"] is None
+                else LOB.objects.get(name=str(data["lob"]).lower())
+            )
             try:
                 roster = Roster(
                     employee=data["employee"],
+                    shiftLegend=data["shiftLegend"],
+                    process=process,
+                    gender=data["gender"],
+                    site=site,
+                    work_role=workRole,
+                    lob=lob,
+                    pick_drop_location=["pick_drop_location"],
                     start_date=data["start_date"],
                     start_time=data["start_time"],
                     end_date=data["end_date"],
                     end_time=data["end_time"],
-                    shiftLegend=data["shiftLegend"],
+                    supervisor_1=data["supervisor_1"],
                     created_by=CustomUser.objects.get(id=request.user.id),
                 )
 
