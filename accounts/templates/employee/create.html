@@ -7,7 +7,7 @@ s{% extends 'base.html' %} {% load crispy_forms_tags %} {% block main %}
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ next }}" />
       {{ form|crispy }}
-      <button type="submit" class="btn btn-primary btn-block">Log in</button>
+      <button type="submit" class="btn btn-primary btn-block">Create</button>
     </form>
   </div>
 </div>

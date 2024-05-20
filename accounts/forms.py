@@ -213,6 +213,7 @@ class CreateEditEmployeeForm(forms.ModelForm):
     class Meta:
         model = CustomUser
         fields = [
+            "is_active",
             "email",
             "name",
             "employee_id",
@@ -251,6 +252,7 @@ class CreateEditEmployeeForm(forms.ModelForm):
         self.fields["supervisor_2"].queryset = Employee.objects.exclude(
             id=self.instance.id
         )
+        self.fields["is_active"].initial = True
         # Determine if this is an edit operation
         is_editing = self.instance.pk is not None
         # Hide password fields if editing an existing supervisor
@@ -273,6 +275,9 @@ class CreateEditEmployeeForm(forms.ModelForm):
             self.fields["password2"].widget.attrs["style"] = "display:none;"
             self.fields["password1"].label = ""
             self.fields["password2"].label = ""
+
+            # Initialize is_active field for editing
+            self.fields["is_active"].initial = custom_user_data["is_active"]
 
     def clean(self):
         cd = super().clean()

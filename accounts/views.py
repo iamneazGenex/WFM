@@ -1544,15 +1544,32 @@ def editEmployee(request, id):
                 # print(data)
                 try:
                     customUser = CustomUser.objects.get(id=employee.user.id)
-                    process = Process.objects.get(name=data["process"])
-                    site = Site.objects.get(name=data["site"])
-                    workRole = WorkRole.objects.get(name=data["work_role"])
-                    lob = LOB.objects.get(name=data["lob"])
+                    process = (
+                        None
+                        if data["process"] is None
+                        else Process.objects.get(name=data["process"])
+                    )
+                    site = (
+                        None
+                        if data["site"] is None
+                        else Site.objects.get(name=data["site"])
+                    )
+                    workRole = (
+                        None
+                        if data["work_role"] is None
+                        else WorkRole.objects.get(name=data["work_role"])
+                    )
+                    lob = (
+                        None
+                        if data["lob"] is None
+                        else LOB.objects.get(name=data["lob"])
+                    )
 
                     customUser.email = data["email"]
                     customUser.name = data["name"]
                     customUser.system_id = data["system_id"]
                     customUser.employee_id = data["employee_id"]
+                    customUser.is_active = data["is_active"]
                     customUser.save()
 
                     employee.process = process
@@ -1626,6 +1643,7 @@ class ViewEmployeeJson(BaseDatatableView):
         "user__email",
         "user__employee_id",
         "user__system_id",
+        "user__is_active",
         "avaya_id",
         "vdi",
         "doj",
@@ -1650,6 +1668,7 @@ class ViewEmployeeJson(BaseDatatableView):
         "user__email",
         "user__employee_id",
         "user__system_id",
+        "user__is_active",
         "avaya_id",
         "vdi",
         "doj",
@@ -1694,6 +1713,7 @@ class ViewEmployeeJson(BaseDatatableView):
                 "user__email": item.user.email,
                 "user__employee_id": item.user.employee_id,
                 "user__system_id": item.user.system_id,
+                "user__is_active": item.user.is_active,
                 "avaya_id": "" if item.avaya_id is None else item.avaya_id,
                 "vdi": "" if item.vdi is None else item.vdi,
                 "doj": "" if item.doj is None else item.doj.strftime("%d-%m-%Y"),

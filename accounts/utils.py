@@ -44,7 +44,10 @@ def customUserCreation(request, data, groupName):
                 system_id=data["system_id"],
             )
             user.set_password(str(data["password1"]))
-            user.is_active = True
+            if "is_active" in data:
+                user.is_active = data["is_active"]
+            else:
+                user.is_active = True
             user.created_by = CustomUser.objects.get(id=request.user.id)
             user.save()
             employeeGroup = Group.objects.get(name=groupName)
