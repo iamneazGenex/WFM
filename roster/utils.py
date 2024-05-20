@@ -20,8 +20,9 @@ def createRosterCount(roster):
     Returns:
         boolean: success or failure of the execution
     """
-    logger.info(f"Trying to create RosterCount of {roster} id:|{roster.id}|")
+    logging.info(f"Trying to create RosterCount of {roster} id:|{roster.id}|")
     success = False
+    print("In RosterCount")
     if roster.start_time is not None:
         try:
             rosterCount = RosterCount.objects.get(
@@ -37,7 +38,7 @@ def createRosterCount(roster):
             rosterCount.count += 1
             rosterCount.save()
             success = True
-            logger.info(f"|Success| Roster Count Updated Successfully")
+            logging.info(f"|Success| Roster Count Updated Successfully")
         except RosterCount.DoesNotExist:
             try:
                 rosterCount = RosterCount.objects.create(
@@ -52,12 +53,13 @@ def createRosterCount(roster):
                     count=1,
                 )
                 success = True
-                logger.info(f"|Success| Roster Count Created Successfully")
+                logging.info(f"|Success| Roster Count Created Successfully")
             except Exception as e:
-                logger.info(f"|Failed| Roster Count Creation failed.Exception: {e}")
+                logging.error(f"|Failed| Roster Count Creation failed.Exception: {e}")
     else:
         success = True
-        logger.info(f"|Success| Did not create Roster Count as start time is none")
+        logging.info(f"|Success| Did not create Roster Count as start time is none")
+    print(f"Roster Count: {success}")
     return success
 
 
@@ -72,6 +74,7 @@ def rosterCreation(data, request):
         bool: If the creation is successful or not
     """
     success = False
+    logging.info(f"In Roster Creation")
     try:
         roster = Roster.objects.get(
             employee=data["employee"],
@@ -80,16 +83,20 @@ def rosterCreation(data, request):
             end_date=data["end_date"],
             end_time=data["end_time"],
         )
+        print(roster)
     except Roster.DoesNotExist:
+        logging.info(f"Roster Does not Exist")
         try:
             roster = Roster.objects.get(
                 employee=data["employee"], start_date=data["start_date"]
             )
             message = f"A Roster on {roster.start_date.strftime('%d-%m-%Y')} exists of {roster.employee.user.name}"
-            logger.info(f"|Failed| {message}")
+            logging.error(f"|Failed| {message}")
             messages.error(request, message)
+            print(message)
         except Roster.DoesNotExist:
-            
+            logging.info(f"Trying to create new roster")
+            print(data)
             try:
                 roster = Roster(
                     employee=data["employee"],
@@ -107,27 +114,31 @@ def rosterCreation(data, request):
                     supervisor_1=data["supervisor_1"],
                     created_by=CustomUser.objects.get(id=request.user.id),
                 )
-
-                logger.info(f"--Trying to create Roster Count")
+                print(roster)
+                logging.info(f"--Trying to create Roster Count")
                 rosterCountCreationResult = createRosterCount(roster)
                 if rosterCountCreationResult is True:
                     success = True
                     roster.save()
-                    logger.info(f"|Success| Roster Created Successfully")
+                    logging.info(f"|Success| Roster Created Successfully")
                 else:
                     with open("newfile.txt", "a+") as file:
                         file.write(f"--{data}\n Roster Count Creation result")
-                    logger.info(f"|Failed| Failed to create Roster")
+                    logging.error(f"|Failed| Failed to create Roster")
+                    print(f"|Failed| Failed to create Roster")
             except Exception as e:
                 with open("newfile.txt", "a+") as file:
                     file.write(f"--{data}\n Roster Creation Exception:{e}")
-                logger.info(f"|Failed| Failed to create Roster. Exception:{e}")
+                logging.error(f"|Failed| Failed to create Roster. Exception:{e}")
+                print(f"|Failed| Failed to create Roster. Exception:{e}")
                 messages.error(request, "Failed to create Roster")
     except Exception as e:
         with open("newfile.txt", "a+") as file:
             file.write(f"--{data}\n Failed to create Roster. Exception:{e}")
-        logger.info(f"|Failed| Failed to create Roster. Exception:{e}")
+        logging.error(f"|Failed| Failed to create Roster. Exception:{e}")
+        print(f"|Failed| Failed to create Roster. Exception:{e}")
         messages.error(request, "Failed to create Roster")
+    print(success)
     return success
 
 
@@ -143,7 +154,7 @@ def rosterModification(id, data):
         bool: If the Modification is successful or not
     """
     roster = Roster.objects.get(id=id)
-    logger.info(f"Trying to update Roster{id} : {roster}")
+    logging.info(f"Trying to update Roster{id} : {roster}")
     success = False
     try:
         roster.start_date = data["start_date"]
@@ -151,10 +162,10 @@ def rosterModification(id, data):
         roster.end_date = data["end_date"]
         roster.end_time = data["end_time"]
         roster.save()
-        logger.info("|Success| Roster updated successfully")
+        logging.info("|Success| Roster updated successfully")
         success = True
     except Exception as e:
-        logger.info(f"|Failed| Exception: {e}")
+        logging.info(f"|Failed| Exception: {e}")
     return success
 
 
@@ -186,12 +197,12 @@ def rosterSeatCountCreation(data, request):
             )
             rosterSeatCount.save()
             success = True
-            logger.info(f"|Success| Roster Seat Count Created Successfully")
+            logging.info(f"|Success| Roster Seat Count Created Successfully")
         except Exception as e:
-            logger.info(f"|Failed| Failed to create Roster Seat Count. Exception:{e}")
+            logging.info(f"|Failed| Failed to create Roster Seat Count. Exception:{e}")
             messages.error(request, "Failed to create Roster Seat Count")
     except Exception as e:
-        logger.info(f"|Failed| Failed to create Roster Seat Count. Exception:{e}")
+        logging.info(f"|Failed| Failed to create Roster Seat Count. Exception:{e}")
         messages.error(request, "Failed to create Roster Seat Count")
     return success
 
@@ -217,13 +228,13 @@ def rosterSeatCountEdit(id, data, updated_by):
             instance.updated_by = CustomUser.objects.get(id=updated_by)
             instance.save()
             success = True
-            logger.info(f"|Success| Roster Seat Count Created Successfully")
+            logging.info(f"|Success| Roster Seat Count Created Successfully")
         except Exception as e:
-            logger.info(f"|Failed| Failed to create Roster Seat Count. Exception:{e}")
+            logging.info(f"|Failed| Failed to create Roster Seat Count. Exception:{e}")
     except RosterSeatCount.DoesNotExist:
-        logger.error(f"|Failed| Roster Seat Count with ID {id} does not exist.")
+        logging.error(f"|Failed| Roster Seat Count with ID {id} does not exist.")
     except Exception as e:
-        logger.info(f"|Failed| Failed to create Roster Seat Count. Exception:{e}")
+        logging.info(f"|Failed| Failed to create Roster Seat Count. Exception:{e}")
     return success
 
 
@@ -258,11 +269,11 @@ def forecastingCreation(data, request):
             )
             forecastingInstance.save()
             success = True
-            logger.info(f"|Success| Forecasting Created Successfully")
+            logging.info(f"|Success| Forecasting Created Successfully")
         except Exception as e:
-            logger.info(f"|Failed| Forecasting already exists. Exception:{e}")
+            logging.info(f"|Failed| Forecasting already exists. Exception:{e}")
     except Exception as e:
-        logger.info(f"|Failed| Failed to create Forecasting. Exception:{e}")
+        logging.info(f"|Failed| Failed to create Forecasting. Exception:{e}")
     return success
 
 
@@ -293,25 +304,25 @@ def shiftLegendCreation(data, request):
             try:
                 shiftLegendInstance = ShiftLegend.objects.create(**data)
                 success = True
-                logger.info(f"|Success| Shift Legend Created Successfully")
+                logging.info(f"|Success| Shift Legend Created Successfully")
             except Exception as e:
                 message = traceback.format_exc()
-                logger.info(
+                logging.info(
                     f"|Failed| Failed to create Shift Legend. Exception:{e} | Traceback:{message}"
                 )
         else:
             try:
                 shiftLegendInstance = ShiftLegend.objects.create(**data)
                 success = True
-                logger.info(f"|Success| Shift Legend Created Successfully")
+                logging.info(f"|Success| Shift Legend Created Successfully")
             except Exception as e:
                 message = traceback.format_exc()
-                logger.info(
+                logging.info(
                     f"|Failed| Failed to create Shift Legend. Exception:{e} | Traceback:{message}"
                 )
     except Exception as e:
         message = traceback.format_exc()
-        logger.info(
+        logging.info(
             f"|Failed| Failed to create Shift Legend. Exception:{e} | Traceback:{message}"
         )
     return success
@@ -329,7 +340,7 @@ def forecastingModification(id, data):
         bool: If the Modification is successful or not
     """
     forecastInstance = Forecast.objects.get(id=id)
-    logger.info(f"Trying to update Forecast{id} : {forecastInstance}")
+    logging.info(f"Trying to update Forecast{id} : {forecastInstance}")
     success = False
     try:
         forecastInstance.date = data["date"]
@@ -339,10 +350,10 @@ def forecastingModification(id, data):
         forecastInstance.forecast = data["forecast"]
         forecastInstance.required_hc = data["required_hc"]
         forecastInstance.save()
-        logger.info("|Success| Forecast updated successfully")
+        logging.info("|Success| Forecast updated successfully")
         success = True
     except Exception as e:
-        logger.info(f"|Failed| Exception: {e}")
+        logging.info(f"|Failed| Exception: {e}")
     return success
 
 
@@ -358,7 +369,7 @@ def shiftLegendModification(id, data):
         bool: If the Modification is successful or not
     """
     shiftLegendInstance = ShiftLegend.objects.get(id=id)
-    logger.info(f"Trying to update Shift Legend{id} : {shiftLegendInstance}")
+    logging.info(f"Trying to update Shift Legend{id} : {shiftLegendInstance}")
     success = False
     try:
         # Update the instance with the new data
@@ -366,10 +377,10 @@ def shiftLegendModification(id, data):
             setattr(shiftLegendInstance, key, value)
         shiftLegendInstance.clean()
         shiftLegendInstance.save()
-        logger.info("|Success| Shift Legend updated successfully")
+        logging.info("|Success| Shift Legend updated successfully")
         success = True
     except Exception as e:
-        logger.info(f"|Failed| Exception: {e}")
+        logging.info(f"|Failed| Exception: {e}")
     return success
 
 

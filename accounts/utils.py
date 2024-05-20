@@ -162,4 +162,5 @@ def employeeCreation(data, request, bulk, group="Employee"):
             user.delete()
             logging.error("Exception:{exception}".format(exception=e))
             messages.error(request, "Exception:{exception}".format(exception=e))
+            
     return success

@@ -359,6 +359,7 @@ def createBulkRoster(request):
                 try:
                     employee = Employee.objects.get(user__employee_id=row[1])
                     employeeExists = True
+                    logging.info(f"{employee.user.name} Exists")
                     # print(employee)
                 except Employee.DoesNotExist:
                     # errorMessage = "Employee {employeeName} with Employee ID {employeeID} does not exist".format(
@@ -403,27 +404,31 @@ def createBulkRoster(request):
                     givenProcess = row[5].lower().strip()
                     givenSite = row[0].lower().strip()
                     givenWorkRole = row[7].lower().strip()
-                    givenLob = row[6].lower().strip()
+                    givenLob = str(row[6]).lower().strip()
                     process = (
                         None
                         if givenProcess is None
                         else Process.objects.get(name=givenProcess)
                     )
+
                     site = (
                         None
                         if givenSite is None
                         else Site.objects.get(name=givenSite.lower())
                     )
+
                     workRole = (
                         None
                         if givenWorkRole is None
                         else WorkRole.objects.get(name=givenWorkRole.lower())
                     )
+
                     lob = (
                         None
                         if givenLob is None
                         else LOB.objects.get(name=givenLob.lower())
                     )
+
                     noneShiftNames = [
                         "Dayoff",
                         "LWP",
@@ -438,6 +443,7 @@ def createBulkRoster(request):
                         "Withdraw",
                     ]
                     if row[14] not in noneShiftNames:
+                        logging.info("Shift names not in none types")
                         endTime = time(23, 59)
                         data = {
                             "employee": employee,
@@ -476,6 +482,8 @@ def createBulkRoster(request):
                             }
                         except ShiftLegend.DoesNotExist:
                             errorMessage = f"Shift Legend :{row[14]} does not exist"
+
+                            logging.error(errorMessage)
                             messages.error(request, errorMessage)
                     result = rosterCreation(data, request)
                     # print(result)
