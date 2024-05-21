@@ -52,6 +52,7 @@ def customUserCreation(request, data, groupName):
             user.save()
             employeeGroup = Group.objects.get(name=groupName)
             user.groups.add(employeeGroup)
+            user.save()
             success = True
             logger.info("User Created Successfully")
     return success, user
@@ -165,5 +166,5 @@ def employeeCreation(data, request, bulk, group="Employee"):
             user.delete()
             logging.error("Exception:{exception}".format(exception=e))
             messages.error(request, "Exception:{exception}".format(exception=e))
-            
+
     return success
