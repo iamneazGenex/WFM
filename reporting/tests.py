@@ -11,7 +11,7 @@ import pprint
 def runtest():
     skill = Skill.objects.get(id=20)
     intervalType = "month"
-    monthString = "2024-02"
+    monthString = "2024-03"
     year, month = map(int, monthString.split("-"))
     tableData = []
     if intervalType == "date":
@@ -41,6 +41,7 @@ def runtest():
             forecast_mapping[formatted_date] = (f["forecast"], f["required_hc"])
 
     avayaCDRMapping = getAvayaCDRMappingByMonth(month=month, year=year, skill=skill)
+
     # --------- Agent Hourly Performance Mapping
 
     agentHourlyPerformanceMapping = (
@@ -48,7 +49,7 @@ def runtest():
             month=month, year=year, skill=skill
         )
     )
-    # pprint.pprint(agentHourlyPerformanceMapping)
+    pprint.pprint(agentHourlyPerformanceMapping)
 
 
 def getAgentHourlyPerformanceMappingWithRosterByMonthTest(month, year, skill):
@@ -69,7 +70,6 @@ def getAgentHourlyPerformanceMappingWithRosterByMonthTest(month, year, skill):
     # Filter agentHourlyPerformances for the current hour
     # Fetch related ShiftLegend objects
     tableData = generate_date_table_data(month, year)
-    pprint.pprint(tableData)
     for item in tableData:
         date = item["date"]
         shiftCount = 0
@@ -78,15 +78,15 @@ def getAgentHourlyPerformanceMappingWithRosterByMonthTest(month, year, skill):
             agentHourlyPerformances = AgentHourlyPerformance.objects.filter(
                 date=date, skill=skill
             ).select_related("roster__shiftLegend")
-            pprint.pprint(agentHourlyPerformances)
             unique_roster_ids = agentHourlyPerformances.values_list(
                 "roster_id", flat=True
             ).distinct()
 
             for item in unique_roster_ids:
-                roster = Roster.objects.get(id=item)
-                shiftCount += roster.shiftLegend.shift_count
-                absent += roster.is_absent
+                if item:
+                    roster = Roster.objects.get(id=item)
+                    shiftCount += roster.shiftLegend.shift_count
+                    absent += roster.is_absent
 
             agentHourlyPerformanceMapping[date] = {
                 "shiftCount": shiftCount,

@@ -268,7 +268,7 @@ def getAgentHourlyPerformanceMappingWithRoster(date, skill):
     for hour in hour_list:
         if hour == 1:
             pass
-            #print(f"Hour - {hour}")
+            # print(f"Hour - {hour}")
         shiftCount = 0
         absent = 0
         tempShiftCount = 0
@@ -282,7 +282,7 @@ def getAgentHourlyPerformanceMappingWithRoster(date, skill):
 
         if hour == 1:
             pass
-            #print("------")
+            # print("------")
             # rosterList = []
             # for agentHourlyPerformance in agentHourlyPerformances:
             #     roster = Roster.objects.get(
@@ -309,7 +309,7 @@ def getAgentHourlyPerformanceMappingWithRoster(date, skill):
             #     # start_time__gte=agentHourlyPerformance.time_interval_start,
             #     # end_time__lte=agentHourlyPerformance.time_interval_end,
             # #print(f"ShiftCount: {tempShiftCount} | Absent: {tempAbsent}")
-            #print("------")
+            # print("------")
             # #print(
             #     f"Initial agentHourlyPerformances count {agentHourlyPerformances.count()}"
             # )
@@ -323,21 +323,21 @@ def getAgentHourlyPerformanceMappingWithRoster(date, skill):
             .filter(roster_id__isnull=False)
             .distinct()
         )
-        #print(f"unique_roster_ids count {unique_roster_ids}")
+        # print(f"unique_roster_ids count {unique_roster_ids}")
         if hour == 1:
-            #print(f"unique_roster_ids count {unique_roster_ids.count()}")
+            # print(f"unique_roster_ids count {unique_roster_ids.count()}")
             pass
         for item in unique_roster_ids:
-            #print(item)
+            # print(item)
             roster = Roster.objects.get(id=item)
             shiftCount += roster.shiftLegend.shift_count
             absent += roster.is_absent
             if hour == 1:
-                #print(f"roster: {roster.id} | shift name: {roster.shiftLegend.shift_name}")
+                # print(f"roster: {roster.id} | shift name: {roster.shiftLegend.shift_name}")
                 pass
         if hour == 1:
             pass
-            #print(f"ShiftCount: {shiftCount} | Absent: {absent}")
+            # print(f"ShiftCount: {shiftCount} | Absent: {absent}")
 
         # Update the agentHourlyPerformanceMapping dictionary with the aggregated data for this hour
         # agentHourlyPerformanceMapping[hour] = {
@@ -387,9 +387,10 @@ def getAgentHourlyPerformanceMappingWithRosterByMonth(month, year, skill):
             ).distinct()
 
             for item in unique_roster_ids:
-                roster = Roster.objects.get(id=item)
-                shiftCount += roster.shiftLegend.shift_count
-                absent += roster.is_absent
+                if item:
+                    roster = Roster.objects.get(id=item)
+                    shiftCount += roster.shiftLegend.shift_count
+                    absent += roster.is_absent
 
             agentHourlyPerformanceMapping[date] = {
                 "shiftCount": shiftCount,
