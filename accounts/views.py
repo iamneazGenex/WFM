@@ -301,8 +301,8 @@ class viewProcessJson(BaseDatatableView):
             row = {
                 "name": item.name.title(),
                 "created_by": "" if item.created_by is None else item.created_by.name,
-                "created_at": item.created_at.strftime("%d-%m-%Y"),
-                "updated_at": item.updated_at.strftime("%d-%m-%Y"),
+                "created_at": item.created_at.strftime("%d-%b-%y"),
+                "updated_at": item.updated_at.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
                 "actions": self.get_actions_html(item),
             }
@@ -512,8 +512,12 @@ class viewSiteJson(BaseDatatableView):
             row = {
                 "name": item.name.title(),
                 "created_by": "" if item.created_by is None else item.created_by.name,
-                "created_at": item.created_at.strftime("%d-%m-%Y"),
-                "updated_at": item.updated_at.strftime("%d-%m-%Y"),
+                "created_at": item.created_at.strftime("%d-%b-%y"),
+                "updated_at": (
+                    ""
+                    if item.updated_at is None
+                    else item.updated_at.strftime("%d-%b-%y")
+                ),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
                 "actions": self.get_actions_html(item),
             }
@@ -717,9 +721,9 @@ class viewLOBJson(BaseDatatableView):
             row = {
                 "name": item.name.upper(),
                 "created_by": "" if item.created_by is None else item.created_by.name,
-                "created_at": item.created_at.strftime("%d-%m-%Y"),
+                "created_at": item.created_at.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
-                "updated_at": item.updated_at.strftime("%d-%m-%Y"),
+                "updated_at": item.updated_at.strftime("%d-%b-%y"),
                 "actions": self.get_actions_html(item),
             }
             data.append(row)
@@ -926,9 +930,9 @@ class viewWorkRoleJson(BaseDatatableView):
             row = {
                 "name": item.name.upper(),
                 "created_by": "" if item.created_by is None else item.created_by.name,
-                "created_at": item.created_at.strftime("%d-%m-%Y"),
+                "created_at": item.created_at.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
-                "updated_at": item.updated_at.strftime("%d-%m-%Y"),
+                "updated_at": item.updated_at.strftime("%d-%b-%y"),
                 "actions": self.get_actions_html(item),
             }
             data.append(row)
@@ -1133,9 +1137,9 @@ class viewSkillJson(BaseDatatableView):
             row = {
                 "name": item.name.upper(),
                 "created_by": "" if item.created_by is None else item.created_by.name,
-                "created_at": item.created_at.strftime("%d-%m-%Y"),
+                "created_at": item.created_at.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
-                "updated_at": item.updated_at.strftime("%d-%m-%Y"),
+                "updated_at": item.updated_at.strftime("%d-%b-%y"),
                 "actions": self.get_actions_html(item),
             }
             data.append(row)
@@ -1368,11 +1372,11 @@ class ViewSupervisorJson(BaseDatatableView):
                 "created_by": (
                     "" if item.created_by is None else item.created_by.name.title()
                 ),
-                "created_at": item.created_at.strftime("%d-%m-%Y"),
+                "created_at": item.created_at.strftime("%d-%b-%y"),
                 "updated_by": (
                     "" if item.updated_by is None else item.updated_by.name.title()
                 ),
-                "updated_at": item.updated_at.strftime("%d-%m-%Y"),
+                "updated_at": item.updated_at.strftime("%d-%b-%y"),
                 "actions": self.get_actions_html(item),
             }
             data.append(row)
@@ -1716,7 +1720,7 @@ class ViewEmployeeJson(BaseDatatableView):
                 "user__is_active": item.user.is_active,
                 "avaya_id": "" if item.avaya_id is None else item.avaya_id,
                 "vdi": "" if item.vdi is None else item.vdi,
-                "doj": "" if item.doj is None else item.doj.strftime("%d-%m-%Y"),
+                "doj": "" if item.doj is None else item.doj.strftime("%d-%b-%y"),
                 "process__name": (
                     "" if item.process is None else item.process.name.title()
                 ),
@@ -1738,11 +1742,11 @@ class ViewEmployeeJson(BaseDatatableView):
                 "created_by": (
                     "" if item.created_by is None else item.created_by.name.title()
                 ),
-                "created_at": item.created_at.strftime("%d-%m-%Y"),
+                "created_at": item.created_at.strftime("%d-%b-%y"),
                 "updated_by": (
                     "" if item.updated_by is None else item.updated_by.name.title()
                 ),
-                "updated_at": item.updated_at.strftime("%d-%m-%Y"),
+                "updated_at": item.updated_at.strftime("%d-%b-%y"),
                 "actions": self.get_actions_html(item),
             }
             data.append(row)

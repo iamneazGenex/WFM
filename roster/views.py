@@ -271,20 +271,20 @@ class viewRosterJson(BaseDatatableView):
                 "employee__gender": item.gender,
                 "employee__pick_drop_location": item.pick_drop_location.title(),
                 "start_date": (
-                    item.start_date.strftime("%d-%m-%Y") if item.start_date else "-"
+                    item.start_date.strftime("%d-%b-%y") if item.start_date else "-"
                 ),
                 "start_time": (
                     item.start_time.strftime("%H:%M %p") if item.start_time else "-"
                 ),
                 "end_date": (
-                    item.end_date.strftime("%d-%m-%Y") if item.end_date else "-"
+                    item.end_date.strftime("%d-%b-%y") if item.end_date else "-"
                 ),
                 "end_time": (
                     item.end_time.strftime("%H:%M %p") if item.end_time else "-"
                 ),
                 "created_by": item.created_by.name,
-                "created_at": item.created_At.strftime("%d-%m-%Y"),
-                "updated_at": item.updated_At.strftime("%d-%m-%Y"),
+                "created_at": item.created_At.strftime("%d-%b-%y"),
+                "updated_at": item.updated_At.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
                 "actions": self.get_actions_html(item),
             }
@@ -744,9 +744,9 @@ class viewRosterCountJson(BaseDatatableView):
                 "work_role__name": (
                     "" if item.workRole is None else item.workRole.name.title()
                 ),
-                "start_date": item.start_date.strftime("%d-%m-%Y"),
+                "start_date": item.start_date.strftime("%d-%b-%y"),
                 "start_time": item.start_time.strftime("%H:%M %p"),
-                "end_date": item.end_date.strftime("%d-%m-%Y"),
+                "end_date": item.end_date.strftime("%d-%b-%y"),
                 "end_time": item.end_time.strftime("%H:%M %p"),
                 "count": item.count,
                 "hour_00": item.hour_00,
@@ -1392,15 +1392,15 @@ class viewForecastingListJson(BaseDatatableView):
         for item in qs:
             # Fetch the related field and use it directly in the data dictionary
             row = {
-                "date": (item.date.strftime("%d-%m-%Y") if item.date else "-"),
+                "date": (item.date.strftime("%d-%b-%y") if item.date else "-"),
                 "process__name": item.process.name.title(),
                 "lob__name": item.lob.name.title(),
                 "interval": item.interval,
                 "forecast": item.forecast,
                 "required_hc": item.required_hc,
                 "created_by": "" if item.updated_by is None else item.updated_by.name,
-                "created_at": item.created_At.strftime("%d-%m-%Y"),
-                "updated_at": item.updated_At.strftime("%d-%m-%Y"),
+                "created_at": item.created_At.strftime("%d-%b-%y"),
+                "updated_at": item.updated_At.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
                 "actions": self.get_actions_html(item),
             }
@@ -1851,8 +1851,8 @@ class viewShiftLegendListJson(BaseDatatableView):
                     else item.hour_23
                 ),
                 "created_by": "" if item.created_by is None else item.created_by.name,
-                "created_at": item.created_At.strftime("%d-%m-%Y"),
-                "updated_at": item.updated_At.strftime("%d-%m-%Y"),
+                "created_at": item.created_At.strftime("%d-%b-%y"),
+                "updated_at": item.updated_At.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
                 "actions": self.get_actions_html(item),
             }

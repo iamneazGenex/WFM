@@ -1730,7 +1730,7 @@ class viewReportingThreeListJson(BaseDatatableView):
 
         for item in qs:
             row = {
-                "date": item["date"].strftime("%d-%m-%Y"),
+                "date": item["date"].strftime("%d-%b-%y"),
                 "employee__user__employee_id": item["employee__user__employee_id"],
                 "employee__user__name": item["employee__user__name"],
                 "staffed_time": item["total_staffed_time"],
