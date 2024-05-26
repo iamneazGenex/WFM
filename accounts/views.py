@@ -288,10 +288,25 @@ class viewProcessJson(BaseDatatableView):
 
     def filter_queryset(self, qs):
         # Handle POST parameters for filtering the queryset
-        search = self.request.POST.get("search[value]", None)
-        if search:
-            # Filter by employee's name
-            qs = qs.filter(employee__user__name__icontains=search)
+        # Handle search parameter from Datatable
+        searchValue = self.request.GET.get("search[value]", None)
+        if searchValue:
+            # Define the fields you want to search on
+            searchFields = [
+                "name",
+                "created_by__name",
+                "created_at",
+                "updated_by__name",
+                "updated_at",
+            ]
+
+            # Create a Q object to dynamically construct the filter conditions
+            searchFilter = Q()
+            for field in searchFields:
+                searchFilter |= Q(**{f"{field}__icontains": searchValue})
+
+            # Apply the search filter to the queryset
+            qs = qs.filter(searchFilter)
         return qs
 
     def prepare_results(self, qs):
@@ -496,13 +511,29 @@ class viewSiteJson(BaseDatatableView):
             or self.request.user.is_Supervisor()
         ):
             return Site.objects.all().order_by("name")
+        return Site.objects.none()
 
     def filter_queryset(self, qs):
         # Handle POST parameters for filtering the queryset
-        search = self.request.POST.get("search[value]", None)
-        if search:
-            # Filter by employee's name
-            qs = qs.filter(employee__user__name__icontains=search)
+        # Handle search parameter from Datatable
+        searchValue = self.request.GET.get("search[value]", None)
+        if searchValue:
+            # Define the fields you want to search on
+            searchFields = [
+                "name",
+                "created_by__name",
+                "created_at",
+                "updated_by__name",
+                "updated_at",
+            ]
+
+            # Create a Q object to dynamically construct the filter conditions
+            searchFilter = Q()
+            for field in searchFields:
+                searchFilter |= Q(**{f"{field}__icontains": searchValue})
+
+            # Apply the search filter to the queryset
+            qs = qs.filter(searchFilter)
         return qs
 
     def prepare_results(self, qs):
@@ -708,10 +739,25 @@ class viewLOBJson(BaseDatatableView):
 
     def filter_queryset(self, qs):
         # Handle POST parameters for filtering the queryset
-        search = self.request.POST.get("search[value]", None)
-        if search:
-            # Filter by employee's name
-            qs = qs.filter(employee__user__name__icontains=search)
+        # Handle search parameter from Datatable
+        searchValue = self.request.GET.get("search[value]", None)
+        if searchValue:
+            # Define the fields you want to search on
+            searchFields = [
+                "name",
+                "created_by__name",
+                "created_at",
+                "updated_by__name",
+                "updated_at",
+            ]
+
+            # Create a Q object to dynamically construct the filter conditions
+            searchFilter = Q()
+            for field in searchFields:
+                searchFilter |= Q(**{f"{field}__icontains": searchValue})
+
+            # Apply the search filter to the queryset
+            qs = qs.filter(searchFilter)
         return qs
 
     def prepare_results(self, qs):
@@ -917,10 +963,25 @@ class viewWorkRoleJson(BaseDatatableView):
 
     def filter_queryset(self, qs):
         # Handle POST parameters for filtering the queryset
-        search = self.request.POST.get("search[value]", None)
-        if search:
-            # Filter by employee's name
-            qs = qs.filter(employee__user__name__icontains=search)
+        # Handle search parameter from Datatable
+        searchValue = self.request.GET.get("search[value]", None)
+        if searchValue:
+            # Define the fields you want to search on
+            searchFields = [
+                "name",
+                "created_by__name",
+                "created_at",
+                "updated_by__name",
+                "updated_at",
+            ]
+
+            # Create a Q object to dynamically construct the filter conditions
+            searchFilter = Q()
+            for field in searchFields:
+                searchFilter |= Q(**{f"{field}__icontains": searchValue})
+
+            # Apply the search filter to the queryset
+            qs = qs.filter(searchFilter)
         return qs
 
     def prepare_results(self, qs):
@@ -1124,10 +1185,25 @@ class viewSkillJson(BaseDatatableView):
 
     def filter_queryset(self, qs):
         # Handle POST parameters for filtering the queryset
-        search = self.request.POST.get("search[value]", None)
-        if search:
-            # Filter by employee's name
-            qs = qs.filter(employee__user__name__icontains=search)
+        # Handle search parameter from Datatable
+        searchValue = self.request.GET.get("search[value]", None)
+        if searchValue:
+            # Define the fields you want to search on
+            searchFields = [
+                "name",
+                "created_by__name",
+                "created_at",
+                "updated_by__name",
+                "updated_at",
+            ]
+
+            # Create a Q object to dynamically construct the filter conditions
+            searchFilter = Q()
+            for field in searchFields:
+                searchFilter |= Q(**{f"{field}__icontains": searchValue})
+
+            # Apply the search filter to the queryset
+            qs = qs.filter(searchFilter)
         return qs
 
     def prepare_results(self, qs):
@@ -1701,11 +1777,42 @@ class ViewEmployeeJson(BaseDatatableView):
             return Employee.objects.all().order_by("user__name")
 
     def filter_queryset(self, qs):
-        # Handle POST parameters for filtering the queryset
-        search = self.request.POST.get("search[value]", None)
-        if search:
-            # Filter by employee's name
-            qs = qs.filter(employee__user__name__icontains=search)
+        # Handle search parameter from DataTables
+        search_value = self.request.GET.get("search[value]", None)
+
+        if search_value:
+            # Define the fields you want to search on
+            search_fields = [
+                "user__name",
+                "user__email",
+                "user__employee_id",
+                "user__system_id",
+                "user__is_active",
+                "avaya_id",
+                "vdi",
+                "doj",
+                "process__name",
+                "gender",
+                "site__name",
+                "work_role__name",
+                "lob__name",
+                "pick_drop_location",
+                "supervisor_1__user__name",
+                "supervisor_2__user__name",
+                "created_by__name",
+                "created_at",
+                "updated_by__name",
+                "updated_at",
+            ]
+
+            # Create a Q object to dynamically construct the filter conditions
+            search_filter = Q()
+            for field in search_fields:
+                search_filter |= Q(**{f"{field}__icontains": search_value})
+
+            # Apply the search filter to the queryset
+            qs = qs.filter(search_filter)
+
         return qs
 
     def prepare_results(self, qs):

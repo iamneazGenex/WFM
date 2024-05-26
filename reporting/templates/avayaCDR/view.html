@@ -8,11 +8,11 @@
 <div class="card ">
   <div class="card-body">
     <ul class="nav justify-content-end">
-      <li class="nav-item mr-2">
+      {% comment %} <li class="nav-item mr-2">
         <a class="btn btn-primary" href="{% url createUrl %}" role="button"
           >Create</a
         >
-      </li>
+      </li> {% endcomment %}
       <li class="nav-item">
         <a class="btn btn-primary" href="{% url bulkUrl %}" role="button"
           >Bulk</a
@@ -22,7 +22,7 @@
   </div>
 </div>
 {% endif %}
-<div class="card mt-3" style="overflow-x:auto;">
+{% comment %} <div class="card mt-3" style="overflow-x:auto;">
   <div class="card-body">
     <!-- Dropdown for column selection -->
 
@@ -76,7 +76,7 @@
       </thead>
     </table>
   </div>
-</div>
+</div> {% endcomment %}
 <div>{% include 'modals/reject_request_modal.html' with details=details %}</div>
 
 <!-- END: Page JS-->
@@ -88,6 +88,7 @@
     // Get the text content of the h6 tag
     var userTypeValue = userTypeTag.textContent || userTypeTag.innerText;
     //$('#myTable tfoot tr').appendTo('#myTable thead');
+    /*
     var table = $("#myTable").DataTable({
       processing: true,
       serverSide: true,
@@ -168,6 +169,7 @@
       ],
       
     });
+    */
   });
   // Function to open the accept modal
   function openAcceptModal(acceptUrl) {

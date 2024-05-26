@@ -1715,12 +1715,57 @@ class viewShiftLegendListJson(BaseDatatableView):
             return ShiftLegend.objects.none()
 
     def filter_queryset(self, qs):
-        # Handle POST parameters for filtering the queryset
-        search_user = self.request.GET.get("search_user", None)
-        # print(search_user)
-        if search_user:
-            qs = qs.filter(employee__user__name=search_user)
-        # print(qs)
+        # Handle search parameter from DataTables
+        search_value = self.request.GET.get("search[value]", None)
+
+        if search_value:
+            # Define the fields you want to search on
+            search_fields = [
+                "shift_name",
+                "shift_count",
+                "shift_start_time",
+                "shift_end_time",
+                "login_start_hour",
+                "duty_hour",
+                "target_break",
+                "target_ready",
+                "hour_0",
+                "hour_1",
+                "hour_2",
+                "hour_3",
+                "hour_4",
+                "hour_5",
+                "hour_6",
+                "hour_7",
+                "hour_8",
+                "hour_9",
+                "hour_10",
+                "hour_11",
+                "hour_12",
+                "hour_13",
+                "hour_14",
+                "hour_15",
+                "hour_16",
+                "hour_17",
+                "hour_18",
+                "hour_19",
+                "hour_20",
+                "hour_21",
+                "hour_22",
+                "hour_23",
+                "created_by__name",
+                "created_At",
+                "updated_by__name",
+                "updated_At",
+            ]
+
+            # Create a Q object to dynamically construct the filter conditions
+            search_filter = Q()
+            for field in search_fields:
+                search_filter |= Q(**{f"{field}__icontains": search_value})
+
+            # Apply the search filter to the queryset
+            qs = qs.filter(search_filter)
         return qs
 
     def prepare_results(self, qs):
