@@ -378,6 +378,12 @@
                       <div class="dropdown-divider"></div>
                   </li>
                   <li>
+                    <a class="dropdown-item" href="{% url 'password_change' %}">
+                        <i class="bx bx-reset me-2"></i>
+                        <span class="align-middle">Reset Password</span>
+                    </a>
+                  </li>
+                  <li>
                     {% if user.is_authenticated %}
                     <form action="{% url 'logout' %}" method="post">
                         {% csrf_token %}
@@ -391,6 +397,7 @@
                         </a>
                     {% endif %}
                   </li>
+                  
               </ul>
           </li>
           <!--/ User -->
