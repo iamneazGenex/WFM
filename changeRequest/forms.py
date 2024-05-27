@@ -3,6 +3,8 @@ from roster.models import Roster
 from django.db.models import Q
 from django.forms import ModelChoiceField
 from accounts.models import Employee
+from django.utils import timezone
+from datetime import datetime
 
 
 class MyModelChoiceField(ModelChoiceField):
@@ -26,12 +28,16 @@ class DayOffTradingForm(forms.Form):
         self.fields["swapDate"].widget.attrs.update({"class": "select2"})
         self.fields["tradeDate"].widget.attrs.update({"class": "select2"})
         self.fields["requestee"].widget.attrs.update({"class": "select2"})
+
+        currentDate = timezone.now()
+        # currentDate = datetime(2024, 2, 1, tzinfo=timezone.utc)
+
         # Build the querysets for swapDate and tradeDate
         swap_date_queryset = Roster.objects.filter(
-            Q(employee=employee) & ~Q(start_time=None)
+            Q(employee=employee) & ~Q(start_time=None) & Q(start_date__gte=currentDate)
         )
         trade_date_queryset = Roster.objects.filter(
-            Q(employee=employee) & Q(start_time=None)
+            Q(employee=employee) & Q(start_time=None) & Q(start_date__gte=currentDate)
         )
         requestee_queryset = Employee.objects.filter(
             Q(process=employee.process)
@@ -81,10 +87,10 @@ class ShiftTimeTradingForm(forms.Form):
 
     def __init__(self, employee, swapDateID, requesteeID, *args, **kwargs):
         super(ShiftTimeTradingForm, self).__init__(*args, **kwargs)
-
+        currentDate = timezone.now()
         # Build the querysets for swapDate and tradeDate
         swap_date_queryset = Roster.objects.filter(
-            Q(employee=employee) & ~Q(start_time=None)
+            Q(employee=employee) & ~Q(start_time=None) & Q(start_date__gte=currentDate)
         )
 
         requestee_queryset = Employee.objects.filter(
