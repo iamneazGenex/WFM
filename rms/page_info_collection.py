@@ -183,3 +183,11 @@ class PageInfoCollection:
     ################################################################
     REPORTINGTHREE_VIEW = PageInfo("Agent Staffed Report", "viewReportingThree")
     REPORTINGTHREE_JSON = PageInfo("JSON", "viewReportingThreeListJson")
+    ################################################################
+    #   Group
+    ################################################################
+    GROUP_VIEW = PageInfo("Group", "viewGroup")
+    GROUP_CREATE = PageInfo("Create", "createGroup")
+    GROUP_EDIT = PageInfo("Edit", "editGroup")
+    GROUP_DELETE = PageInfo("Delete", "deleteGroup")
+    GROUP_JSON = PageInfo("JSON", "viewGroupJson")

@@ -190,14 +190,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin, BaseModel):
 
 
 class Supervisor(BaseModel):
-    GENDER_CHOICES = (("", "----"), ("M", "Male"), ("F", "Female"))
+    GENDER_CHOICES = (("M", "Male"), ("F", "Female"))
 
-    SITE_CHOICES = (("", "----"), ("DHK", "Dhaka"), ("CTG", "Chittagong"))
-
-    WORKROLE_CHOICES = (
-        ("", "----"),
-        ("TL", "Team Leader"),
-    )
     user = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
@@ -213,7 +207,7 @@ class Supervisor(BaseModel):
         related_name="supervisorProcess",
     )
     gender = models.CharField(
-        default="N/A", max_length=50, null=True, choices=GENDER_CHOICES, blank=True
+        default="N/A", max_length=50, null=True, choices=GENDER_CHOICES
     )
     site = models.ForeignKey(
         Site,
@@ -229,6 +223,33 @@ class Supervisor(BaseModel):
         blank=True,
         related_name="supervisorWorkRole",
     )
+    lob = models.ForeignKey(
+        LOB,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="supervisorLOB",
+    )
+    pick_drop_location = models.CharField(max_length=255, blank=True, null=True)
+    vdi = models.CharField(max_length=255, default="", blank=True, null=True)
+    avaya_id = models.IntegerField(default=0, blank=True, null=True)
+    doj = models.DateField(null=True, blank=True)
+    is_absent = models.IntegerField(null=True, blank=True, editable=False, default=0)
+    supervisor_1 = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="supervisor1ofSupervisor",
+    )
+    supervisor_2 = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="supervisor2ofSupervisor",
+    )
+    is_previously_logged_in = models.BooleanField(default=False)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

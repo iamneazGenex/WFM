@@ -21,6 +21,7 @@ from django.contrib.auth.views import PasswordChangeView
 from django.contrib.auth.forms import PasswordChangeForm
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.contrib.auth.models import Group
 
 logger = logging.getLogger(__name__)
 
@@ -350,7 +351,7 @@ class viewProcessJson(BaseDatatableView):
 
 
 ################################################################
-#   Site
+#   Site                                                       #
 ################################################################
 
 
@@ -1260,6 +1261,8 @@ def viewSupervisor(request):
         "ajaxUrl": PageInfoCollection.SUPERVISOR_JSON.urlName,
         "createUrl": PageInfoCollection.SUPERVISOR_CREATE.urlName,
         "bulkUrl": PageInfoCollection.SUPERVISOR_BULK.urlName,
+        "supervisorActive": "active",
+        "usersActive": "active open",
     }
     return render(request, templateName, context)
 
@@ -2085,3 +2088,204 @@ def bulkAddEmployeesOtherInfo(request):
     }
 
     return render(request, template_name, context)
+
+
+################################################################
+#   Groups
+################################################################
+
+
+@login_required(login_url="/login/")
+@check_user_able_to_see_page(GroupEnum.wfm)
+def viewGroup(request):
+    templateName = "group/view.html"
+
+    breadCrumbList = [PageInfoCollection.SETTINGS, PageInfoCollection.GROUP_VIEW]
+
+    context = {
+        "breadCrumbList": breadCrumbList,
+        "currentBreadCrumb": PageInfoCollection.GROUP_VIEW.pageName,
+        "details": {
+            "name": "delete",
+            "type": "Skill",
+        },
+        "ajaxUrl": PageInfoCollection.GROUP_JSON.urlName,
+        "createUrl": PageInfoCollection.GROUP_CREATE.urlName,
+        "settingsActive": "active open",
+        "groupActive": "active",
+    }
+    return render(request, templateName, context)
+
+
+@login_required(login_url="/login/")
+@check_user_able_to_see_page(GroupEnum.wfm)
+def createGroup(request):
+    templateName = "group/create.html"
+
+    breadCrumbList = [
+        PageInfoCollection.SETTINGS,
+        PageInfoCollection.GROUP_VIEW,
+        PageInfoCollection.GROUP_CREATE,
+    ]
+
+    if request.method == "POST":
+        form = GroupForm(request.POST)
+        if form.is_valid():
+            groupName = form.cleaned_data["name"]
+            form.save()
+            messages.success(request, f"Group {groupName} Created Successfully")
+            logging.info(f"Group {groupName} created Successfully")
+            return redirect(PageInfoCollection.GROUP_VIEW.urlName)
+        else:
+            messages.error(
+                request, "Error creating group. Please check the form for errors"
+            )
+            logging.error("|Failed| Error creating group: %s", form.errors)
+    else:
+        form = GroupForm()
+    context = {
+        "form": form,
+        "breadCrumbList": breadCrumbList,
+        "currentBreadCrumb": PageInfoCollection.GROUP_CREATE.pageName,
+        "formUrl": PageInfoCollection.GROUP_CREATE.urlName,
+        "settingsActive": "active open",
+        "skillActive": "active",
+    }
+    return render(request, templateName, context)
+
+
+@login_required(login_url="/login/")
+@check_user_able_to_see_page(GroupEnum.wfm)
+def editGroup(request, id):
+    template_name = "group/edit.html"
+    breadCrumbList = [
+        PageInfoCollection.SETTINGS,
+        PageInfoCollection.GROUP_VIEW,
+        PageInfoCollection.GROUP_EDIT,
+    ]
+    # Retrieve the existing process based on the provided process_id
+    group = get_object_or_404(Group, id=id)
+
+    if request.method == "POST":
+        form = GroupForm(request.POST, instance=group)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Group: {group.name} edited Successfully")
+            logging.info(f"Group: {group.name} edited Successfully")
+            return redirect(PageInfoCollection.GROUP_VIEW.urlName)
+        else:
+            messages.error(
+                request, "Error updating group. Please check the form for errors"
+            )
+            logging.error("|Failed| Error updating group: %s", form.errors)
+    else:
+        # If it's a GET request, populate the form with the existing process data
+        form = GroupForm(instance=group)
+
+    context = {
+        "form": form,
+        "id": id,
+        "breadCrumbList": breadCrumbList,
+        "currentBreadCrumb": PageInfoCollection.GROUP_EDIT.pageName,
+        "formUrl": PageInfoCollection.GROUP_EDIT.urlName,
+        "settingsActive": "active open",
+        "skillActive": "active",
+    }
+    return render(request, template_name, context)
+
+
+@login_required(login_url="/login/")
+@check_user_able_to_see_page(GroupEnum.wfm)
+def deleteGroup(request, id):
+    success = False
+    errorMessage = "Failed To Delete"
+    successMessage = "Deleted Successfully"
+    if request.user.is_WFM():
+        try:
+            group = Group.objects.get(id=id)
+            group.delete()
+            success = True
+        except Group.DoesNotExist:
+            logging.error(
+                f"|Failed| Delete A Group |id:{id}| Exception: Group does not exist."
+            )
+        except Exception as e:
+            logging.error(f"|Failed| Delete A Group |id:{id}| Exception:{e}")
+    else:
+        errorMessage = "User does not have permission to delete"
+    response = JsonResponse(
+        {
+            "success": success,
+            "message": successMessage if success is True else errorMessage,
+        }
+    )
+    return response
+
+
+class viewGroupJson(BaseDatatableView):
+    model = Group
+
+    # Define the columns you want to display
+    columns = [
+        "name",
+        "actions",
+    ]
+
+    # Define the order columns, make sure they match the columns order
+    order_columns = [
+        "name",
+        "",  # Add an empty string for the actions column
+    ]
+
+    def get_initial_queryset(self):
+        # Log the request
+        if self.request.user.is_WFM():
+            return Group.objects.all().order_by("name")
+
+    def filter_queryset(self, qs):
+        # Handle POST parameters for filtering the queryset
+        # Handle search parameter from Datatable
+        searchValue = self.request.GET.get("search[value]", None)
+        if searchValue:
+            # Define the fields you want to search on
+            searchFields = [
+                "name",
+            ]
+
+            # Create a Q object to dynamically construct the filter conditions
+            searchFilter = Q()
+            for field in searchFields:
+                searchFilter |= Q(**{f"{field}__icontains": searchValue})
+
+            # Apply the search filter to the queryset
+            qs = qs.filter(searchFilter)
+        return qs
+
+    def prepare_results(self, qs):
+        data = []
+        for item in qs:
+            # Fetch the related field and use it directly in the data dictionary
+            row = {
+                "name": item.name.upper(),
+                "actions": self.get_actions_html(item),
+            }
+            data.append(row)
+        return data
+
+    def render_column(self, row, column):
+        return super(viewSkillJson, self).render_column(row, column)
+
+    def get_actions_html(self, item):
+        edit_url = reverse(PageInfoCollection.GROUP_EDIT.urlName, args=[item.id])
+        reject_url = reverse(PageInfoCollection.GROUP_DELETE.urlName, args=[item.id])
+
+        edit_link = format_html(
+            '<a href="{}" class="btn btn-success">Edit</a>',
+            edit_url,
+        )
+        reject_link = format_html(
+            '<a href="{}" data-toggle="modal" data-target="#rejectModal" class="btn btn-danger">Delete</a>',
+            reject_url,
+        )
+
+        return format_html("{} {}", edit_link, reject_link)

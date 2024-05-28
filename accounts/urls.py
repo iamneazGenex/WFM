@@ -185,4 +185,28 @@ urlpatterns = [
         bulkAddEmployeesOtherInfo,
         name=PageInfoCollection.EMPLOYEE_OTHERINFO.urlName,
     ),
+    ################################################################
+    #   Group
+    ################################################################
+    path(
+        "createGroup/",
+        createGroup,
+        name=PageInfoCollection.GROUP_CREATE.urlName,
+    ),
+    path("viewGroup/", viewGroup, name=PageInfoCollection.GROUP_VIEW.urlName),
+    path(
+        "viewGroupJson/",
+        viewGroupJson.as_view(),
+        name=PageInfoCollection.GROUP_JSON.urlName,
+    ),
+    path(
+        "editGroup/<int:id>/",
+        editGroup,
+        name=PageInfoCollection.GROUP_EDIT.urlName,
+    ),
+    path(
+        "deleteGroup/<int:id>/",
+        deleteGroup,
+        name=PageInfoCollection.GROUP_DELETE.urlName,
+    ),
 ]

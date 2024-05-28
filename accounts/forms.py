@@ -1,6 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import *
 from django import forms
+from django.contrib.auth.models import Group
 
 
 class CustomUserCreationForm(UserChangeForm):
@@ -385,3 +386,10 @@ class CreateSkill(forms.ModelForm):
         model = Skill
         fields = ["name"]
         labels = {"name": "Name"}
+
+
+class GroupForm(forms.ModelForm):
+    class Meta:
+        model = Group
+        fields = ["name"]
+        widgets = {"name": forms.TextInput(attrs={"class": "form-control"})}
