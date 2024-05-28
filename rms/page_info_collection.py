@@ -191,3 +191,11 @@ class PageInfoCollection:
     GROUP_EDIT = PageInfo("Edit", "editGroup")
     GROUP_DELETE = PageInfo("Delete", "deleteGroup")
     GROUP_JSON = PageInfo("JSON", "viewGroupJson")
+    ################################################################
+    #   User
+    ################################################################
+    USER_VIEW = PageInfo("User", "viewUser")
+    USER_CREATE = PageInfo("Create", "createUser")
+    USER_EDIT = PageInfo("Edit", "editUser")
+    USER_DELETE = PageInfo("Delete", "deleteUser")
+    USER_JSON = PageInfo("JSON", "viewUserJson")

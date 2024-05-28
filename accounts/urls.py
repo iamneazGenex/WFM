@@ -209,4 +209,28 @@ urlpatterns = [
         deleteGroup,
         name=PageInfoCollection.GROUP_DELETE.urlName,
     ),
+    ################################################################
+    #   User
+    ################################################################
+    path(
+        "createUser/",
+        createUser,
+        name=PageInfoCollection.USER_CREATE.urlName,
+    ),
+    path("viewUser/", viewUser, name=PageInfoCollection.USER_VIEW.urlName),
+    path(
+        "viewUserJson/",
+        viewUserJson.as_view(),
+        name=PageInfoCollection.USER_JSON.urlName,
+    ),
+    path(
+        "editUser/<int:id>/",
+        editUser,
+        name=PageInfoCollection.USER_EDIT.urlName,
+    ),
+    path(
+        "deleteUser/<int:id>/",
+        deleteUser,
+        name=PageInfoCollection.USER_DELETE.urlName,
+    ),
 ]

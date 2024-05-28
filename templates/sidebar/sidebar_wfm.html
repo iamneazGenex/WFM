@@ -97,7 +97,13 @@
                 <i class="menu-icon tf-icons bx bx-user"></i>
                 <div class="text-truncate">Users</div>
             </a>
-
+            <ul class="menu-sub">
+                <li class="menu-item {{ userActive }}">
+                    <a href="{% url 'viewUser' %}" class="menu-link">
+                        <div>Users</div>
+                    </a>
+                </li>
+            </ul>
             <ul class="menu-sub">
                 <li class="menu-item {{ employeeActive }}">
                     <a href="{% url 'viewEmployee' %}" class="menu-link">

@@ -393,3 +393,31 @@ class GroupForm(forms.ModelForm):
         model = Group
         fields = ["name"]
         widgets = {"name": forms.TextInput(attrs={"class": "form-control"})}
+
+
+class CustomUserForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = [
+            "email",
+            "name",
+            "employee_id",
+            "system_id",
+            "is_staff",
+            "is_active",
+            "created_by",
+            "updated_by",
+        ]
+
+class CustomUserFormWithGroup(forms.ModelForm):
+    groups = forms.ModelMultipleChoiceField(queryset=Group.objects.all(), required=False)
+
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'name', 'is_staff', 'is_active', 'groups']
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if CustomUser.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("This email address is already in use.")
+        return email

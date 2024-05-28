@@ -1,5 +1,9 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    PermissionsMixin,
+    BaseUserManager,
+)
 from django.utils.translation import gettext_lazy as _
 from .managers import CustomUserManager
 from django.utils import timezone
@@ -18,6 +22,20 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, name, password=None, **extra_fields):
+        if not email:
+            raise ValueError("The Email field must be set")
+        email = self.normalize_email(email)
+        user = self.model(email=email, name=name, **extra_fields)
+        if password:
+            user.set_password(password)  # Set password if provided
+        else:
+            user.set_password("123456")  # Set default password
+        user.save(using=self._db)
+        return user
 
 
 class Site(BaseModel):

@@ -2107,7 +2107,7 @@ def viewGroup(request):
         "currentBreadCrumb": PageInfoCollection.GROUP_VIEW.pageName,
         "details": {
             "name": "delete",
-            "type": "Skill",
+            "type": "Group",
         },
         "ajaxUrl": PageInfoCollection.GROUP_JSON.urlName,
         "createUrl": PageInfoCollection.GROUP_CREATE.urlName,
@@ -2149,7 +2149,7 @@ def createGroup(request):
         "currentBreadCrumb": PageInfoCollection.GROUP_CREATE.pageName,
         "formUrl": PageInfoCollection.GROUP_CREATE.urlName,
         "settingsActive": "active open",
-        "skillActive": "active",
+        "groupActive": "active",
     }
     return render(request, templateName, context)
 
@@ -2189,7 +2189,7 @@ def editGroup(request, id):
         "currentBreadCrumb": PageInfoCollection.GROUP_EDIT.pageName,
         "formUrl": PageInfoCollection.GROUP_EDIT.urlName,
         "settingsActive": "active open",
-        "skillActive": "active",
+        "groupActive": "active",
     }
     return render(request, template_name, context)
 
@@ -2278,6 +2278,242 @@ class viewGroupJson(BaseDatatableView):
     def get_actions_html(self, item):
         edit_url = reverse(PageInfoCollection.GROUP_EDIT.urlName, args=[item.id])
         reject_url = reverse(PageInfoCollection.GROUP_DELETE.urlName, args=[item.id])
+
+        edit_link = format_html(
+            '<a href="{}" class="btn btn-success">Edit</a>',
+            edit_url,
+        )
+        reject_link = format_html(
+            '<a href="{}" data-toggle="modal" data-target="#rejectModal" class="btn btn-danger">Delete</a>',
+            reject_url,
+        )
+
+        return format_html("{} {}", edit_link, reject_link)
+
+
+################################################################
+#   Custom User
+################################################################
+
+
+@login_required(login_url="/login/")
+@check_user_able_to_see_page(GroupEnum.wfm)
+def viewUser(request):
+    templateName = "user/view.html"
+
+    breadCrumbList = [PageInfoCollection.SETTINGS, PageInfoCollection.USER_VIEW]
+
+    context = {
+        "breadCrumbList": breadCrumbList,
+        "currentBreadCrumb": PageInfoCollection.USER_VIEW.pageName,
+        "details": {
+            "name": "delete",
+            "type": "User",
+        },
+        "ajaxUrl": PageInfoCollection.USER_JSON.urlName,
+        "createUrl": PageInfoCollection.USER_CREATE.urlName,
+        "usersActive": "active open",
+        "userActive": "active",
+    }
+    return render(request, templateName, context)
+
+
+@login_required(login_url="/login/")
+@check_user_able_to_see_page(GroupEnum.wfm)
+def createUser(request):
+    templateName = "user/create.html"
+
+    breadCrumbList = [
+        PageInfoCollection.SETTINGS,
+        PageInfoCollection.USER_VIEW,
+        PageInfoCollection.USER_CREATE,
+    ]
+
+    if request.method == "POST":
+        form = CustomUserFormWithGroup(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            group = form.cleaned_data["groups"]
+            if CustomUser.objects.filter(email=email).exists():
+                logging.error(f"User with email '{email}' already exists")
+                messages.error(
+                    request, f"|Failed| User with email '{email}' already exists"
+                )
+            else:
+                try:
+                    user = form.save(commit=False)
+                    user.created_by = request.user
+                    userName = form.cleaned_data["name"]
+                    user.set_password("123456")  # Set the password
+                    user.save()
+                    user.groups.set(group)
+                    messages.success(request, f"User: {userName} Created Successfully")
+                    logging.info(f"User: {userName} created Successfully")
+                    return redirect(PageInfoCollection.USER_VIEW.urlName)
+                except Exception as e:
+                    messages.error(
+                        request, f"An error occurred while creating the user: {e}"
+                    )
+                    logging.error(f"Error creating user: {e}")
+        else:
+            messages.error(
+                request, "Error creating user. Please check the form for errors"
+            )
+            logging.error("|Failed| Error creating user: %s", form.errors)
+    else:
+        form = CustomUserFormWithGroup()
+    context = {
+        "form": form,
+        "breadCrumbList": breadCrumbList,
+        "currentBreadCrumb": PageInfoCollection.USER_CREATE.pageName,
+        "formUrl": PageInfoCollection.USER_CREATE.urlName,
+        "settingsActive": "active open",
+        "userActive": "active",
+    }
+    return render(request, templateName, context)
+
+
+@login_required(login_url="/login/")
+@check_user_able_to_see_page(GroupEnum.wfm)
+def editUser(request, id):
+    template_name = "group/edit.html"
+    breadCrumbList = [
+        PageInfoCollection.SETTINGS,
+        PageInfoCollection.USER_VIEW,
+        PageInfoCollection.USER_EDIT,
+    ]
+    # Retrieve the existing process based on the provided process_id
+    user = get_object_or_404(CustomUser, id=id)
+
+    if request.method == "POST":
+        form = CustomUserFormWithGroup(request.POST, instance=user)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, f"User: {user.name} edited Successfully")
+                logging.info(f"User: {user.name} edited Successfully")
+                return redirect(PageInfoCollection.USER_VIEW.urlName)
+            except Exception as e:
+                messages.error(request, f"Error updating user: {e}")
+                logger.error(f"|Failed| Error updating user: {e}")
+        else:
+            messages.error(
+                request, "Error updating group. Please check the form for errors"
+            )
+            logging.error("|Failed| Error updating group: %s", form.errors)
+    else:
+        # If it's a GET request, populate the form with the existing process data
+        form = CustomUserFormWithGroup(instance=user)
+
+    context = {
+        "form": form,
+        "id": id,
+        "breadCrumbList": breadCrumbList,
+        "currentBreadCrumb": PageInfoCollection.USER_EDIT.pageName,
+        "formUrl": PageInfoCollection.USER_EDIT.urlName,
+        "settingsActive": "active open",
+        "skillActive": "active",
+    }
+    return render(request, template_name, context)
+
+
+@login_required(login_url="/login/")
+@check_user_able_to_see_page(GroupEnum.wfm)
+def deleteUser(request, id):
+    success = False
+    errorMessage = "Failed To Delete"
+    successMessage = "Deleted Successfully"
+    if request.user.is_WFM():
+        try:
+            user = CustomUser.objects.get(id=id)
+            user.delete()
+            success = True
+        except CustomUser.DoesNotExist:
+            logging.error(
+                f"|Failed| Delete A User |id:{id}| Exception: CustomUser does not exist."
+            )
+        except Exception as e:
+            logging.error(f"|Failed| Delete A User |id:{id}| Exception:{e}")
+    else:
+        errorMessage = "User does not have permission to delete"
+    response = JsonResponse(
+        {
+            "success": success,
+            "message": successMessage if success is True else errorMessage,
+        }
+    )
+    return response
+
+
+class viewUserJson(BaseDatatableView):
+    model = CustomUser
+
+    # Define the columns you want to display
+    columns = [
+        "name",
+        "email",
+        "is_active",
+        "is_staff",
+        "groups",
+        "actions",
+    ]
+
+    # Define the order columns, make sure they match the columns order
+    order_columns = [
+        "name",
+        "email",
+        "is_active",
+        "is_staff",
+        "",
+        "",  # Add an empty string for the actions column
+    ]
+
+    def get_initial_queryset(self):
+        # Log the request
+        if self.request.user.is_WFM():
+            return CustomUser.objects.exclude(
+                groups__name__in=["Employee", "Supervisor"]
+            ).order_by("name")
+
+    def filter_queryset(self, qs):
+        # Handle POST parameters for filtering the queryset
+        # Handle search parameter from Datatable
+        searchValue = self.request.GET.get("search[value]", None)
+        if searchValue:
+            # Define the fields you want to search on
+            searchFields = ["name", "email", "is_active", "is_staff", "groups__name"]
+
+            # Create a Q object to dynamically construct the filter conditions
+            searchFilter = Q()
+            for field in searchFields:
+                searchFilter |= Q(**{f"{field}__icontains": searchValue})
+
+            # Apply the search filter to the queryset
+            qs = qs.filter(searchFilter)
+        return qs
+
+    def prepare_results(self, qs):
+        data = []
+        for item in qs:
+            groupNames = ", ".join([group.name for group in item.groups.all()])
+            # Fetch the related field and use it directly in the data dictionary
+            row = {
+                "name": item.name.upper(),
+                "email": item.email,
+                "is_active": item.is_active,
+                "is_staff": item.is_staff,
+                "groups": groupNames,
+                "actions": self.get_actions_html(item),
+            }
+            data.append(row)
+        return data
+
+    def render_column(self, row, column):
+        return super(viewSkillJson, self).render_column(row, column)
+
+    def get_actions_html(self, item):
+        edit_url = reverse(PageInfoCollection.USER_EDIT.urlName, args=[item.id])
+        reject_url = reverse(PageInfoCollection.USER_DELETE.urlName, args=[item.id])
 
         edit_link = format_html(
             '<a href="{}" class="btn btn-success">Edit</a>',
