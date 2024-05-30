@@ -1,5 +1,5 @@
 from django.db import models
-from accounts.models import Employee
+from accounts.models import Employee, CustomUser
 from accounts.models import Process, LOB, Site, WorkRole
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -212,14 +212,14 @@ class Roster(BaseModel):
     end_date = models.DateField()
     end_time = models.TimeField(null=True, blank=True)
     supervisor_1 = models.ForeignKey(
-        Employee,
+        CustomUser,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="rosterSupervisor1",
     )
     supervisor_2 = models.ForeignKey(
-        Employee,
+        CustomUser,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

@@ -1,4 +1,4 @@
-from .models import Roster, RosterCount, RosterSeatCount, Forecast, ShiftLegend
+from ..models import Roster, RosterCount, RosterSeatCount, Forecast, ShiftLegend
 from accounts.models import Employee
 from django.contrib import messages
 from accounts.models import CustomUser
@@ -7,6 +7,7 @@ import traceback
 from accounts.models import *
 from django.utils.dateparse import parse_time
 from django.utils.dateformat import time_format
+
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +21,8 @@ def createRosterCount(roster):
     Returns:
         boolean: success or failure of the execution
     """
-    logging.info(f"Trying to create RosterCount of {roster} id:|{roster.id}|")
+    logging.info(f"----Trying to create RosterCount of {roster} id:|{roster.id}|")
     success = False
-    print("In RosterCount")
     if roster.start_time is not None:
         try:
             rosterCount = RosterCount.objects.get(
@@ -38,7 +38,7 @@ def createRosterCount(roster):
             rosterCount.count += 1
             rosterCount.save()
             success = True
-            logging.info(f"|Success| Roster Count Updated Successfully")
+            logging.info(f"----|Success| Roster Count Updated Successfully")
         except RosterCount.DoesNotExist:
             try:
                 rosterCount = RosterCount.objects.create(
@@ -53,54 +53,56 @@ def createRosterCount(roster):
                     count=1,
                 )
                 success = True
-                logging.info(f"|Success| Roster Count Created Successfully")
+                logging.info(f"----|Success| Roster Count Created Successfully")
             except Exception as e:
-                logging.error(f"|Failed| Roster Count Creation failed.Exception: {e}")
+                logging.error(
+                    f"----|Failed| Roster Count Creation failed.Exception: {e}"
+                )
     else:
         success = True
-        logging.info(f"|Success| Did not create Roster Count as start time is none")
-    print(f"Roster Count: {success}")
+        logging.info(f"----|Success| Did not create Roster Count as start time is none")
     return success
 
 
-def rosterCreation(data, request):
+def roster_creation(data, request, index=None):
     """Create a Roster
 
     Args:
-        data (_type_): Roster Creation Data
-        request (_type_): Request from view
+        data (dict): Roster Creation Data
+        request (HttpRequest): Request from view
 
     Returns:
-        bool: If the creation is successful or not
+        bool: If the creation is successful, False otherwise
     """
     success = False
-    logging.info(f"In Roster Creation")
+    logging.info(
+        f"----Attempting to create roster with data: {', '.join(map(str, data.items()))}"
+    )
     try:
-        roster = Roster.objects.get(
+        # Check if roster already exists with exact details
+        Roster.objects.get(
             employee=data["employee"],
             start_date=data["start_date"],
             start_time=data["start_time"],
             end_date=data["end_date"],
             end_time=data["end_time"],
         )
-        print(roster)
     except Roster.DoesNotExist:
-        logging.info(f"Roster Does not Exist")
+        logging.info(f"----Roster does not exist, proceeding with creation.")
         try:
-            roster = Roster.objects.get(
+            # Check if a roster already exists for the employee on the given start date
+            existing_roster = Roster.objects.get(
                 employee=data["employee"], start_date=data["start_date"]
             )
-            message = f"A Roster on {roster.start_date.strftime('%d-%m-%Y')} exists of {roster.employee.user.name}"
-            logging.error(f"|Failed| {message}")
+            message = f"A roster already exists on {existing_roster.start_date.strftime('%d-%m-%Y')} for {existing_roster.employee.user.name} {' at row index ' + str(index) if index else ''}"
+            logging.error(f"----|Failed| Roster Creation : {message}")
             messages.error(request, message)
-            print(message)
         except Roster.DoesNotExist:
-            logging.info(f"Trying to create new roster")
-            print(data)
+            logging.info("----No conflicting roster found, creating new roster.")
             try:
                 roster = Roster(
                     employee=data["employee"],
-                    shiftLegend=data["shiftLegend"],
+                    shiftLegend=data["shift_legend"],
                     process=data["process"],
                     gender=data["gender"],
                     site=data["site"],
@@ -112,33 +114,31 @@ def rosterCreation(data, request):
                     end_date=data["end_date"],
                     end_time=data["end_time"],
                     supervisor_1=data["supervisor_1"],
+                    supervisor_2=data["supervisor_2"],
                     created_by=CustomUser.objects.get(id=request.user.id),
                 )
-                print(roster)
-                logging.info(f"--Trying to create Roster Count")
-                rosterCountCreationResult = createRosterCount(roster)
-                if rosterCountCreationResult is True:
-                    success = True
+                logging.info(f"----Trying to create Roster Count")
+                if createRosterCount(roster):
                     roster.save()
-                    logging.info(f"|Success| Roster Created Successfully")
+                    success = True
+                    logging.info(f"----|Success| Roster Created Successfully")
                 else:
-                    with open("newfile.txt", "a+") as file:
-                        file.write(f"--{data}\n Roster Count Creation result")
-                    logging.error(f"|Failed| Failed to create Roster")
-                    print(f"|Failed| Failed to create Roster")
+                    message = f"Failed to create RosterCount {' at row index ' + str(index) if index else ''}"
+                    logging.error(f"----|Failed| {message}")
+                    messages.error(request, message)
             except Exception as e:
-                with open("newfile.txt", "a+") as file:
-                    file.write(f"--{data}\n Roster Creation Exception:{e}")
-                logging.error(f"|Failed| Failed to create Roster. Exception:{e}")
-                print(f"|Failed| Failed to create Roster. Exception:{e}")
-                messages.error(request, "Failed to create Roster")
+                logging.error(f"----|Failed| Failed to create Roster. Exception:{e}")
+                messages.error(
+                    request,
+                    f"Failed to create Roster{' at row index ' + str(index) if index else ''}",
+                )
     except Exception as e:
-        with open("newfile.txt", "a+") as file:
-            file.write(f"--{data}\n Failed to create Roster. Exception:{e}")
-        logging.error(f"|Failed| Failed to create Roster. Exception:{e}")
-        print(f"|Failed| Failed to create Roster. Exception:{e}")
-        messages.error(request, "Failed to create Roster")
-    print(success)
+        logging.error(f"----|Failed| Failed to create Roster. Exception:{e}")
+        messages.error(
+            request,
+            f"Failed to create Roster{' at row index ' + str(index) if index else ''}",
+        )
+
     return success
 
 
@@ -402,3 +402,19 @@ def formatShiftLegend(value):
         formattedEnd = formatTimeToAmPm(endTime)
         return f"{formattedStart} - {formattedEnd}"
     return value
+
+
+def convertTimeRange(start_time, end_time):
+    """
+    Convert start and end times to the format "HHMM-HHMM".
+
+    Args:
+        start_time (datetime): The start time.
+        end_time (datetime): The end time.
+
+    Returns:
+        str: The time range in "HHMM-HHMM" format.
+    """
+    start_str = start_time.strftime("%H%M")
+    end_str = end_time.strftime("%H%M")
+    return f"{start_str}-{end_str}"

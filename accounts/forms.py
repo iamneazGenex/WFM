@@ -1,7 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import *
 from django import forms
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 
 
 class CustomUserCreationForm(UserChangeForm):
@@ -389,6 +389,13 @@ class CreateSkill(forms.ModelForm):
 
 
 class GroupForm(forms.ModelForm):
+    permissions = forms.ModelMultipleChoiceField(
+        queryset=Permission.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Permissions",
+    )
+
     class Meta:
         model = Group
         fields = ["name"]
@@ -409,15 +416,18 @@ class CustomUserForm(forms.ModelForm):
             "updated_by",
         ]
 
+
 class CustomUserFormWithGroup(forms.ModelForm):
-    groups = forms.ModelMultipleChoiceField(queryset=Group.objects.all(), required=False)
+    groups = forms.ModelMultipleChoiceField(
+        queryset=Group.objects.all(), required=False
+    )
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'name', 'is_staff', 'is_active', 'groups']
-    
+        fields = ["email", "name", "is_staff", "is_active", "groups"]
+
     def clean_email(self):
-        email = self.cleaned_data.get('email')
+        email = self.cleaned_data.get("email")
         if CustomUser.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("This email address is already in use.")
         return email

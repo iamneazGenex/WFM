@@ -22,6 +22,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.models import Group
+from django.http import HttpResponseForbidden
 
 logger = logging.getLogger(__name__)
 
@@ -1772,12 +1773,27 @@ class ViewEmployeeJson(BaseDatatableView):
 
     def get_initial_queryset(self):
         # Log the request
+
         if (
             self.request.user.is_WFM()
             or self.request.user.is_Employee()
             or self.request.user.is_Supervisor()
         ):
-            return Employee.objects.all().order_by("user__name")
+            userType = self.request.GET.get("userType")
+            if userType == "Supervisors":
+                return Employee.objects.filter(work_role__name="Supervisor").order_by(
+                    "user__name"
+                )
+            elif userType == "Agents":
+                return (
+                    Employee.objects.all()
+                    .exclude(work_role__name="Supervisor")
+                    .order_by("user__name")
+                )
+            else:
+                return Employee.objects.all().order_by("user__name")
+        else:
+            Employee.objects.none()
 
     def filter_queryset(self, qs):
         # Handle search parameter from DataTables
@@ -2114,6 +2130,10 @@ def viewGroup(request):
         "settingsActive": "active open",
         "groupActive": "active",
     }
+    print(request.user.groups.filter(permissions__codename="view_group"))
+    if not request.user.groups.filter(permissions__codename="view_group").exists():
+        return HttpResponseForbidden("You do not have permission to view this roster.")
+
     return render(request, templateName, context)
 
 
@@ -2132,7 +2152,10 @@ def createGroup(request):
         form = GroupForm(request.POST)
         if form.is_valid():
             groupName = form.cleaned_data["name"]
-            form.save()
+            group = form.save()
+            # Save Permissions
+            group.permissions.set(form.cleaned_data["permissions"])
+            group.save()
             messages.success(request, f"Group {groupName} Created Successfully")
             logging.info(f"Group {groupName} created Successfully")
             return redirect(PageInfoCollection.GROUP_VIEW.urlName)
@@ -2169,7 +2192,9 @@ def editGroup(request, id):
     if request.method == "POST":
         form = GroupForm(request.POST, instance=group)
         if form.is_valid():
-            form.save()
+            group = form.save(commit=False)
+            group.permissions.set(form.cleaned_data["permissions"])
+            group.save()
             messages.success(request, f"Group: {group.name} edited Successfully")
             logging.info(f"Group: {group.name} edited Successfully")
             return redirect(PageInfoCollection.GROUP_VIEW.urlName)
@@ -2180,7 +2205,9 @@ def editGroup(request, id):
             logging.error("|Failed| Error updating group: %s", form.errors)
     else:
         # If it's a GET request, populate the form with the existing process data
-        form = GroupForm(instance=group)
+        form = GroupForm(
+            instance=group, initial={"permissions": group.permissions.all()}
+        )
 
     context = {
         "form": form,

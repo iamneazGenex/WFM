@@ -5,7 +5,7 @@ from django.db.models import Q
 from rms.global_utilities import *
 from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
-from .utils import *
+from .utils.common import *
 from django.contrib.auth.models import Group
 
 # class CreateRosterForm(forms.Form):
@@ -67,7 +67,7 @@ class RosterForm(forms.ModelForm):
         # Get the Supervisor group
         supervisorGroup = Group.objects.get(name="Supervisor")
         # Filter supervisors based on the group
-        supervisors = Employee.objects.filter(user__groups=supervisorGroup)
+        supervisors = CustomUser.objects.filter(groups=supervisorGroup)
         self.fields["employee"].widget.attrs.update({"class": "form-control"})
         self.fields["process"].widget.attrs.update({"class": "form-control"})
         self.fields["gender"].widget.attrs.update({"class": "form-control"})

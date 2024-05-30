@@ -5,7 +5,12 @@
 <div class="card ">
   <div class="card-body">
     <ul class="nav justify-content-end">
-      <li class="nav-item">
+      <select id="userTypeFilter">
+        <option value="">All</option>
+        <option value="Supervisors">Supervisors</option>
+        <option value="Agents">Agents</option>
+      </select>
+      <li class="nav-item ml-2">
         <a class="btn btn-primary" href="{% url createUrl %}" role="button"
           >Create</a
         >
@@ -68,13 +73,16 @@
 
     // Get the text content of the h6 tag
     var userTypeValue = userTypeTag.textContent || userTypeTag.innerText;
-    $("#myTable").DataTable({
+    table = $("#myTable").DataTable({
       processing: true,
       serverSide: true,
       paging: true,
       ajax: {
         url: "{% url ajaxUrl %}",
         type: "GET",
+        data: function(d) {
+          d.userType = $('#userTypeFilter').val();
+        },
         error: function (xhr, error, thrown) {
           // Handle errors here
           console.log("DataTables error:", error, thrown);
@@ -113,11 +121,15 @@
           searchable: false,
           render: function (data, type, full, meta) {
             // Assuming 'actions' is HTML content, use render to display it as HTML
-            console.log(data);
             return data;
           },
         },
       ],
+    });
+
+    // Event listener for the dropdown filter
+    $('#userTypeFilter').on('change', function() {
+      table.ajax.reload();
     });
   });
   // Function to open the accept modal

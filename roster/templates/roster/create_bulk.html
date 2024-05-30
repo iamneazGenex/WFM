@@ -1,7 +1,6 @@
 {% extends 'base.html' %} {% load crispy_forms_tags %} {% block main %}
 {% include 'breadcrumb.html' %}
 {% include 'messages.html' %}
-{% include 'messages.html' %}
 <div class="card">
   <div class="card-body">
     <form
@@ -10,6 +9,10 @@
       enctype="multipart/form-data"
     >
       {% csrf_token %}
+      <div class="mb-2">
+        <label for="sheetName">Sheet Name</label>
+        <input type="text" class="form-control" id="sheetName" name="sheetName" aria-describedby="sheetName" placeholder="">
+      </div>
       <input type="file" name="excel_file" />
       <button type="submit" class="btn btn-primary btn-block mt-3">Import</button>
     </form>

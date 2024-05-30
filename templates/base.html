@@ -144,7 +144,7 @@
           {% if user.is_WFM %}
                 {% include 'sidebar/sidebar_wfm.html' %}
           {% endif %}
-          {% if user.is_Employee %}
+          {% if user.is_Employee or user.is_Supervisor %}
                 {% include 'sidebar/sidebar_employee.html' %}
           {% endif %}
         {% endif %}

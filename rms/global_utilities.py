@@ -1,6 +1,10 @@
 from accounts.models import Employee, CustomUser, Supervisor
 from django import forms
 from django.utils import timezone
+import logging
+from django.contrib import messages
+
+logger = logging.getLogger(__name__)
 
 
 def getEmployee(id):
@@ -84,3 +88,18 @@ def timedelta_to_timefield(timedelta_value):
     time_value = timezone.now().replace(hour=hours, minute=minutes, second=seconds)
 
     return time_value.time()
+
+
+def get_object_or_log_error(model, name, model_name, index, request):
+    if not name:
+        message = f"{model_name} name is None for row index {index}"
+        logging.error(f"----{message}")
+        messages.error(request, message)
+        return None
+    try:
+        return model.objects.get(name=name.lower().strip())
+    except model.DoesNotExist:
+        message = f"{model_name} '{name}' does not exist for row index {index}"
+        logging.error(f"----{message}")
+        messages.error(request, message)
+        return None

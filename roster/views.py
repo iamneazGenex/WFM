@@ -11,7 +11,7 @@ import logging
 from django.contrib import messages
 from django.db.models import Q
 from rms.global_utilities import *
-from .utils import *
+from .utils.common import *
 from django.utils.html import format_html
 from rms.page_info_collection import PageInfoCollection
 from django.http import JsonResponse
@@ -24,7 +24,8 @@ from accounts.utils import employeeCreation
 from collections import defaultdict
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
-from django.contrib.auth.models import Group
+import re
+from .utils.roster import *
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +117,7 @@ def createRoster(request):
         if form.is_valid():
             data = form.cleaned_data
             print(data)
-            result = rosterCreation(data, request)
+            result = roster_creation(data, request)
             if result == True:
                 messages.success(request, "Roster created successfully.")
                 return redirect(PageInfoCollection.ROSTER_VIEW.urlName)
@@ -152,8 +153,8 @@ class viewRosterJson(BaseDatatableView):
         "employee__process__name",
         "employee__lob__name",
         "employee__work_role__name",
-        "employee__supervisor_1__user__name",
-        "employee__supervisor_2__user__name",
+        "supervisor_1__name",
+        "supervisor_2__name",
         "employee__gender",
         "employee__pick_drop_location",
         "start_date",
@@ -176,8 +177,8 @@ class viewRosterJson(BaseDatatableView):
         "employee__process__name",
         "employee__lob__name",
         "employee__work_role__name",
-        "employee__supervisor_1__user__name",
-        "employee__supervisor_2__user__name",
+        "supervisor_1__name",
+        "supervisor_2__name",
         "employee__gender",
         "employee__pick_drop_location",
         "start_date",
@@ -199,19 +200,19 @@ class viewRosterJson(BaseDatatableView):
                 .order_by("-created_At")
                 .select_related("shiftLegend")
             )
+        elif self.request.user.is_Supervisor():
+            employee = getEmployee(self.request.user.id)
+            supervised_employees = Employee.objects.filter(
+                Q(supervisor_1=employee) | Q(supervisor_2=employee)
+            )
+            return Roster.objects.filter(Q(employee__in=supervised_employees)).order_by(
+                "-created_At"
+            )
         elif self.request.user.is_Employee():
             employee = getEmployee(self.request.user.id)
-            if employee.is_supervisor():
-                supervised_employees = Employee.objects.filter(
-                    Q(supervisor_1=employee) | Q(supervisor_2=employee)
-                )
-                return Roster.objects.filter(
-                    Q(employee__in=supervised_employees)
-                ).order_by("-created_At")
-            else:
-                return Roster.objects.filter(
-                    Q(employee=employee.id) | Q(employee__lob=employee.lob)
-                ).order_by("-created_At")
+            return Roster.objects.filter(
+                Q(employee=employee.id) | Q(employee__lob=employee.lob)
+            ).order_by("-created_At")
         else:
             return Roster.objects.none()
 
@@ -227,8 +228,8 @@ class viewRosterJson(BaseDatatableView):
                 "employee__process__name",
                 "employee__lob__name",
                 "employee__work_role__name",
-                "employee__supervisor_1__user__name",
-                "employee__supervisor_2__user__name",
+                "supervisor_1__name",
+                "supervisor_2__name",
                 "employee__pick_drop_location",
                 "start_date",
                 "start_time",
@@ -262,11 +263,11 @@ class viewRosterJson(BaseDatatableView):
                 "employee__process__name": item.process.name.title(),
                 "employee__lob__name": item.lob.name.title(),
                 "employee__work_role__name": item.work_role.name.title(),
-                "employee__supervisor_1__user__name": (
-                    "" if item.supervisor_1 is None else item.supervisor_1.user.name
+                "supervisor_1__name": (
+                    "" if item.supervisor_1 is None else item.supervisor_1.name
                 ),
-                "employee__supervisor_2__user__name": (
-                    "" if item.supervisor_2 is None else item.supervisor_2.user.name
+                "supervisor_2__name": (
+                    "" if item.supervisor_2 is None else item.supervisor_2.name
                 ),
                 "employee__gender": item.gender,
                 "employee__pick_drop_location": item.pick_drop_location.title(),
@@ -274,13 +275,17 @@ class viewRosterJson(BaseDatatableView):
                     item.start_date.strftime("%d-%b-%y") if item.start_date else "-"
                 ),
                 "start_time": (
-                    item.start_time.strftime("%H:%M %p") if item.start_time else "-"
+                    item.start_time.strftime("%I:%M %p")
+                    if item.start_time
+                    else item.shiftLegend.shift_name
                 ),
                 "end_date": (
                     item.end_date.strftime("%d-%b-%y") if item.end_date else "-"
                 ),
                 "end_time": (
-                    item.end_time.strftime("%H:%M %p") if item.end_time else "-"
+                    item.end_time.strftime("%I:%M %p")
+                    if item.end_time
+                    else item.shiftLegend.shift_name
                 ),
                 "created_by": item.created_by.name,
                 "created_at": item.created_At.strftime("%d-%b-%y"),
@@ -313,208 +318,31 @@ class viewRosterJson(BaseDatatableView):
 @login_required(login_url="/login/")
 @check_user_able_to_see_page(GroupEnum.wfm)
 def createBulkRoster(request):
-    templateName = "roster/create_bulk.html"
-    breadCrumbList = [
+    template_name = "roster/create_bulk.html"
+    bread_crumb_list = [
         PageInfoCollection.ROSTERMANAGEMENT,
         PageInfoCollection.ROSTER_VIEW,
         PageInfoCollection.ROSTER_BULK,
     ]
-    failedRow = []
+    failed_rows = []
+
     if request.method == "POST":
-        excel_file = request.FILES["excel_file"]
-        wb = load_workbook(excel_file)
-        ws = wb["Raw Roster"]
-        count = (
-            len([row for row in ws if not all([cell.value == None for cell in row])])
-            - 1
-        )
-        successCount = 0
+        sheet_name = request.POST.get("sheetName").strip()
+        if not sheet_name:
+            messages.error(request, "Sheet name is empty")
+        else:
+            process_roster_file(request, sheet_name, failed_rows)
 
-        for index, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-            if row[0] is not None:
-                logging.info(f"--------------------------------")
-                logging.info(f"index:{index}")
-                failedRow.append({"index": index})
-                # #print(row)
-                employeeExists = False
-                supervisor_Group = Group.objects.get(name="Supervisor")
-                supervisors = supervisor_Group.user_set.all()
-                supervisor1 = None
-                supervisor1_name = row[8].strip()
-                supervisor1_email = row[9].strip() if row[9] is not None else None
-                if supervisor1_email:
-                    supervisor1 = Employee.objects.get(
-                        user__email=supervisor1_email, user__in=supervisors
-                    )
-                    logging.info(f"Supervisor found by email")
-                else:
-                    if supervisor1_name:
-                        supervisor1 = Employee.objects.get(
-                            user__name=supervisor1_name, user__in=supervisors
-                        )
-                        logging.info(f"Supervisor found by name")
-                    else:
-                        supervisor1 = None
-                        logging.error(f"Supervisor Not found")
-                try:
-                    employee = Employee.objects.get(user__employee_id=row[1])
-                    employeeExists = True
-                    logging.info(f"{employee.user.name} Exists")
-                    # print(employee)
-                except Employee.DoesNotExist:
-                    # errorMessage = "Employee {employeeName} with Employee ID {employeeID} does not exist".format(
-                    #     employeeName=employee.user.name,
-                    #     employeeID=employee.user.employee_id,
-                    # )
-                    # messages.error(request, errorMessage)
-                    # break
-                    logging.error(f"Employee Does not exist. Creating a new employee.")
-
-                    data = {
-                        "name": row[3].strip(),
-                        # "email": row[1],
-                        "email": (
-                            f"{row[3].lower().replace(' ','')}{row[1]}@zohomail.com"
-                            if row[4] is None
-                            else row[4]
-                        ),
-                        "employee_id": row[1],
-                        "system_id": row[2],
-                        "gender": row[11].strip(),
-                        "process": row[5].lower().strip(),
-                        "site": row[0].lower().strip(),
-                        "work_role": row[7].lower().strip(),
-                        "lob": (
-                            row[6].lower().strip()
-                            if isinstance(row[6], str)
-                            else row[6]
-                        ),
-                        "pick_drop_location": str(row[12]).strip(),
-                        "supervisor_1": supervisor1,
-                        "supervisor_2": None,
-                        "password1": "123456",
-                    }
-                    result = employeeCreation(data, request, True)
-                    employeeExists = result
-                    if employeeExists is True:
-                        employee = Employee.objects.get(user__employee_id=row[1])
-                        # print(employee)
-                if employeeExists is True:
-                    # try:
-                    givenProcess = row[5].lower().strip()
-                    givenSite = row[0].lower().strip()
-                    givenWorkRole = row[7].lower().strip()
-                    givenLob = str(row[6]).lower().strip()
-                    process = (
-                        None
-                        if givenProcess is None
-                        else Process.objects.get(name=givenProcess)
-                    )
-
-                    site = (
-                        None
-                        if givenSite is None
-                        else Site.objects.get(name=givenSite.lower())
-                    )
-
-                    workRole = (
-                        None
-                        if givenWorkRole is None
-                        else WorkRole.objects.get(name=givenWorkRole.lower())
-                    )
-
-                    lob = (
-                        None
-                        if givenLob is None
-                        else LOB.objects.get(name=givenLob.lower())
-                    )
-
-                    noneShiftNames = [
-                        "Dayoff",
-                        "LWP",
-                        "Mentor",
-                        "NTR",
-                        "OTR",
-                        "PL",
-                        "PTR",
-                        "Resign",
-                        "TR",
-                        "Transfer",
-                        "Withdraw",
-                    ]
-                    if row[14] not in noneShiftNames:
-                        logging.info("Shift names not in none types")
-                        endTime = time(23, 59)
-                        data = {
-                            "employee": employee,
-                            "start_date": row[13],
-                            "start_time": row[14],
-                            "end_date": row[15],
-                            "end_time": (row[16] if row[16] != endTime else time(0, 0)),
-                            "shiftLegend": None,
-                            "gender": row[11].strip(),
-                            "process": process,
-                            "site": site,
-                            "work_role": workRole,
-                            "lob": lob,
-                            "pick_drop_location": str(row[12]).strip(),
-                            "supervisor_1": supervisor1,
-                            "supervisor_2": None,
-                        }
-                    else:
-                        try:
-                            shiftLegend = ShiftLegend.objects.get(shift_name=row[14])
-                            data = {
-                                "employee": employee,
-                                "start_date": row[13],
-                                "start_time": None,
-                                "end_date": row[15],
-                                "end_time": None,
-                                "shiftLegend": shiftLegend,
-                                "gender": row[11].strip(),
-                                "process": process,
-                                "site": site,
-                                "work_role": workRole,
-                                "lob": lob,
-                                "pick_drop_location": str(row[12]).strip(),
-                                "supervisor_1": supervisor1,
-                                "supervisor_2": None,
-                            }
-                        except ShiftLegend.DoesNotExist:
-                            errorMessage = f"Shift Legend :{row[14]} does not exist"
-
-                            logging.error(errorMessage)
-                            messages.error(request, errorMessage)
-                    result = rosterCreation(data, request)
-                    # print(result)
-                    if result == True:
-                        successCount += 1
-                        failedRow.remove({"index": index})
-                    else:
-                        logging.error(f"|Failed| Create A Roster |index:{index}|")
-                        break
-                # except Exception as e:
-                #     logging.error(
-                #         f"|Failed| Create A Roster |index:{index}| Exception:{e}"
-                #     )
-                logging.info(f"--------------------------------")
-        # print("failedRows:")
-        for item in failedRow:
-            pass
-            # print(item)
-        if count == successCount:
-            logging.info("All Roster Imported Successfully")
-            messages.success(request, "Roster Imported Successfully")
     context = {
         "title": "Create",
         "button": "Create",
-        "breadCrumbList": breadCrumbList,
+        "breadCrumbList": bread_crumb_list,
         "currentBreadCrumb": PageInfoCollection.ROSTER_BULK.pageName,
         "formUrl": PageInfoCollection.ROSTER_BULK.urlName,
         "rosterManagementActive": "active open",
         "rosterActive": "active",
     }
-    return render(request, templateName, context)
+    return render(request, template_name, context)
 
 
 @login_required(login_url="/login/")
