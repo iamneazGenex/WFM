@@ -211,9 +211,14 @@ class CreateEditEmployeeForm(forms.ModelForm):
     site = forms.ModelChoiceField(queryset=Site.objects.all())
     work_role = forms.ModelChoiceField(queryset=WorkRole.objects.all())
 
+    # Add userType field
+    USER_TYPE_CHOICES = [("employee", "Employee"), ("supervisor", "Supervisor")]
+    userType = forms.ChoiceField(choices=USER_TYPE_CHOICES, required=True)
+
     class Meta:
         model = CustomUser
         fields = [
+            "userType",
             "is_active",
             "email",
             "name",
@@ -279,6 +284,12 @@ class CreateEditEmployeeForm(forms.ModelForm):
 
             # Initialize is_active field for editing
             self.fields["is_active"].initial = custom_user_data["is_active"]
+
+            # Set userType filed based on the user's group
+            if self.instance.user.groups.filter(name="Supervisor").exists():
+                self.fields["userType"].initial = "supervisor"
+            else:
+                self.fields["userType"].initial = "employee"
 
     def clean(self):
         cd = super().clean()

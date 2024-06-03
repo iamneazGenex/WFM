@@ -1575,8 +1575,7 @@ def createEmployee(request):
         form = CreateEditEmployeeForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            # print(data)
-            result = employeeCreation(data, request, False)
+            result = employeeCreation(data, request, False, data["userType"])
             if result == True:
                 return redirect(PageInfoCollection.EMPLOYEE_VIEW.urlName)
         else:
@@ -1780,14 +1779,18 @@ class ViewEmployeeJson(BaseDatatableView):
             or self.request.user.is_Supervisor()
         ):
             userType = self.request.GET.get("userType")
+            supervisor_group = Group.objects.get(name="Supervisor")
             if userType == "Supervisors":
-                return Employee.objects.filter(work_role__name="Supervisor").order_by(
-                    "user__name"
-                )
+                return Employee.objects.filter(
+                    Q(work_role__name="Supervisor") | Q(user__groups=supervisor_group)
+                ).order_by("user__name")
             elif userType == "Agents":
                 return (
                     Employee.objects.all()
-                    .exclude(work_role__name="Supervisor")
+                    .exclude(
+                        Q(work_role__name="Supervisor")
+                        | Q(user__groups=supervisor_group)
+                    )
                     .order_by("user__name")
                 )
             else:
