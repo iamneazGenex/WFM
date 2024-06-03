@@ -108,7 +108,6 @@ def process_roster_row(request, row, index):
             WorkRole, row[7], "WorkRole", index, request
         )
         lob = get_object_or_log_error(LOB, row[6], "LOB", index, request)
-
         # Check if all related objects are found
         if not all([process, site, work_role, lob]):
             logging.error(f"Missing related objects for row index {index}")
