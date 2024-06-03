@@ -1969,6 +1969,7 @@ def bulkAddEmployees(request):
                             supervisor2_email = row[13]
                             logger.info(f"supervisor1 email: {supervisor1_email}")
                             supervisor1 = None
+                            supervisor2 = None
                             if supervisor1_email is not None:
                                 try:
                                     supervisor1 = Employee.objects.get(
@@ -1979,7 +1980,16 @@ def bulkAddEmployees(request):
                                         f"Supervisor [{supervisor1_email}] does not exist"
                                     )
 
-                            logger.info(f"supervisor1: {supervisor1}")
+                            if supervisor2_email is not None:
+                                try:
+                                    supervisor2 = Employee.objects.get(
+                                        user__email=supervisor2_email.lower().strip()
+                                    )
+                                except Employee.DoesNotExist:
+                                    logger.error(
+                                        f"Supervisor [{supervisor2_email}] does not exist"
+                                    )
+
                             # supervisor2 = (
                             #     Employee.objects.get(
                             #         user__email=supervisor2_email.lower()
@@ -1987,7 +1997,6 @@ def bulkAddEmployees(request):
                             #     if supervisor2_email
                             #     else None
                             # )
-                            supervisor2 = None
 
                             password = 123456
                             tempLob = str(row[8])
