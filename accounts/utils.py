@@ -17,7 +17,7 @@ def customUserCreation(request, data, groupName):
             email=data["email"]
         )
         messages.error(request, error)
-        logger.error(error)
+        logger.error(f"----{error}")
     except CustomUser.DoesNotExist:
         try:
             CustomUser.objects.get(employee_id=data["employee_id"])
@@ -25,7 +25,7 @@ def customUserCreation(request, data, groupName):
             error = "User with this Employee Id: {employee_id} already exist".format(
                 employee_id=data["employee_id"]
             )
-            logger.error(error)
+            logger.error(f"----{error}")
             messages.error(request, error)
         except CustomUser.DoesNotExist:
             # try:
