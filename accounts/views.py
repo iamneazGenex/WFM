@@ -237,9 +237,11 @@ def deleteProcess(request, id):
     successMessage = "Deleted Successfully"
     if request.user.is_WFM():
         try:
+            logging.info(f"{request.user.name} trying to delete A Process |id:{id}| ")
             process = Process.objects.get(id=id)
             process.delete()
             success = True
+            logging.info(f"|Success| Delete A Process |id:{id}|")
         except Process.DoesNotExist:
             logging.error(
                 f"|Failed| Delete A Process |id:{id}| Exception: Process does not exist."
@@ -248,6 +250,7 @@ def deleteProcess(request, id):
             logging.error(f"|Failed| Delete A Process |id:{id}| Exception:{e}")
     else:
         errorMessage = "User does not have permission to delete"
+        logging.error(f"|Failed| Delete A Process |id:{id}| {errorMessage}")
     response = JsonResponse(
         {
             "success": success,
@@ -463,9 +466,11 @@ def deleteSite(request, id):
     successMessage = "Deleted Successfully"
     if request.user.is_WFM():
         try:
+            logging.info(f"{request.user.name} trying to delete A Site |id:{id}| ")
             site = Site.objects.get(id=id)
             site.delete()
             success = True
+            logging.info(f"|Success| Delete A Site |id:{id}|")
         except Process.DoesNotExist:
             logging.error(
                 f"|Failed| Delete A Site |id:{id}| Exception: Process does not exist."
@@ -688,9 +693,11 @@ def deleteLOB(request, id):
     successMessage = "Deleted Successfully"
     if request.user.is_WFM():
         try:
+            logging.info(f"{request.user.name} trying to delete A LOB |id:{id}| ")
             lob = LOB.objects.get(id=id)
             lob.delete()
             success = True
+            logging.info(f"|Success| Delete A LOB |id:{id}| ")
         except LOB.DoesNotExist:
             logging.error(
                 f"|Failed| Delete A LOB |id:{id}| Exception: LOB does not exist."
@@ -699,6 +706,7 @@ def deleteLOB(request, id):
             logging.error(f"|Failed| Delete A LOB |id:{id}| Exception:{e}")
     else:
         errorMessage = "User does not have permission to delete"
+        logging.error(f"|Failed| Delete A LOB |id:{id}| {errorMessage}")
     response = JsonResponse(
         {
             "success": success,
@@ -912,9 +920,11 @@ def deleteWorkRole(request, id):
     successMessage = "Deleted Successfully"
     if request.user.is_WFM():
         try:
+            logging.info(f"{request.user.name} trying to delete A WorkRole |id:{id}| ")
             workRole = WorkRole.objects.get(id=id)
             workRole.delete()
             success = True
+            logging.info(f"|Success| Delete A WorkRole |id:{id}|")
         except LOB.DoesNotExist:
             logging.error(
                 f"|Failed| Delete A WorkRole |id:{id}| Exception: LOB does not exist."
@@ -923,6 +933,7 @@ def deleteWorkRole(request, id):
             logging.error(f"|Failed| Delete A WorkRole |id:{id}| Exception:{e}")
     else:
         errorMessage = "User does not have permission to delete"
+        logging.error(f"|Failed| Delete A WorkRole |id:{id}| {errorMessage}")
     response = JsonResponse(
         {
             "success": success,
@@ -1134,9 +1145,11 @@ def deleteSkill(request, id):
     successMessage = "Deleted Successfully"
     if request.user.is_WFM():
         try:
+            logging.info(f"{request.user.name} trying to delete A Skill |id:{id}| ")
             skill = Skill.objects.get(id=id)
             skill.delete()
             success = True
+            logging.info(f"|Success| Delete A Skill |id:{id}|")
         except LOB.DoesNotExist:
             logging.error(
                 f"|Failed| Delete A Skill |id:{id}| Exception: LOB does not exist."
@@ -1145,6 +1158,7 @@ def deleteSkill(request, id):
             logging.error(f"|Failed| Delete A Skill |id:{id}| Exception:{e}")
     else:
         errorMessage = "User does not have permission to delete"
+        logging.error(f"|Failed| Delete A Skill |id:{id}| {errorMessage}")
     response = JsonResponse(
         {
             "success": success,
@@ -1698,9 +1712,11 @@ def deleteEmployee(request, id):
     successMessage = "Deleted Successfully"
     if request.user.is_WFM():
         try:
+            logging.info(f"{request.user.name} trying to delete A Employee |id:{id}| ")
             employee = Employee.objects.get(id=id)
             employee.delete()
             success = True
+            logging.info(f"|Success| Delete A Employee |id:{id}|")
         except Employee.DoesNotExist:
             logging.error(
                 f"|Failed| Delete A Employee |id:{id}| Exception: Employee does not exist."
@@ -1709,6 +1725,7 @@ def deleteEmployee(request, id):
             logging.error(f"|Failed| Delete A Employee |id:{id}| Exception:{e}")
     else:
         errorMessage = "User does not have permission to delete"
+        logging.error(f"|Failed| Delete A Employee {errorMessage}")
     response = JsonResponse(
         {
             "success": success,
@@ -2283,9 +2300,11 @@ def deleteGroup(request, id):
     successMessage = "Deleted Successfully"
     if request.user.is_WFM():
         try:
+            logging.info(f"{request.user.name} trying to delete A Group |id:{id}| ")
             group = Group.objects.get(id=id)
             group.delete()
             success = True
+            logging.error(f"|Success| Delete A Group |id:{id}|")
         except Group.DoesNotExist:
             logging.error(
                 f"|Failed| Delete A Group |id:{id}| Exception: Group does not exist."
@@ -2294,6 +2313,7 @@ def deleteGroup(request, id):
             logging.error(f"|Failed| Delete A Group |id:{id}| Exception:{e}")
     else:
         errorMessage = "User does not have permission to delete"
+        logging.error(f"|Failed| Delete A Group |id:{id}| {errorMessage}")
     response = JsonResponse(
         {
             "success": success,
@@ -2506,9 +2526,11 @@ def deleteUser(request, id):
     successMessage = "Deleted Successfully"
     if request.user.is_WFM():
         try:
+            logging.info(f"{request.user.name} trying to delete A User |id:{id}|")
             user = CustomUser.objects.get(id=id)
             user.delete()
             success = True
+            logging.info(f"|Success| Delete A User |id:{id}|")
         except CustomUser.DoesNotExist:
             logging.error(
                 f"|Failed| Delete A User |id:{id}| Exception: CustomUser does not exist."
@@ -2517,6 +2539,7 @@ def deleteUser(request, id):
             logging.error(f"|Failed| Delete A User |id:{id}| Exception:{e}")
     else:
         errorMessage = "User does not have permission to delete"
+        logging.error(f"|Failed| Delete A User |id:{id}| {errorMessage}")
     response = JsonResponse(
         {
             "success": success,

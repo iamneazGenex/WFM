@@ -16,6 +16,7 @@ import logging.config
 import os
 from django.utils.log import DEFAULT_LOGGING
 from dotenv import load_dotenv
+from logging.handlers import TimedRotatingFileHandler
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent
@@ -198,7 +199,10 @@ MESSAGE_TAGS = {
 LOGGING_CONFIG = None
 
 LOGLEVEL = os.environ.get("LOGLEVEL", "info").upper()
-
+# Define the log directory and ensure it exists
+log_directory = os.path.join(BASE_DIR, "logs")
+if not os.path.exists(log_directory):
+    os.makedirs(log_directory)
 logging.config.dictConfig(
     {
         "version": 1,
@@ -216,6 +220,15 @@ logging.config.dictConfig(
                 "class": "logging.StreamHandler",
                 "formatter": "default",
             },
+            "file": {
+                "class": "logging.handlers.TimedRotatingFileHandler",
+                "formatter": "default",
+                "filename": os.path.join(log_directory, "app.log"),  # Base file path
+                "when": "midnight",  # Rotate at midnight
+                "interval": 1,  # Rotate every day
+                "backupCount": 0,  # Keep the last 30 days' logs
+                "encoding": "utf-8",
+            },
             "django.server": DEFAULT_LOGGING["handlers"]["django.server"],
         },
         "loggers": {
@@ -224,6 +237,7 @@ logging.config.dictConfig(
                 "level": LOGLEVEL,
                 "handlers": [
                     "console",
+                    "file",
                 ],
             },
             # Our application code
@@ -231,6 +245,7 @@ logging.config.dictConfig(
                 "level": LOGLEVEL,
                 "handlers": [
                     "console",
+                    "file",
                 ],
                 # Avoid double logging because of root logger
                 "propagate": False,
@@ -238,7 +253,10 @@ logging.config.dictConfig(
             # Prevent noisy modules from logging to Sentry
             "noisy_module": {
                 "level": "ERROR",
-                "handlers": ["console"],
+                "handlers": [
+                    "console",
+                    "file",
+                ],
                 "propagate": False,
             },
             # Default runserver request logging
