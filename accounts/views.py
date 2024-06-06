@@ -1912,153 +1912,176 @@ def bulkAddEmployees(request):
     ]
 
     if request.method == "POST":
-        excel_file = request.FILES.get("excel_file")
-        if "supervisor" in request.POST:
-            selectedGroup = "Supervisor"
+        sheet_name = request.POST.get("sheetName").strip()
+        if not sheet_name:
+            messages.error(request, "Sheet name is empty")
         else:
-            selectedGroup = "Employee"
+            excel_file = request.FILES.get("excel_file")
+            if "supervisor" in request.POST:
+                selectedGroup = "Supervisor"
+            else:
+                selectedGroup = "Employee"
 
-        logger.info(f"Selected Group: {selectedGroup}")
-        if excel_file:
-            wb = load_workbook(excel_file)
-            ws = wb["Sheet1"]
-            count = (
-                len(
-                    [row for row in ws if not all([cell.value == None for cell in row])]
+            logger.info(f"Selected Group: {selectedGroup}")
+            if excel_file:
+                wb = load_workbook(excel_file)
+                ws = wb[sheet_name]
+                count = (
+                    len(
+                        [
+                            row
+                            for row in ws
+                            if not all([cell.value == None for cell in row])
+                        ]
+                    )
+                    - 1
                 )
-                - 1
-            )
-            successCount = 0
-            failedList = []
-            logger.info(f"Trying to insert data")
-            for index, row in enumerate(
-                ws.iter_rows(min_row=2, values_only=True), start=2
-            ):
-                logger.info(f"--------------------------------")
-                if row[0] is not None:
-                    logger.info(f"Index:{index}")
-                    flagEmptyFields = False
-                    try:
-                        employee_id = row[2]
-                    except (ValueError, IndexError) as e:
-                        employee_id = None
-                        logging.error(
-                            f"Invalid employee_id format for index: {index} - Error: {e}"
-                        )
-                        messages.error(
-                            request, f"Invalid employee_id format for index: {index}"
-                        )
-
-                    try:
-                        name = row[0].strip() if row[0] else None
-                    except IndexError as e:
-                        name = None
-                        logging.error(f"Missing name for index: {index} - Error: {e}")
-                        messages.error(request, f"Missing name for index: {index}")
-                        break
-                    try:
-                        email = row[1].strip() if row[1] else None
-                    except IndexError as e:
-                        email = None
-                        logging.error(f"Missing email for index: {index} - Error: {e}")
-                        messages.error(request, f"Missing email for index: {index}")
-                        break
-
-                    try:
-                        system_id = str(row[3]).strip() if row[3] else None
-                    except IndexError as e:
-                        system_id = None
-                        logging.error(
-                            f"Missing system_id for index: {index} - Error: {e}"
-                        )
-                        messages.error(request, f"Missing system_id for index: {index}")
-                        break
-
-                    try:
-                        gender = row[4].strip() if row[4] else None
-                    except IndexError as e:
-                        gender = None
-                        logging.error(f"Missing gender for index: {index} - Error: {e}")
-                        messages.error(request, f"Missing gender for index: {index}")
-                        break
-
-                    customUserData = {
-                        "name": name,
-                        "email": email,
-                        "employee_id": employee_id,
-                        "system_id": system_id,
-                        "gender": gender,
-                    }
-
-                    logging.info(f"No Empty Fields in customUserData")
-                    logging.info(f"Employee Name: {row[0]}")
-                    try:
-                        process = row[5].strip() if row[5] else None
-                        site = row[6].strip() if row[6] else None
-                        workRole = row[7].strip() if row[7] else None
-                        lob = str(row[8]).strip() if row[8] else None
-                        pick_drop_location = row[9].strip() if row[9] else None
-                        supervisor1_email = row[11].strip().lower() if row[11] else None
-                        supervisor2_email = row[13].strip().lower() if row[13] else None
-                        supervisor1 = None
-                        supervisor2 = None
-                        if supervisor1_email is not None:
-                            try:
-                                supervisor1 = Employee.objects.get(
-                                    user__email=supervisor1_email
-                                )
-                            except Employee.DoesNotExist:
-                                logger.error(
-                                    f"Supervisor [{supervisor1_email}] does not exist"
-                                )
-
-                        if supervisor2_email is not None:
-                            try:
-                                supervisor2 = Employee.objects.get(
-                                    user__email=supervisor2_email
-                                )
-                            except Employee.DoesNotExist:
-                                logger.error(
-                                    f"Supervisor [{supervisor2_email}] does not exist"
-                                )
-
-                        password = 123456
-                        employeeData = {
-                            "process": process,
-                            "site": site,
-                            "work_role": workRole,
-                            "lob": lob,
-                            "pick_drop_location": pick_drop_location,
-                            "supervisor_1": supervisor1,
-                            "supervisor_2": supervisor2,
-                            "password1": password,
-                        }
-
-                        if not flagEmptyFields:
-                            data = {**customUserData, **employeeData}
-                            result = employeeCreation(
-                                data, request, True, selectedGroup, index
+                successCount = 0
+                failedList = []
+                logger.info(f"Trying to insert data")
+                for index, row in enumerate(
+                    ws.iter_rows(min_row=2, values_only=True), start=2
+                ):
+                    logger.info(f"--------------------------------")
+                    if row[0] is not None:
+                        logger.info(f"Index:{index}")
+                        flagEmptyFields = False
+                        try:
+                            employee_id = row[2]
+                        except (ValueError, IndexError) as e:
+                            employee_id = None
+                            logging.error(
+                                f"Invalid employee_id format for index: {index} - Error: {e}"
+                            )
+                            messages.error(
+                                request,
+                                f"Invalid employee_id format for index: {index}",
                             )
 
-                            if result:
-                                successCount += 1
-                            else:
-                                failedList.append(index)
-                                break
-                    except Exception as e:
-                        failedList.append(index)
-                        logging.error(
-                            f"|Failed| [Index:{index}] Create A Employee in bulk. Exception:{e}"
-                        )
-                        break
+                        try:
+                            name = row[0].strip() if row[0] else None
+                        except IndexError as e:
+                            name = None
+                            logging.error(
+                                f"Missing name for index: {index} - Error: {e}"
+                            )
+                            messages.error(request, f"Missing name for index: {index}")
+                            break
+                        try:
+                            email = row[1].strip() if row[1] else None
+                        except IndexError as e:
+                            email = None
+                            logging.error(
+                                f"Missing email for index: {index} - Error: {e}"
+                            )
+                            messages.error(request, f"Missing email for index: {index}")
+                            break
 
-                logger.info(f"--------------------------------")
-            if count == successCount:
-                logger.info(f"|Success| All {selectedGroup} Created successfully")
-                messages.success(request, f"{selectedGroup} Created successfully.")
-            else:
-                logger.error(f"|Failed| {','.join(map(str,failedList))}")
-                messages.error(request, f"Failed : {','.join(map(str,failedList))}")
+                        try:
+                            system_id = str(row[3]).strip() if row[3] else None
+                        except IndexError as e:
+                            system_id = None
+                            logging.error(
+                                f"Missing system_id for index: {index} - Error: {e}"
+                            )
+                            messages.error(
+                                request, f"Missing system_id for index: {index}"
+                            )
+                            break
+
+                        try:
+                            gender = row[4].strip() if row[4] else None
+                        except IndexError as e:
+                            gender = None
+                            logging.error(
+                                f"Missing gender for index: {index} - Error: {e}"
+                            )
+                            messages.error(
+                                request, f"Missing gender for index: {index}"
+                            )
+                            break
+
+                        customUserData = {
+                            "name": name,
+                            "email": email,
+                            "employee_id": employee_id,
+                            "system_id": system_id,
+                            "gender": gender,
+                        }
+
+                        logging.info(f"No Empty Fields in customUserData")
+                        logging.info(f"Employee Name: {row[0]}")
+                        try:
+                            process = row[5].strip() if row[5] else None
+                            site = row[6].strip() if row[6] else None
+                            workRole = row[7].strip() if row[7] else None
+                            lob = str(row[8]).strip() if row[8] else None
+                            pick_drop_location = row[9].strip() if row[9] else None
+                            supervisor1_email = (
+                                row[11].strip().lower() if row[11] else None
+                            )
+                            supervisor2_email = (
+                                row[13].strip().lower() if row[13] else None
+                            )
+                            supervisor1 = None
+                            supervisor2 = None
+                            if supervisor1_email is not None:
+                                try:
+                                    supervisor1 = Employee.objects.get(
+                                        user__email=supervisor1_email
+                                    )
+                                except Employee.DoesNotExist:
+                                    logger.error(
+                                        f"Supervisor [{supervisor1_email}] does not exist"
+                                    )
+
+                            if supervisor2_email is not None:
+                                try:
+                                    supervisor2 = Employee.objects.get(
+                                        user__email=supervisor2_email
+                                    )
+                                except Employee.DoesNotExist:
+                                    logger.error(
+                                        f"Supervisor [{supervisor2_email}] does not exist"
+                                    )
+
+                            password = 123456
+                            employeeData = {
+                                "process": process,
+                                "site": site,
+                                "work_role": workRole,
+                                "lob": lob,
+                                "pick_drop_location": pick_drop_location,
+                                "supervisor_1": supervisor1,
+                                "supervisor_2": supervisor2,
+                                "password1": password,
+                            }
+
+                            if not flagEmptyFields:
+                                data = {**customUserData, **employeeData}
+                                result = employeeCreation(
+                                    data, request, True, selectedGroup, index
+                                )
+
+                                if result:
+                                    successCount += 1
+                                else:
+                                    failedList.append(index)
+                                    break
+                        except Exception as e:
+                            failedList.append(index)
+                            logging.error(
+                                f"|Failed| [Index:{index}] Create A Employee in bulk. Exception:{e}"
+                            )
+                            break
+
+                    logger.info(f"--------------------------------")
+                if count == successCount:
+                    logger.info(f"|Success| All {selectedGroup} Created successfully")
+                    messages.success(request, f"{selectedGroup} Created successfully.")
+                else:
+                    logger.error(f"|Failed| {','.join(map(str,failedList))}")
+                    messages.error(request, f"Failed : {','.join(map(str,failedList))}")
 
     context = {
         "breadCrumbList": breadCrumbList,

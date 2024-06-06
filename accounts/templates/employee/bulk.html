@@ -9,6 +9,10 @@
       enctype="multipart/form-data"
     >
       {% csrf_token %}
+      <div class="mb-2">
+        <label for="sheetName">Sheet Name</label>
+        <input type="text" class="form-control" id="sheetName" name="sheetName" aria-describedby="sheetName" placeholder="">
+      </div>
       <input type="file" name="excel_file" />
       <input type="checkbox" name="supervisor" value="supervisor">
       <label for="supervisor">Supervisor</label><br>

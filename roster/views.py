@@ -1071,55 +1071,62 @@ def createBulkForcasting(request):
         PageInfoCollection.FORECASTING_VIEW,
         PageInfoCollection.FORECASTING_BULK,
     ]
-    # print("here")
     if request.method == "POST":
-        try:
-            excel_file = request.FILES["excel_file"]
-            wb = load_workbook(excel_file, data_only=True)
-            ws = wb["Sheet1"]
-            count = (
-                len(
-                    [row for row in ws if not all([cell.value == None for cell in row])]
+        sheet_name = request.POST.get("sheetName").strip()
+        if not sheet_name:
+            messages.error(request, "Sheet name is empty")
+        else:
+            try:
+                excel_file = request.FILES["excel_file"]
+                wb = load_workbook(excel_file, data_only=True)
+                ws = wb[sheet_name]
+                count = (
+                    len(
+                        [
+                            row
+                            for row in ws
+                            if not all([cell.value == None for cell in row])
+                        ]
+                    )
+                    - 1
                 )
-                - 1
-            )
-            successCount = 0
+                successCount = 0
 
-            for row in ws.iter_rows(min_row=2, values_only=True):
-                if row[0] is not None:
-                    # print(row)
-                    try:
-                        process = Process.objects.get(name=row[1].lower())
-                        lob = LOB.objects.get(name=row[2].lower())
-                        data = {
-                            "date": row[0],
-                            "process": process,
-                            "lob": lob,
-                            "interval": row[3],
-                            "forecast": row[4],
-                            "required_hc": row[5],
-                        }
-                        result = forecastingCreation(data, request)
-                        if result == True:
-                            successCount += 1
-                        # else:
-                        #     break
-                    except ObjectDoesNotExist as e:
-                        logger.info(
-                            f"|Failed| {e.model.__name__} does not exist .Exception: {e}"
-                        )
-                    except Exception as e:
-                        pass
-                        # print(f"An error occurred: {e}")
-            if count == successCount:
-                messages.success(request, "ALL Forecasting Uploaded Successfully")
-            elif successCount == 0:
-                messages.error(request, "Failed to Upload any Forecasting")
-            else:
-                messages.warning(request, "Failed to upload some Forecasting")
-        except Exception as e:
-            logger.info(f"|Failed| Bulk Forecasting Upload failed.Exception: {e}")
-            messages.error(request, "Bulk Forecasting Upload failed")
+                for row in ws.iter_rows(min_row=2, values_only=True):
+                    if row[0] is not None:
+                        # print(row)
+                        try:
+                            process = Process.objects.get(name=row[1].lower())
+                            lob = LOB.objects.get(name=row[2].lower())
+                            data = {
+                                "date": row[0],
+                                "process": process,
+                                "lob": lob,
+                                "interval": row[3],
+                                "forecast": row[4],
+                                "required_hc": row[5],
+                            }
+                            result = forecastingCreation(data, request)
+                            if result == True:
+                                successCount += 1
+                            # else:
+                            #     break
+                        except ObjectDoesNotExist as e:
+                            logger.info(
+                                f"|Failed| {e.model.__name__} does not exist .Exception: {e}"
+                            )
+                        except Exception as e:
+                            pass
+
+                if count == successCount:
+                    messages.success(request, "ALL Forecasting Uploaded Successfully")
+                elif successCount == 0:
+                    messages.error(request, "Failed to Upload any Forecasting")
+                else:
+                    messages.warning(request, "Failed to upload some Forecasting")
+            except Exception as e:
+                logger.info(f"|Failed| Bulk Forecasting Upload failed.Exception: {e}")
+                messages.error(request, "Bulk Forecasting Upload failed")
     context = {
         "title": "Create",
         "button": "Create",
