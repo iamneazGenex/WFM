@@ -103,3 +103,16 @@ def get_object_or_log_error(model, name, model_name, index, request):
         logging.error(f"----{message}")
         messages.error(request, message)
         return None
+
+
+def get_or_none(model, value):
+    try:
+        if value is None:
+            return None
+        return model.objects.get(name=value.lower())
+    except model.DoesNotExist:
+        logger.warning(f"{model.__name__} with name '{value}' does not exist.")
+        return None
+    except Exception as e:
+        logger.error(f"Error retrieving {model.__name__} for value '{value}': {e}")
+        return None

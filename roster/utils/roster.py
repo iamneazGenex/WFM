@@ -16,6 +16,7 @@ from django.contrib.auth.models import Group
 from django.shortcuts import get_object_or_404
 from datetime import time
 from rms.global_utilities import *
+from django.db import transaction
 
 logger = logging.getLogger(__name__)
 
@@ -97,62 +98,67 @@ def count_non_empty_rows(worksheet):
 
 
 def process_roster_row(request, row, index):
-    try:
-        employee = Employee.objects.get(user__employee_id=row[1])
-        logging.info(f"{employee.user.name} exists")
+    with transaction.atomic():
+        try:
+            employee = Employee.objects.get(user__employee_id=row[1])
+            logging.info(f"{employee.user.name} exists")
 
-        # Retrieve related objects and check if any are missing
-        process = get_object_or_log_error(Process, row[5], "Process", index, request)
-        site = get_object_or_log_error(Site, row[0], "Site", index, request)
-        work_role = get_object_or_log_error(
-            WorkRole, row[7], "WorkRole", index, request
-        )
-        lob = get_object_or_log_error(LOB, row[6], "LOB", index, request)
-        # Check if all related objects are found
-        if not all([process, site, work_role, lob]):
-            logging.error(f"Missing related objects for row index {index}")
-            return False
-        # Get shift name
-        shift_name = get_shift_name(row[15], row[17])
-        if not shift_name:
-            message = f"Invalid shift start time type for row index {index}"
+            # Retrieve related objects and check if any are missing
+            process = get_object_or_log_error(
+                Process, row[5], "Process", index, request
+            )
+            site = get_object_or_log_error(Site, row[0], "Site", index, request)
+            work_role = get_object_or_log_error(
+                WorkRole, row[7], "WorkRole", index, request
+            )
+            lob = get_object_or_log_error(LOB, str(row[6]), "LOB", index, request)
+            # Check if all related objects are found
+            if not all([process, site, work_role, lob]):
+                logging.error(f"Missing related objects for row index {index}")
+                return False
+            # Get shift name
+            shift_name = get_shift_name(row[15], row[17])
+            if not shift_name:
+                message = f"Invalid shift start time type for row index {index}"
+                logging.error(message)
+                messages.error(request, message)
+                return False
+
+            # Get shift legend
+            shift_legend = get_shift_legend(shift_name)
+            if not shift_legend:
+                message = (
+                    f"ShiftLegend {shift_name} does not exist for row index {index}"
+                )
+                logging.error(message)
+                messages.error(request, message)
+                return False
+
+            supervisor_1 = getSupervisor(row[8], row[9])
+            supervisor_2 = getSupervisor(row[10], row[11])
+
+            roster_data = {
+                "employee": employee,
+                "start_date": row[14],
+                "start_time": row[15] if shift_legend.shift_count == 1 else None,
+                "end_date": row[16],
+                "end_time": row[17] if shift_legend.shift_count == 1 else None,
+                "shift_legend": shift_legend,
+                "gender": row[12].strip(),
+                "process": process,
+                "site": site,
+                "work_role": work_role,
+                "lob": lob,
+                "pick_drop_location": str(row[13]).strip(),
+                "supervisor_1": supervisor_1,
+                "supervisor_2": supervisor_2,
+            }
+            return roster_creation(roster_data, request, index)
+        except Employee.DoesNotExist:
+            message = f"Employee does not exist for row index {index}"
             logging.error(message)
             messages.error(request, message)
             return False
-
-        # Get shift legend
-        shift_legend = get_shift_legend(shift_name)
-        if not shift_legend:
-            message = f"ShiftLegend {shift_name} does not exist for row index {index}"
-            logging.error(message)
-            messages.error(request, message)
-            return False
-
-        supervisor_1 = getSupervisor(row[8], row[9])
-        supervisor_2 = getSupervisor(row[10], row[11])
-
-        roster_data = {
-            "employee": employee,
-            "start_date": row[14],
-            "start_time": row[15] if shift_legend.shift_count == 1 else None,
-            "end_date": row[16],
-            "end_time": row[17] if shift_legend.shift_count == 1 else None,
-            "shift_legend": shift_legend,
-            "gender": row[12].strip(),
-            "process": process,
-            "site": site,
-            "work_role": work_role,
-            "lob": lob,
-            "pick_drop_location": str(row[13]).strip(),
-            "supervisor_1": supervisor_1,
-            "supervisor_2": supervisor_2,
-        }
-        return roster_creation(roster_data, request, index)
-    except Employee.DoesNotExist:
-        message = f"Employee does not exist for row index {index}"
-        logging.error(message)
-        messages.error(request, message)
-        return False
 
 
 def get_object_or_none(model, name):
