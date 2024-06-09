@@ -14,5 +14,6 @@ keepalive = 3600
 accesslog = "-"  # Redirect Gunicorn access logs to stdout
 errorlog = "-"  # Redirect Gunicorn error logs to stdout
 loglevel = "debug"
+worker_class = "eventlet"
 # Specify the working directory
 WorkingDirectory = "/home/wfmuser/WFM"
