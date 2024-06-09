@@ -1,6 +1,6 @@
 import os
 from logging.handlers import TimedRotatingFileHandler
-import concurrent_log_handler
+from concurrent_log_handler import ConcurrentRotatingFileHandler
 
 # Define the log directory and ensure it exists
 log_directory = "/home/wfmuser/WFM/logs"
