@@ -144,4 +144,4 @@ downloads/
 !.vscode/extensions.jsoneports
 
 #log directory
-log
+logs
