@@ -1,5 +1,6 @@
 import os
 from logging.handlers import TimedRotatingFileHandler
+import concurrent_log_handler
 
 # Define the log directory and ensure it exists
 log_directory = "/home/wfmuser/WFM/logs"
@@ -22,14 +23,12 @@ LOGGING = {
             "formatter": "default",
         },
         "file": {
-            "class": "logging.handlers.TimedRotatingFileHandler",
+            "class": "concurrent_log_handler.ConcurrentRotatingFileHandler",
             "formatter": "default",
             "filename": os.path.join(log_directory, "app.log"),  # Base filename
-            "when": "midnight",  # Rotate at midnight
-            "interval": 1,  # Rotate every day
-            "backupCount": 0,  # Keep all logs indefinitely
+            "maxBytes": 100 * 1024 * 1024,  # Rotate log files at 10MB
+            "backupCount": 20,  # Keep all log files
             "encoding": "utf-8",
-            "utc": True,  # Use UTC time for rotation
         },
     },
     "loggers": {

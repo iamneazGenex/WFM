@@ -17,7 +17,7 @@ import os
 from django.utils.log import DEFAULT_LOGGING
 from dotenv import load_dotenv
 from logging.handlers import TimedRotatingFileHandler
-from concurrent_log_handler import ConcurrentRotatingFileHandler
+from concurrent_log_handler import ConcurrentTimedRotatingFileHandler
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent
@@ -222,11 +222,13 @@ logging.config.dictConfig(
                 "formatter": "default",
             },
             "file": {
-                "class": "concurrent_log_handler.ConcurrentRotatingFileHandler",
+                "class": "concurrent_log_handler.ConcurrentTimedRotatingFileHandler",
                 "formatter": "default",
                 "filename": os.path.join(log_directory, "app.log"),  # Base file path
-                "maxBytes": 10 * 1024 * 1024,  # Rotate log files at 10MB
-                "backupCount": 0,  # Keep all log files
+                "when": "M",
+                "interval": 1,
+                "maxBytes": 0,
+                "backupCount": 1440,
                 "encoding": "utf-8",
             },
             "django.server": DEFAULT_LOGGING["handlers"]["django.server"],
