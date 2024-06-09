@@ -15,5 +15,6 @@ accesslog = "-"  # Redirect Gunicorn access logs to stdout
 errorlog = "-"  # Redirect Gunicorn error logs to stdout
 loglevel = "debug"
 worker_class = "gevent"
+max_requests = 1000  # Restart worker after processing 1000 requests
 # Specify the working directory
 WorkingDirectory = "/home/wfmuser/WFM"
