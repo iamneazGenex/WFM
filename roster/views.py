@@ -61,7 +61,7 @@ def import_from_excel(request):
 #   Roster Management
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewRosterManagement(request):
     templateName = "rosterManagement/view.html"
     breadCrumbList = [PageInfoCollection.ROSTERMANAGEMENT]
@@ -80,7 +80,9 @@ def viewRosterManagement(request):
 #   Roster
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee)
+@check_user_able_to_see_page(
+    GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee, GroupEnum.mis_group_1
+)
 def viewRoster(request):
     templateName = "roster/view.html"
     breadCrumbList = [
@@ -104,7 +106,7 @@ def viewRoster(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createRoster(request):
     templateName = "roster/create.html"
     breadCrumbList = [
@@ -194,7 +196,7 @@ class viewRosterJson(BaseDatatableView):
 
     def get_initial_queryset(self):
         # Log the request
-        if self.request.user.is_WFM():
+        if self.request.user.is_WFM() or self.request.user.is_MIS_GROUP_1():
             return (
                 Roster.objects.all()
                 .order_by("-created_At")
@@ -255,6 +257,13 @@ class viewRosterJson(BaseDatatableView):
         data = []
         for item in qs:
             # Fetch the related field and use it directly in the data dictionary
+            actions = ""
+            if self.request.user.is_WFM():
+                actions = format_html(
+                    "{} {}", self.get_edit_html(item), self.get_delete_html(item)
+                )
+            elif self.request.user.is_MIS_GROUP_1():
+                actions = format_html("{}", self.get_edit_html(item))
             row = {
                 "employee__site__name": item.site.name.title(),
                 "employee__user__employee_id": item.employee.user.employee_id,
@@ -291,7 +300,7 @@ class viewRosterJson(BaseDatatableView):
                 "created_at": item.created_At.strftime("%d-%b-%y"),
                 "updated_at": item.updated_At.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
-                "actions": self.get_actions_html(item),
+                "actions": actions,
             }
             data.append(row)
         return data
@@ -299,24 +308,29 @@ class viewRosterJson(BaseDatatableView):
     def render_column(self, row, column):
         return super(viewRosterJson, self).render_column(row, column)
 
-    def get_actions_html(self, item):
+    def get_edit_html(self, item):
         edit_url = reverse(PageInfoCollection.ROSTER_EDIT.urlName, args=[item.id])
-        delete_url = reverse(PageInfoCollection.ROSTER_DELETE.urlName, args=[item.id])
 
         edit_link = format_html(
             '<a href="{}"class="btn btn-success">Edit</a>',
             edit_url,
         )
+
+        return edit_link
+
+    def get_delete_html(self, item):
+        delete_url = reverse(PageInfoCollection.ROSTER_DELETE.urlName, args=[item.id])
+
         delete_link = format_html(
             '<a href="{}" data-toggle="modal" data-target="#rejectModal" class="btn btn-danger">Delete</a>',
             delete_url,
         )
 
-        return format_html("{} {}", edit_link, delete_link)
+        return delete_link
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createBulkRoster(request):
     template_name = "roster/create_bulk.html"
     bread_crumb_list = [
@@ -346,7 +360,7 @@ def createBulkRoster(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editRoster(request, id):
     templateName = "roster/edit.html"
     roster = Roster.objects.get(id=id)
@@ -415,7 +429,7 @@ def deleteRoster(request, id):
 #   Roster Count
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewRosterCount(request):
     templateName = "rosterCount/view.html"
     breadCrumbList = [
@@ -518,7 +532,7 @@ class viewRosterCountJson(BaseDatatableView):
 
     def get_initial_queryset(self):
         # Log the request
-        if self.request.user.is_WFM():
+        if self.request.user.is_WFM() or self.request.user.is_MIS_GROUP_1():
             return RosterCount.objects.all()
         else:
             return RosterCount.objects.none()
@@ -613,7 +627,7 @@ class viewRosterCountJson(BaseDatatableView):
 #   Roster Seat Count
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewRosterSeatCount(request):
     templateName = "rosterSeatCount/view.html"
     breadCrumbList = [
@@ -655,7 +669,7 @@ class viewRosterSeatCountJson(BaseDatatableView):
 
     def get_initial_queryset(self):
         # Log the request
-        if self.request.user.is_WFM():
+        if self.request.user.is_WFM() or self.request.user.is_MIS_GROUP_1():
             return RosterSeatCount.objects.all()
         else:
             return RosterSeatCount.objects.none()
@@ -712,7 +726,7 @@ class viewRosterSeatCountJson(BaseDatatableView):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createRosterSeatCount(request):
     templateName = "rosterSeatCount/create.html"
     breadCrumbList = [
@@ -748,7 +762,7 @@ def createRosterSeatCount(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createBulkRosterSeatCount(request):
     templateName = "rosterSeatCount/create_bulk.html"
     breadCrumbList = [
@@ -804,7 +818,7 @@ def createBulkRosterSeatCount(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editRosterSeatCount(request, id):
     templateName = "rosterSeatCount/edit.html"
     instance = RosterSeatCount.objects.get(id=id)
@@ -845,7 +859,7 @@ def editRosterSeatCount(request, id):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def deleteRosterSeatCount(request, id):
     success = False
     errorMessage = "Failed To Delete"
@@ -878,7 +892,7 @@ def deleteRosterSeatCount(request, id):
 #   Work RULE
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewWorkRule(request):
     templateName = "workRule/view.html"
     breadCrumbList = [PageInfoCollection.SETTINGS, PageInfoCollection.WORKRULE_VIEW]
@@ -902,7 +916,7 @@ def viewWorkRule(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createWorkRule(request):
     template_name = "workRule/create.html"
     breadCrumbList = [
@@ -939,7 +953,7 @@ def createWorkRule(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editWorkRule(request, id):
     template_name = "workRule/edit.html"
     breadCrumbList = [
@@ -981,7 +995,9 @@ def editWorkRule(request, id):
 #   Forecasting
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee)
+@check_user_able_to_see_page(
+    GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee, GroupEnum.mis_group_1
+)
 def viewForecasting(request):
 
     date = datetime(2024, 1, 1)
@@ -1030,7 +1046,7 @@ def viewForecasting(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createForecasting(request):
     templateName = "forecasting/create.html"
     breadCrumbList = [
@@ -1064,7 +1080,7 @@ def createForecasting(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createBulkForcasting(request):
     templateName = "forecasting/create_bulk.html"
     breadCrumbList = [
@@ -1139,7 +1155,7 @@ def createBulkForcasting(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editForecasting(request, id):
     templateName = "forecasting/edit.html"
     forecastInstance = Forecast.objects.get(id=id)
@@ -1208,7 +1224,7 @@ class viewForecastingListJson(BaseDatatableView):
 
     def get_initial_queryset(self):
         # Log the request
-        if self.request.user.is_WFM():
+        if self.request.user.is_WFM() or self.request.user.is_MIS_GROUP_1():
             return Forecast.objects.all().order_by("-created_At")
         else:
             return Forecast.objects.none()
@@ -1226,6 +1242,13 @@ class viewForecastingListJson(BaseDatatableView):
         data = []
         for item in qs:
             # Fetch the related field and use it directly in the data dictionary
+            actions = ""
+            if self.request.user.is_WFM():
+                actions = format_html(
+                    "{} {}", self.get_edit_html(item), self.get_delete_html(item)
+                )
+            elif self.request.user.is_MIS_GROUP_1():
+                actions = format_html("{}", self.get_edit_html(item))
             row = {
                 "date": (item.date.strftime("%d-%b-%y") if item.date else "-"),
                 "process__name": item.process.name.title(),
@@ -1237,7 +1260,7 @@ class viewForecastingListJson(BaseDatatableView):
                 "created_at": item.created_At.strftime("%d-%b-%y"),
                 "updated_at": item.updated_At.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
-                "actions": self.get_actions_html(item),
+                "actions": actions,
             }
             data.append(row)
         return data
@@ -1247,19 +1270,24 @@ class viewForecastingListJson(BaseDatatableView):
 
     def get_actions_html(self, item):
         edit_url = reverse(PageInfoCollection.FORECASTING_EDIT.urlName, args=[item.id])
-        delete_url = reverse(
-            PageInfoCollection.FORECASTING_DELETE.urlName, args=[item.id]
-        )
+
         edit_link = format_html(
             '<a href="{}"class="btn btn-success">Edit</a>',
             edit_url,
+        )
+
+        return edit_link
+
+    def get_actions_html(self, item):
+        delete_url = reverse(
+            PageInfoCollection.FORECASTING_DELETE.urlName, args=[item.id]
         )
         delete_link = format_html(
             '<a href="{}" data-toggle="modal" data-target="#rejectModal" class="btn btn-danger">Delete</a>',
             delete_url,
         )
 
-        return format_html("{} {}", edit_link, delete_link)
+        return delete_link
 
 
 @login_required(login_url="/login/")
@@ -1294,7 +1322,9 @@ def deleteForecasting(request, id):
 #   SHIFT LEGEND
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee)
+@check_user_able_to_see_page(
+    GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee, GroupEnum.mis_group_1
+)
 def viewShiftLegend(request):
 
     templateName = "shiftLegend/view.html"
@@ -1318,7 +1348,7 @@ def viewShiftLegend(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createShiftLegend(request):
     templateName = "shiftLegend/create.html"
     breadCrumbList = [
@@ -1353,7 +1383,7 @@ def createShiftLegend(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createBulkShiftLegend(request):
     templateName = "shiftLegend/create_bulk.html"
     breadCrumbList = [
@@ -1427,7 +1457,7 @@ def createBulkShiftLegend(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editShiftLegend(request, id):
     templateName = "shiftLegend/edit.html"
     shiftLegendInstance = ShiftLegend.objects.get(id=id)
@@ -1544,7 +1574,7 @@ class viewShiftLegendListJson(BaseDatatableView):
 
     def get_initial_queryset(self):
         # Log the request
-        if self.request.user.is_WFM():
+        if self.request.user.is_WFM() or self.request.user.is_MIS_GROUP_1():
             return ShiftLegend.objects.all().order_by("-created_At")
         else:
             return ShiftLegend.objects.none()
@@ -1607,6 +1637,13 @@ class viewShiftLegendListJson(BaseDatatableView):
         data = []
         for item in qs:
             # Fetch the related field and use it directly in the data dictionary
+            actions = ""
+            if self.request.user.is_WFM():
+                actions = format_html(
+                    "{} {}", self.get_edit_html(item), self.get_delete_html(item)
+                )
+            elif self.request.user.is_MIS_GROUP_1():
+                actions = format_html("{}", self.get_edit_html(item))
             row = {
                 "shift_name": item.shift_name,
                 "shift_count": item.shift_count,
@@ -1734,7 +1771,7 @@ class viewShiftLegendListJson(BaseDatatableView):
                 "created_at": item.created_At.strftime("%d-%b-%y"),
                 "updated_at": item.updated_At.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
-                "actions": self.get_actions_html(item),
+                "actions": actions,
             }
             data.append(row)
         return data
@@ -1742,21 +1779,28 @@ class viewShiftLegendListJson(BaseDatatableView):
     def render_column(self, row, column):
         return super(viewForecastingListJson, self).render_column(row, column)
 
-    def get_actions_html(self, item):
+    def get_edit_html(self, item):
         edit_url = reverse(PageInfoCollection.SHIFTLEGEND_EDIT.urlName, args=[item.id])
-        delete_url = reverse(
-            PageInfoCollection.SHIFTLEGEND_DELETE.urlName, args=[item.id]
-        )
+
         edit_link = format_html(
             '<a href="{}"class="btn btn-success">Edit</a>',
             edit_url,
         )
+
+        return edit_link
+
+    def get_delete_html(self, item):
+
+        delete_url = reverse(
+            PageInfoCollection.SHIFTLEGEND_DELETE.urlName, args=[item.id]
+        )
+
         delete_link = format_html(
             '<a href="{}" data-toggle="modal" data-target="#rejectModal" class="btn btn-danger">Delete</a>',
             delete_url,
         )
 
-        return format_html("{} {}", edit_link, delete_link)
+        return delete_link
 
 
 @login_required(login_url="/login/")

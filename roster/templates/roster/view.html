@@ -52,7 +52,7 @@
           <th>Created At</th>
           <th>Updated By</th>
           <th>Updated At</th>
-          {% if user.is_WFM %}
+          {% if user.is_WFM or user.is_MIS_GROUP_1 %}
           <th>Actions</th>
           {% endif %}
         </tr>
@@ -72,6 +72,7 @@
 
     // Get the text content of the h6 tag
     var userTypeValue = userTypeTag.textContent || userTypeTag.innerText;
+    console.log(userTypeValue);
     //$('#myTable tfoot tr').appendTo('#myTable thead');
     var table = $("#myTable").DataTable({
       processing: true,
@@ -115,7 +116,7 @@
       columnDefs: [
         {
           targets: -1, // The last column
-          visible: userTypeValue == "WFM",
+          visible: userTypeValue == "WFM" || userTypeValue == "MIS_GROUP_1",
           data: "actions",
           orderable: false,
           searchable: false,

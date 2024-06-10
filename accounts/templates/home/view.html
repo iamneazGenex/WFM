@@ -2,7 +2,7 @@
 {% load static %} 
 {% block main %} 
 <h6 id="employeeID" hidden>{{user.id}}</h6>
-{% if user.is_WFM %}
+{% if user.is_WFM or user.is_MIS_GROUP_1 %}
 <div class="card ">
   <div class="card-body">
       <div class="row">

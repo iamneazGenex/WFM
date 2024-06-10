@@ -192,6 +192,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin, BaseModel):
     def is_WFM(self):
         return self.groups.filter(name="WFM").exists()
 
+    def is_MIS_GROUP_1(self):
+        return self.groups.filter(name="MIS_GROUP_1").exists()
+
     def is_Supervisor(self):
         return self.groups.filter(name="Supervisor").exists()
 
@@ -203,6 +206,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin, BaseModel):
             return "WFM"
         elif self.groups.filter(name="Supervisor").exists():
             return "Supervisor"
+        elif self.groups.filter(name="MIS_GROUP_1").exists():
+            return "MIS_GROUP_1"
         else:
             return "Employee"
 

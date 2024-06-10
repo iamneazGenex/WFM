@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 #   Avaya CDR
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewAvayaCDR(request):
 
     templateName = "avayaCDR/view.html"
@@ -60,7 +60,7 @@ def viewAvayaCDR(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createAvayaCDR(request):
     templateName = "avayaCDR/create.html"
     breadCrumbList = [
@@ -95,7 +95,7 @@ def createAvayaCDR(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createBulkAvayaCDR(request):
     templateName = "avayaCDR/create_bulk.html"
     breadCrumbList = [
@@ -186,7 +186,7 @@ def createBulkAvayaCDR(request):
 #   Agent Hourly Performace
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewAgentHourlyPerformance(request):
 
     templateName = "agentHourlyPerformance/view.html"
@@ -210,7 +210,7 @@ def viewAgentHourlyPerformance(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createAgentHourlyPerformance(request):
     templateName = "avayaCDR/create.html"
     breadCrumbList = [
@@ -245,7 +245,7 @@ def createAgentHourlyPerformance(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createBulkAgentHourlyPerformance(request):
     templateName = "agentHourlyPerformance/create_bulk.html"
     breadCrumbList = [
@@ -372,7 +372,7 @@ def createBulkAgentHourlyPerformance(request):
 #   Login Logout Time
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewLoginLogoutTime(request):
 
     templateName = "loginLogoutTime/view.html"
@@ -396,7 +396,7 @@ def viewLoginLogoutTime(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createLoginLogoutTime(request):
     templateName = "avayaCDR/create.html"
     breadCrumbList = [
@@ -432,7 +432,7 @@ def createLoginLogoutTime(request):
 
 # [136, 298, 299, 300, 301, 305, 317, 318, 320, 322, 325, 328, 336, 344, 364, 372, 488, 498, 526, 529, 542, 571, 616, 667, 715, 742, 753, 879, 884, 909, 915, 924, 925, 929, 930, 932, 935, 946, 948, 982, 986, 987, 988, 990, 992, 1004, 1010, 1022, 1023, 1025, 1034, 1035, 1036, 1038, 1165, 1225, 1254, 1347, 1356, 1429, 1430, 1439, 1443, 1568, 1593, 1620, 1638, 1642, 1651, 1871, 2142, 2147, 2198, 2199, 2215, 2227, 2266]
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createBulkLoginLogoutTime(request):
     templateName = "loginLogoutTime/create_bulk.html"
     breadCrumbList = [
@@ -514,7 +514,7 @@ def createBulkLoginLogoutTime(request):
 #   Reporting One
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewReportingOne(request):
 
     templateName = "reportingOne/view.html"
@@ -809,7 +809,7 @@ class viewReportingOneListJson(View):
 #   Reporting Two
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewReportingTwo(request):
 
     templateName = "reportingTwo/view.html"
@@ -891,7 +891,7 @@ class viewReportingTwoListJson(View):
 #   Reporting Three
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewReportingThree(request):
 
     templateName = "reportingThree/view.html"

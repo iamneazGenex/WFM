@@ -27,7 +27,9 @@ logger = logging.getLogger(__name__)
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee)
+@check_user_able_to_see_page(
+    GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee, GroupEnum.mis_group_1
+)
 def viewDayOffTradingRequests(request):
     template = "changeRequest/dayOffTrading/view.html"
     breadCrumbList = [
@@ -337,7 +339,9 @@ def createDayOffTrading(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee)
+@check_user_able_to_see_page(
+    GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee, GroupEnum.mis_group_1
+)
 def shiftTimeTrading(request):
     template = "changeRequest/shift_time_trading.html"
     employee = getEmployee(request.user.id)
@@ -550,7 +554,9 @@ def shiftTimeTrading(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee)
+@check_user_able_to_see_page(
+    GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee, GroupEnum.mis_group_1
+)
 def viewShiftTimeTradingRequests(request):
     template = "changeRequest/shiftTimeTrading/view.html"
     breadCrumbList = [
@@ -993,7 +999,7 @@ class DayOffTradingListJson(BaseDatatableView):
                 return DayOffTrading.objects.filter(
                     Q(requestor=employee) | Q(requestee=employee)
                 ).order_by("-created_At")
-        elif self.request.user.is_WFM():
+        elif self.request.user.is_WFM() or self.request.user.is_MIS_GROUP_1():
             return DayOffTrading.objects.all()
 
     def filter_queryset(self, qs):

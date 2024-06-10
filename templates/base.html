@@ -141,7 +141,7 @@
     <div class="layout-wrapper layout-content-navbar">
       <div class="layout-container">
         {% if user.is_authenticated %}
-          {% if user.is_WFM %}
+          {% if user.is_WFM or user.is_MIS_GROUP_1 %}
                 {% include 'sidebar/sidebar_wfm.html' %}
           {% endif %}
           {% if user.is_Employee or user.is_Supervisor %}

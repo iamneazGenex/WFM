@@ -94,7 +94,9 @@ def viewUsers(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee)
+@check_user_able_to_see_page(
+    GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee, GroupEnum.mis_group_1
+)
 def home(request):
     templateName = "home/view.html"
     skills = Skill.objects.all()
@@ -115,7 +117,7 @@ def home(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewProcess(request):
     templateName = "process/view.html"
     breadCrumbList = [PageInfoCollection.SETTINGS, PageInfoCollection.PROCESS_VIEW]
@@ -135,7 +137,7 @@ def viewProcess(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createProcess(request):
     templateName = "process/create.html"
 
@@ -181,7 +183,7 @@ def createProcess(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editProcess(request, id):
     template_name = "process/edit.html"
 
@@ -289,6 +291,7 @@ class viewProcessJson(BaseDatatableView):
             self.request.user.is_WFM()
             or self.request.user.is_Employee()
             or self.request.user.is_Supervisor()
+            or self.request.user.is_MIS_GROUP_1()
         ):
             return Process.objects.all().order_by("name")
 
@@ -319,13 +322,20 @@ class viewProcessJson(BaseDatatableView):
         data = []
         for item in qs:
             # Fetch the related field and use it directly in the data dictionary
+            actions = ""
+            if self.request.user.is_WFM():
+                actions = format_html(
+                    "{} {}", self.get_edit_html(item), self.get_delete_html(item)
+                )
+            elif self.request.user.is_MIS_GROUP_1():
+                actions = format_html("{}", self.get_edit_html(item))
             row = {
                 "name": item.name.title(),
                 "created_by": "" if item.created_by is None else item.created_by.name,
                 "created_at": item.created_at.strftime("%d-%b-%y"),
                 "updated_at": item.updated_at.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
-                "actions": self.get_actions_html(item),
+                "actions": actions,
             }
             data.append(row)
         return data
@@ -339,20 +349,25 @@ class viewProcessJson(BaseDatatableView):
         edit_link = f'<a href="{edit_url}" class="btn btn-success">Edit</a>'
         return f"{edit_link}"
 
-    def get_actions_html(self, item):
+    def get_edit_html(self, item):
         edit_url = reverse(PageInfoCollection.PROCESS_EDIT.urlName, args=[item.id])
-        reject_url = reverse(PageInfoCollection.PROCESS_DELETE.urlName, args=[item.id])
 
         edit_link = format_html(
             '<a href="{}" class="btn btn-success">Edit</a>',
             edit_url,
         )
+
+        return edit_link
+
+    def get_delete_html(self, item):
+        reject_url = reverse(PageInfoCollection.PROCESS_DELETE.urlName, args=[item.id])
+
         reject_link = format_html(
             '<a href="{}" data-toggle="modal" data-target="#rejectModal" class="btn btn-danger">Delete</a>',
             reject_url,
         )
 
-        return format_html("{} {}", edit_link, reject_link)
+        return reject_link
 
 
 ################################################################
@@ -361,7 +376,7 @@ class viewProcessJson(BaseDatatableView):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewSite(request):
     templateName = "site/view.html"
 
@@ -383,7 +398,7 @@ def viewSite(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createSite(request):
     templateName = "site/create.html"
     breadCrumbList = [
@@ -411,7 +426,7 @@ def createSite(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editSite(request, id):
     template_name = "site/edit.html"
     breadCrumbList = [
@@ -517,6 +532,7 @@ class viewSiteJson(BaseDatatableView):
             self.request.user.is_WFM()
             or self.request.user.is_Employee()
             or self.request.user.is_Supervisor()
+            or self.request.user.is_MIS_GROUP_1()
         ):
             return Site.objects.all().order_by("name")
         return Site.objects.none()
@@ -548,6 +564,13 @@ class viewSiteJson(BaseDatatableView):
         data = []
         for item in qs:
             # Fetch the related field and use it directly in the data dictionary
+            actions = ""
+            if self.request.user.is_WFM():
+                actions = format_html(
+                    "{} {}", self.get_edit_html(item), self.get_delete_html(item)
+                )
+            elif self.request.user.is_MIS_GROUP_1():
+                actions = format_html("{}", self.get_edit_html(item))
             row = {
                 "name": item.name.title(),
                 "created_by": "" if item.created_by is None else item.created_by.name,
@@ -558,7 +581,7 @@ class viewSiteJson(BaseDatatableView):
                     else item.updated_at.strftime("%d-%b-%y")
                 ),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
-                "actions": self.get_actions_html(item),
+                "actions": actions,
             }
             data.append(row)
         return data
@@ -566,20 +589,25 @@ class viewSiteJson(BaseDatatableView):
     def render_column(self, row, column):
         return super(viewSiteJson, self).render_column(row, column)
 
-    def get_actions_html(self, item):
+    def get_edit_html(self, item):
         edit_url = reverse(PageInfoCollection.SITE_EDIT.urlName, args=[item.id])
-        reject_url = reverse(PageInfoCollection.SITE_DELETE.urlName, args=[item.id])
 
         edit_link = format_html(
             '<a href="{}" class="btn btn-success">Edit</a>',
             edit_url,
         )
+
+        return edit_link
+
+    def get_delete_html(self, item):
+        reject_url = reverse(PageInfoCollection.SITE_DELETE.urlName, args=[item.id])
+
         reject_link = format_html(
             '<a href="{}" data-toggle="modal" data-target="#rejectModal" class="btn btn-danger">Delete</a>',
             reject_url,
         )
 
-        return format_html("{} {}", edit_link, reject_link)
+        return reject_link
 
 
 ################################################################
@@ -588,7 +616,7 @@ class viewSiteJson(BaseDatatableView):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewLOB(request):
     templateName = "lob/view.html"
 
@@ -610,7 +638,7 @@ def viewLOB(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createLOB(request):
     templateName = "lob/create.html"
     breadCrumbList = [
@@ -638,7 +666,7 @@ def createLOB(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editLOB(request, id):
     template_name = "lob/edit.html"
     breadCrumbList = [
@@ -745,6 +773,7 @@ class viewLOBJson(BaseDatatableView):
             self.request.user.is_WFM()
             or self.request.user.is_Employee()
             or self.request.user.is_Supervisor()
+            or self.request.user.is_MIS_GROUP_1()
         ):
             return LOB.objects.all().order_by("name")
 
@@ -775,13 +804,20 @@ class viewLOBJson(BaseDatatableView):
         data = []
         for item in qs:
             # Fetch the related field and use it directly in the data dictionary
+            actions = ""
+            if self.request.user.is_WFM():
+                actions = format_html(
+                    "{} {}", self.get_edit_html(item), self.get_delete_html(item)
+                )
+            elif self.request.user.is_MIS_GROUP_1():
+                actions = format_html("{}", self.get_edit_html(item))
             row = {
                 "name": item.name.upper(),
                 "created_by": "" if item.created_by is None else item.created_by.name,
                 "created_at": item.created_at.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
                 "updated_at": item.updated_at.strftime("%d-%b-%y"),
-                "actions": self.get_actions_html(item),
+                "actions": actions,
             }
             data.append(row)
         return data
@@ -789,20 +825,25 @@ class viewLOBJson(BaseDatatableView):
     def render_column(self, row, column):
         return super(viewLOBJson, self).render_column(row, column)
 
-    def get_actions_html(self, item):
+    def get_edit_html(self, item):
         edit_url = reverse(PageInfoCollection.LOB_EDIT.urlName, args=[item.id])
-        reject_url = reverse(PageInfoCollection.LOB_DELETE.urlName, args=[item.id])
 
         edit_link = format_html(
             '<a href="{}" class="btn btn-success">Edit</a>',
             edit_url,
         )
+
+        return edit_link
+
+    def get_delete_html(self, item):
+        reject_url = reverse(PageInfoCollection.LOB_DELETE.urlName, args=[item.id])
+
         reject_link = format_html(
             '<a href="{}" data-toggle="modal" data-target="#rejectModal" class="btn btn-danger">Delete</a>',
             reject_url,
         )
 
-        return format_html("{} {}", edit_link, reject_link)
+        return reject_link
 
 
 ################################################################
@@ -811,7 +852,7 @@ class viewLOBJson(BaseDatatableView):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewWorkRole(request):
     templateName = "workRole/view.html"
 
@@ -833,7 +874,7 @@ def viewWorkRole(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createWorkRole(request):
     templateName = "workRole/create.html"
 
@@ -863,7 +904,7 @@ def createWorkRole(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editWorkRole(request, id):
     template_name = "workRole/edit.html"
     breadCrumbList = [
@@ -972,6 +1013,7 @@ class viewWorkRoleJson(BaseDatatableView):
             self.request.user.is_WFM()
             or self.request.user.is_Employee()
             or self.request.user.is_Supervisor()
+            or self.request.user.is_MIS_GROUP_1()
         ):
             return WorkRole.objects.all().order_by("name")
 
@@ -1002,13 +1044,20 @@ class viewWorkRoleJson(BaseDatatableView):
         data = []
         for item in qs:
             # Fetch the related field and use it directly in the data dictionary
+            actions = ""
+            if self.request.user.is_WFM():
+                actions = format_html(
+                    "{} {}", self.get_edit_html(item), self.get_delete_html(item)
+                )
+            elif self.request.user.is_MIS_GROUP_1():
+                actions = format_html("{}", self.get_edit_html(item))
             row = {
                 "name": item.name.upper(),
                 "created_by": "" if item.created_by is None else item.created_by.name,
                 "created_at": item.created_at.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
                 "updated_at": item.updated_at.strftime("%d-%b-%y"),
-                "actions": self.get_actions_html(item),
+                "actions": actions,
             }
             data.append(row)
         return data
@@ -1016,20 +1065,25 @@ class viewWorkRoleJson(BaseDatatableView):
     def render_column(self, row, column):
         return super(viewWorkRoleJson, self).render_column(row, column)
 
-    def get_actions_html(self, item):
+    def get_edit_html(self, item):
         edit_url = reverse(PageInfoCollection.WORKROLE_EDIT.urlName, args=[item.id])
-        reject_url = reverse(PageInfoCollection.WORKROLE_DELETE.urlName, args=[item.id])
 
         edit_link = format_html(
             '<a href="{}" class="btn btn-success">Edit</a>',
             edit_url,
         )
+
+        return edit_link
+
+    def get_delete_html(self, item):
+        reject_url = reverse(PageInfoCollection.WORKROLE_DELETE.urlName, args=[item.id])
+
         reject_link = format_html(
             '<a href="{}" data-toggle="modal" data-target="#rejectModal" class="btn btn-danger">Delete</a>',
             reject_url,
         )
 
-        return format_html("{} {}", edit_link, reject_link)
+        return reject_link
 
 
 ################################################################
@@ -1038,7 +1092,7 @@ class viewWorkRoleJson(BaseDatatableView):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewSkill(request):
     templateName = "skill/view.html"
 
@@ -1060,7 +1114,7 @@ def viewSkill(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createSkill(request):
     templateName = "skill/create.html"
 
@@ -1090,7 +1144,7 @@ def createSkill(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editSkill(request, id):
     template_name = "skill/edit.html"
     breadCrumbList = [
@@ -1197,6 +1251,7 @@ class viewSkillJson(BaseDatatableView):
             self.request.user.is_WFM()
             or self.request.user.is_Employee()
             or self.request.user.is_Supervisor()
+            or self.request.user.is_MIS_GROUP_1()
         ):
             return Skill.objects.all().order_by("name")
 
@@ -1227,13 +1282,20 @@ class viewSkillJson(BaseDatatableView):
         data = []
         for item in qs:
             # Fetch the related field and use it directly in the data dictionary
+            actions = ""
+            if self.request.user.is_WFM():
+                actions = format_html(
+                    "{} {}", self.get_edit_html(item), self.get_delete_html(item)
+                )
+            elif self.request.user.is_MIS_GROUP_1():
+                actions = format_html("{}", self.get_edit_html(item))
             row = {
                 "name": item.name.upper(),
                 "created_by": "" if item.created_by is None else item.created_by.name,
                 "created_at": item.created_at.strftime("%d-%b-%y"),
                 "updated_by": "" if item.updated_by is None else item.updated_by.name,
                 "updated_at": item.updated_at.strftime("%d-%b-%y"),
-                "actions": self.get_actions_html(item),
+                "actions": actions,
             }
             data.append(row)
         return data
@@ -1241,20 +1303,25 @@ class viewSkillJson(BaseDatatableView):
     def render_column(self, row, column):
         return super(viewSkillJson, self).render_column(row, column)
 
-    def get_actions_html(self, item):
+    def get_edit_html(self, item):
         edit_url = reverse(PageInfoCollection.SKILL_EDIT.urlName, args=[item.id])
-        reject_url = reverse(PageInfoCollection.SKILL_DELETE.urlName, args=[item.id])
 
         edit_link = format_html(
             '<a href="{}" class="btn btn-success">Edit</a>',
             edit_url,
         )
+
+        return edit_link
+
+    def get_delete_html(self, item):
+        reject_url = reverse(PageInfoCollection.SKILL_DELETE.urlName, args=[item.id])
+
         reject_link = format_html(
             '<a href="{}" data-toggle="modal" data-target="#rejectModal" class="btn btn-danger">Delete</a>',
             reject_url,
         )
 
-        return format_html("{} {}", edit_link, reject_link)
+        return reject_link
 
 
 ################################################################
@@ -1263,7 +1330,7 @@ class viewSkillJson(BaseDatatableView):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewSupervisor(request):
     templateName = "supervisor/view.html"
     breadCrumbList = [PageInfoCollection.USERS, PageInfoCollection.SUPERVISOR_VIEW]
@@ -1284,7 +1351,7 @@ def viewSupervisor(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createSupervisor(request):
     template_name = "supervisor/create.html"
     breadCrumbList = [
@@ -1314,7 +1381,7 @@ def createSupervisor(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editSupervisor(request, id):
     template_name = "supervisor/edit.html"
     breadCrumbList = [
@@ -1499,7 +1566,7 @@ class ViewSupervisorJson(BaseDatatableView):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def bulkAddSupervisors(request):
     template_name = "supervisor/bulk.html"
     breadCrumbList = [
@@ -1556,7 +1623,7 @@ def bulkAddSupervisors(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewEmployee(request):
     templateName = "employee/view.html"
     breadCrumbList = [PageInfoCollection.USERS, PageInfoCollection.EMPLOYEE_VIEW]
@@ -1578,7 +1645,7 @@ def viewEmployee(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createEmployee(request):
     template_name = "employee/create.html"
     breadCrumbList = [
@@ -1612,7 +1679,7 @@ def createEmployee(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editEmployee(request, id):
     template_name = "employee/edit.html"
     breadCrumbList = [
@@ -1705,7 +1772,7 @@ def editEmployee(request, id):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def deleteEmployee(request, id):
     success = False
     errorMessage = "Failed To Delete"
@@ -1795,6 +1862,7 @@ class ViewEmployeeJson(BaseDatatableView):
             self.request.user.is_WFM()
             or self.request.user.is_Employee()
             or self.request.user.is_Supervisor()
+            or self.request.user.is_MIS_GROUP_1()
         ):
             userType = self.request.GET.get("userType")
             supervisor_group = Group.objects.get(name="Supervisor")
@@ -1859,6 +1927,13 @@ class ViewEmployeeJson(BaseDatatableView):
         data = []
         for item in qs:
             # Fetch the related field and use it directly in the data dictionary
+            actions = ""
+            if self.request.user.is_WFM():
+                actions = format_html(
+                    "{} {}", self.get_edit_html(item), self.get_delete_html(item)
+                )
+            elif self.request.user.is_MIS_GROUP_1():
+                actions = format_html("{}", self.get_edit_html(item))
             row = {
                 "user__name": "" if item.user.name is None else item.user.name.title(),
                 "user__email": item.user.email,
@@ -1894,7 +1969,7 @@ class ViewEmployeeJson(BaseDatatableView):
                     "" if item.updated_by is None else item.updated_by.name.title()
                 ),
                 "updated_at": item.updated_at.strftime("%d-%b-%y"),
-                "actions": self.get_actions_html(item),
+                "actions": actions,
             }
             data.append(row)
         return data
@@ -1902,24 +1977,29 @@ class ViewEmployeeJson(BaseDatatableView):
     def render_column(self, row, column):
         return super(ViewEmployeeJson, self).render_column(row, column)
 
-    def get_actions_html(self, item):
+    def get_edit_html(self, item):
         edit_url = reverse(PageInfoCollection.EMPLOYEE_EDIT.urlName, args=[item.id])
-        reject_url = reverse(PageInfoCollection.EMPLOYEE_DELETE.urlName, args=[item.id])
 
         edit_link = format_html(
             '<a href="{}" class="btn btn-success">Edit</a>',
             edit_url,
         )
+
+        return edit_link
+
+    def get_delete_html(self, item):
+        reject_url = reverse(PageInfoCollection.EMPLOYEE_DELETE.urlName, args=[item.id])
+
         reject_link = format_html(
             '<a href="{}" data-toggle="modal" data-target="#rejectModal" class="btn btn-danger">Delete</a>',
             reject_url,
         )
 
-        return format_html("{} {}", edit_link, reject_link)
+        return reject_link
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def bulkAddEmployees(request):
     template_name = "employee/bulk.html"
     breadCrumbList = [
@@ -2112,7 +2192,7 @@ def bulkAddEmployees(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def bulkAddEmployeesOtherInfo(request):
     template_name = "employee/otherInfo.html"
     breadCrumbList = [
@@ -2398,7 +2478,7 @@ class viewGroupJson(BaseDatatableView):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def viewUser(request):
     templateName = "user/view.html"
 
@@ -2420,7 +2500,7 @@ def viewUser(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def createUser(request):
     templateName = "user/create.html"
 
@@ -2475,7 +2555,7 @@ def createUser(request):
 
 
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
 def editUser(request, id):
     template_name = "group/edit.html"
     breadCrumbList = [
@@ -2574,7 +2654,7 @@ class viewUserJson(BaseDatatableView):
 
     def get_initial_queryset(self):
         # Log the request
-        if self.request.user.is_WFM():
+        if self.request.user.is_WFM() or self.request.user.is_MIS_GROUP_1:
             return CustomUser.objects.exclude(
                 groups__name__in=["Employee", "Supervisor"]
             ).order_by("name")
@@ -2600,6 +2680,13 @@ class viewUserJson(BaseDatatableView):
         data = []
         for item in qs:
             groupNames = ", ".join([group.name for group in item.groups.all()])
+            actions = ""
+            if self.request.user.is_WFM():
+                actions = format_html(
+                    "{} {}", self.get_edit_html(item), self.get_delete_html(item)
+                )
+            elif self.request.user.is_MIS_GROUP_1():
+                actions = format_html("{}", self.get_edit_html(item))
             # Fetch the related field and use it directly in the data dictionary
             row = {
                 "name": item.name.upper(),
@@ -2607,7 +2694,7 @@ class viewUserJson(BaseDatatableView):
                 "is_active": item.is_active,
                 "is_staff": item.is_staff,
                 "groups": groupNames,
-                "actions": self.get_actions_html(item),
+                "actions": actions,
             }
             data.append(row)
         return data
@@ -2615,17 +2702,22 @@ class viewUserJson(BaseDatatableView):
     def render_column(self, row, column):
         return super(viewSkillJson, self).render_column(row, column)
 
-    def get_actions_html(self, item):
+    def get_edit_html(self, item):
         edit_url = reverse(PageInfoCollection.USER_EDIT.urlName, args=[item.id])
-        reject_url = reverse(PageInfoCollection.USER_DELETE.urlName, args=[item.id])
 
         edit_link = format_html(
             '<a href="{}" class="btn btn-success">Edit</a>',
             edit_url,
         )
+
+        return edit_link
+
+    def get_delete_html(self, item):
+        reject_url = reverse(PageInfoCollection.USER_DELETE.urlName, args=[item.id])
+
         reject_link = format_html(
             '<a href="{}" data-toggle="modal" data-target="#rejectModal" class="btn btn-danger">Delete</a>',
             reject_url,
         )
 
-        return format_html("{} {}", edit_link, reject_link)
+        return reject_link
