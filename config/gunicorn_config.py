@@ -21,11 +21,11 @@ configure_logging()
 # WorkingDirectory = "/home/wfmuser/WFM"
 
 bind = "unix:/run/gunicorn.sock"
-workers = multiprocessing.cpu_count() * 2 + 1
+workers = multiprocessing.cpu_count() + 1
 limit_request_line = 0
-timeout = 300  # Reduce timeout to a more reasonable value
-graceful_timeout = 300  # Reduce graceful timeout
-keepalive = 60  # Reduce keepalive to free up idle connections
+timeout = 3600 * 2  # Reduce timeout to a more reasonable value
+graceful_timeout = 3600 * 2  # Reduce graceful timeout
+keepalive = 3600 * 2  # Reduce keepalive to free up idle connections
 accesslog = "-"  # Redirect Gunicorn access logs to stdout
 errorlog = "-"  # Redirect Gunicorn error logs to stdout
 loglevel = "debug"
