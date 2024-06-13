@@ -51,7 +51,319 @@ def viewDayOffTradingRequests(request):
 
 @login_required(login_url="/login/")
 @check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee)
-def createDayOffTrading(request):
+def createDayOffTradingOLD(request):
+    template = "changeRequest/dayOffTrading/create.html"
+    breadCrumbList = [
+        PageInfoCollection.DAYOFFTRADING_VIEW,
+        PageInfoCollection.DAYOFFTRADING_CREATE,
+    ]
+    employee = getEmployee(request.user.id)
+
+    context = {
+        "form1": form1,
+        "breadCrumbList": breadCrumbList,
+        "currentBreadCrumb": PageInfoCollection.DAYOFFTRADING_CREATE.pageName,
+        "details": {
+            "name": "delete",
+            "type": "process",
+        },
+        "ajaxUrl": PageInfoCollection.PROCESS_JSON.urlName,
+        "createUrl": PageInfoCollection.DAYOFFTRADING_CREATE.urlName,
+        "dayOffTradingActive": "active",
+    }
+
+    if request.method == "POST" and "btnform1" in request.POST:
+        logging.info(logString("Day Off Trading", 1))
+        swapDateID = int(request.POST.get("swapDate"))
+        tradeDateID = int(request.POST.get("tradeDate"))
+        requesteeID = int(request.POST.get("requestee"))
+
+        form1 = DayOffTradingForm(
+            employee=employee,
+            swapDateID=swapDateID,
+            tradeDateID=tradeDateID,
+            requesteeID=requesteeID,
+        )
+
+        try:
+            workRule = WorkRule.objects.get(id=1)
+            logging.info(logString("WorkRule exists", 3))
+        except WorkRule.DoesNotExist:
+            workRule = None
+            logging.error(logString("WorkRule does not exist", 5))
+            messages.error(request, "WorkRule does not exist")
+            return render(request, template, context)
+
+        try:
+            requestee = Employee.objects.get(id=requesteeID)
+        except Employee.DoesNotExist:
+            logging.error(
+                logString(f"Employee with ID {requesteeID} does not exist", 5)
+            )
+            messages.error("Requestee does not exist")
+            return render(request, template, context)
+
+        try:
+            requestorSwapDayRoster = Roster.objects.get(id=swapDateID)
+        except Roster.DoesNotExist:
+            logging.error(
+                logString(
+                    f"RequestorSwapDayRoster with ID {swapDateID} does not exist", 5
+                )
+            )
+            messages.error("Requestor Swap Roster does not exist")
+            return render(request, template, context)
+
+        try:
+            requestorTradeDayRoster = Roster.objects.get(id=tradeDateID)
+        except Roster.DoesNotExist:
+            logging.error(
+                logString(
+                    f"RequestorTradeDayRoster with ID {swapDateID} does not exist", 5
+                )
+            )
+            messages.error("Requestor Trade Roster does not exist")
+            return render(request, template, context)
+
+        try:
+            requesteeSwapDayRoster = Roster.objects.get(
+                employee=requestee, start_date=requestorTradeDayRoster.start_date
+            )
+        except Roster.DoesNotExist:
+            logging.error(
+                logString(
+                    f"RequesteeSwapDayRoster with ID {swapDateID} does not exist", 5
+                )
+            )
+            messages.error("Requestee Swap Roster does not exist")
+            return render(request, template, context)
+
+        try:
+            requesteeTradeDayRoster = Roster.objects.get(
+                employee=requestee, start_date=requestorSwapDayRoster.start_date
+            )
+        except Roster.DoesNotExist:
+            logging.error(
+                logString(
+                    f"RequesteeTradeDayRoster with ID {swapDateID} does not exist", 5
+                )
+            )
+            messages.error("Requestee Trade Roster does not exist")
+            return render(request, template, context)
+
+        ###########################
+        ##  Checking Business rules
+        ###########################
+        # checkMaxCountInAParticularInterval(
+        #     requestor=employee,
+        #     requestorSwapRoster=requestorSwapDayRoster,
+        #     requestee=requestee,
+        #     requesteeSwapRoster=requesteeSwapDayRoster,
+        #     workRule=workRule,
+        # )
+        ##########################
+        # Consecutive Working Days
+        logging.info(logString("Consecutive Working Days", 2))
+
+        (
+            requestorConsecutiveWorkingDaysResult,
+            requestorConsecutiveWorkingDayError,
+        ) = checkConsecutiveWorkingDays(
+            swapRosterID=swapDateID,
+            tradeRosterID=tradeDateID,
+            employee=employee,
+            workRule=workRule,
+        )
+
+        if not requestorConsecutiveWorkingDaysResult:
+            logging.error(
+                f"Requestor consecutive working days check failed: {requestorConsecutiveWorkingDayError}"
+            )
+            messages.error(requestorConsecutiveWorkingDayError)
+            return render(request, template, context)
+
+        (
+            requesteeConsecutiveWorkingDaysResult,
+            requesteeConsecutiveWorkingDayError,
+        ) = checkConsecutiveWorkingDays(
+            swapRosterID=requesteeSwapDayRoster.id,
+            tradeRosterID=requesteeTradeDayRoster.id,
+            employee=requestee,
+            workRule=workRule,
+        )
+        if not requesteeConsecutiveWorkingDaysResult:
+            logging.error(
+                f"Requestee consecutive working days check failed: {requestorConsecutiveWorkingDayError}"
+            )
+            messages.error(requesteeConsecutiveWorkingDayError)
+            return render(request, template, context)
+
+        dayCanBeSwapedResult, dayCanBeSwapedError = dayCanBeSwaped(
+            requestee=requestee,
+            swapDateID=swapDateID,
+            tradeDateID=tradeDateID,
+        )
+        if not dayCanBeSwapedResult:
+            logging.error(logString("Days can be swapped", 4))
+            messages.error(dayCanBeSwapedError)
+            return render(request, template, context)
+
+        if dayCanBeSwapedResult is True:
+            logging.info(logString("Days can be swapped", 3))
+
+            ####################################################
+            # Gap between shift end to the next shift start time
+            logging.info(logString("Gap Check", 2))
+            gapCheckingResult = checkGapBetweenShiftEndToTheNextShiftStartTime(
+                employee=employee,
+                requestee=requestee,
+                swapDateID=swapDateID,
+                tradeDateID=tradeDateID,
+                workRule=workRule,
+                request=request,
+            )
+            if gapCheckingResult:
+                logging.info(logString("Gap Check", 3))
+                ###################
+                # Female Shift time
+
+                # Made the flag true first as if the employee is male we do not need to check
+                employeeGenderResult = True
+                if employee.gender == "F":
+                    logging.info(logString("Female Shift Time - <Employee>", 2))
+                    employeeGenderResult = checkFemaleShiftTimeFollowsWorkRule(
+                        startTime=employeeTradeRoster.start_time,
+                        endTime=employeeTradeRoster.end_time,
+                        workRule=workRule,
+                        request=request,
+                    )
+                # Made the flag true first as if the requeste is male we do not need to check
+                requesteeGenderResult = True
+                if requestee.gender == "F":
+                    logging.info(logString("Female Shift Time - <Requestee>", 2))
+                    requesteeGenderResult = checkFemaleShiftTimeFollowsWorkRule(
+                        startTime=requesteeTradeRoster.start_time,
+                        endTime=requesteeTradeRoster.end_time,
+                        workRule=workRule,
+                        request=request,
+                    )
+                if employeeGenderResult is True and requesteeGenderResult is True:
+                    logging.info(logString("Female Shift Time", 3))
+                    ########################
+                    # Regular Shift Duration
+                    logging.info(logString("Regular Shift Duration", 2))
+                    # Check Regular shift duration of the roster of the requestee which the employee want to swap with
+                    employeeRegularShiftDurationResult = checkRegularShiftDuration(
+                        roster=employeeTradeRoster,
+                        workRule=workRule,
+                    )
+                    #   Check Regular shift duration of the roster of the employee which the requestee want to swap with
+                    requesteeRegularShiftDurationResult = checkRegularShiftDuration(
+                        roster=requesteeTradeRoster,
+                        workRule=workRule,
+                        request=request,
+                    )
+                    if (
+                        employeeRegularShiftDurationResult is True
+                        and requesteeRegularShiftDurationResult is True
+                    ):
+                        logging.info(logString("Regular Shift Duration", 3))
+                        ###################################################################
+                        # Check Roster end time of a shift is between the prohibitted time
+                        logging.info(
+                            logString(
+                                "Roster end time of a shift is between the prohibitted time",
+                                2,
+                            )
+                        )
+                        employeeProhibitedTimeResult = checkShiftEndInProhibitedTime(
+                            roster=employeeTradeRoster,
+                            workRule=workRule,
+                        )
+                        if employeeProhibitedTimeResult is False:
+                            dayOffTradingExists = DayOffTrading.objects.filter(
+                                Q(requestor=employee),
+                                Q(requestee=requestee),
+                                Q(requestor_swap_roster=requestorSwapDayRoster),
+                                Q(requestor_trade_roster=requestorTradeDayRoster),
+                                Q(requestee_swap_roster=requesteeSwapDayRoster),
+                                Q(requestee_trade_roster=requesteeTradeDayRoster),
+                                Q(trading_status="in process")
+                                | Q(trading_status="accepted"),
+                            ).exists()
+                            if dayOffTradingExists is True:
+                                messages.error(
+                                    request,
+                                    "Trading already exists",
+                                )
+                            else:
+                                print("dd")
+                                try:
+                                    dayOffTradingInstance = DayOffTrading(
+                                        requestor=employee,
+                                        requestee=requestee,
+                                        requestor_swap_roster=requestorSwapDayRoster,
+                                        requestor_trade_roster=requestorTradeDayRoster,
+                                        requestee_swap_roster=requesteeSwapDayRoster,
+                                        requestee_trade_roster=requesteeTradeDayRoster,
+                                        trading_status="in process",
+                                    )
+                                    dayOffTradingInstance.save()
+                                    return redirect(
+                                        PageInfoCollection.DAYOFFTRADING_VIEW.urlName
+                                    )
+                                except Exception as e:
+                                    logging.info(
+                                        logString(
+                                            f"Could not create Day off Trading. Exception:{e}",
+                                            4,
+                                        )
+                                    )
+                                    messages.error(
+                                        request,
+                                        "Could not create Day off Trading",
+                                    )
+                    else:
+                        logging.info(logString("Regular Shift Duration", 4))
+                        messages.error(request, "Could not create Day off Trading")
+                else:
+                    logging.info(logString("Female Shift Time", 4))
+                    messages.error(request, "Could not create Day off Trading")
+            else:
+                logging.info(logString("Gap Check", 4))
+                messages.error(request, "Could not create Day off Trading")
+        else:
+            logging.info(logString("Days can be swapped", 4))
+            messages.error(
+                request,
+                f"{dayCanBeSwapedError} \n Could not create Day off Trading",
+            )
+
+    else:
+        form1 = DayOffTradingForm(
+            employee=employee, swapDateID=None, tradeDateID=None, requesteeID=None
+        )
+
+    context = {
+        "form1": form1,
+        "breadCrumbList": breadCrumbList,
+        "currentBreadCrumb": PageInfoCollection.DAYOFFTRADING_CREATE.pageName,
+        "details": {
+            "name": "delete",
+            "type": "process",
+        },
+        "ajaxUrl": PageInfoCollection.PROCESS_JSON.urlName,
+        "createUrl": PageInfoCollection.DAYOFFTRADING_CREATE.urlName,
+        "dayOffTradingActive": "active",
+    }
+    return render(request, template, context)
+
+
+@login_required(login_url="/login/")
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee)
+@login_required(login_url="/login/")
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee)
+def createDayOffTradingOLD(request):
     template = "changeRequest/dayOffTrading/create.html"
     breadCrumbList = [
         PageInfoCollection.DAYOFFTRADING_VIEW,
@@ -84,240 +396,155 @@ def createDayOffTrading(request):
             result = False
             requestee = Employee.objects.get(id=requesteeID)
             # The roster selected by requestor to be swapped
-            employeeSwapDayRoster = Roster.objects.get(id=swapDateID)
-            # The roster selected by requestor to be trade
-            employeeTradeDayRoster = Roster.objects.get(id=tradeDateID)
+            requestorSwapDayRoster = Roster.objects.get(id=swapDateID)
+            # The roster selected by requestor to be traded
+            requestorTradeDayRoster = Roster.objects.get(id=tradeDateID)
+            # The roster of requestee to be swapped
+            requesteeSwapDayRoster = None
+            # The roster of requestee to be traded
+            requesteeTradeDayRoster = None
             try:
-                requesteeSwapDayRoster = Roster.objects.get(
-                    employee=requestee, start_date=employeeTradeDayRoster.start_date
-                )
-                requesteeTradeDayRoster = Roster.objects.get(
-                    employee=requestee, start_date=employeeSwapDayRoster.start_date
-                )
-            except Exception as e:
-                messages.error(request, "Exception:{exception}".format(exception=e))
-                logging.error(logString(f"Exception:{e}", 5))
+                requestor_swap_roster = Roster.objects.get(id=swapDateID)
+                requestor_trade_roster = Roster.objects.get(id=tradeDateID)
+                requestee_swap_roster = Roster.objects.get(id=requesteeID)
 
-            if (
-                requesteeSwapDayRoster is not None
-                and requesteeTradeDayRoster is not None
-            ):
-                #   The roster which the employee would swap with the requestee.
-                employeeTradeRoster = Roster.objects.get(
-                    employee=requestee, start_date=employeeTradeDayRoster.start_date
-                )
-                #   The roster which the requestee would swap with the requestee.
-                requesteeTradeRoster = Roster.objects.get(
-                    employee=employee, start_date=employeeSwapDayRoster.start_date
-                )
-                logging.info(logString("Checking Business Rules", 2))
-                ###########################
-                ##  Checking Business rules
-                ###########################
-                # checkMaxCountInAParticularInterval(
-                #     requestor=employee,
-                #     requestorSwapRoster=employeeSwapDayRoster,
-                #     requestee=requestee,
-                #     requesteeSwapRoster=requesteeSwapDayRoster,
-                #     workRule=workRule,
-                # )
-                ##########################
-                # Consecutive Working Days
-                logging.info(logString("Consecutive Working Days", 2))
-                employeeConsecutiveWorkingDaysResult = checkConsecutiveWorkingDays(
-                    tradeRosterID=tradeDateID, employee=employee, workRule=workRule
-                )
-                if employeeConsecutiveWorkingDaysResult is True:
-                    requesteeConsecutiveWorkingDaysResult = checkConsecutiveWorkingDays(
-                        tradeRosterID=requesteeTradeDayRoster.id,
-                        employee=requestee,
-                        workRule=workRule,
+                # Validate work rules
+                error_messages = []
+
+                # Consecutive working days
+                if (
+                    requestor_trade_roster.start_date - requestor_swap_roster.start_date
+                ).days > workRule.consecutive_working_days:
+                    error_messages.append(
+                        "Exceeds the maximum allowed consecutive working days."
                     )
-                    if requesteeConsecutiveWorkingDaysResult is True:
-                        logging.info(logString("Consecutive Working Days", 3))
-                        ####################
-                        # Day can be swaped
-                        logging.info(logString("Days can be swapped", 2))
-                        dayCanBeSwapedResult = dayCanBeSwaped(
-                            requestee=requestee,
-                            swapDateID=swapDateID,
-                            tradeDateID=tradeDateID,
-                            request=request,
+
+                # Regular shift duration
+                requestor_shift_duration = (
+                    datetime.combine(
+                        requestor_swap_roster.end_date,
+                        requestor_swap_roster.end_time,
+                    )
+                    - datetime.combine(
+                        requestor_swap_roster.start_date,
+                        requestor_swap_roster.start_time,
+                    )
+                ).seconds / 3600
+                if (
+                    requestor_shift_duration < workRule.minimum_regular_shift_duration
+                    or requestor_shift_duration
+                    > workRule.maximum_regular_shift_duration
+                ):
+                    error_messages.append(
+                        "Requestor shift duration does not comply with regular shift duration limits."
+                    )
+
+                requestee_shift_duration = (
+                    datetime.combine(
+                        requestee_swap_roster.end_date, requestee_swap_roster.end_time
+                    )
+                    - datetime.combine(
+                        requestee_swap_roster.start_date,
+                        requestee_swap_roster.start_time,
+                    )
+                ).seconds / 3600
+                if (
+                    requestee_shift_duration < workRule.minimum_regular_shift_duration
+                    or requestee_shift_duration
+                    > workRule.maximum_regular_shift_duration
+                ):
+                    error_messages.append(
+                        "Requestee shift duration does not comply with regular shift duration limits."
+                    )
+
+                # Gap between shifts
+                if (
+                    datetime.combine(
+                        requestor_swap_roster.end_date, requestor_swap_roster.end_time
+                    )
+                    + timedelta(
+                        hours=workRule.gap_between_shift_end_to_the_next_shift_start_time
+                    )
+                ) > datetime.combine(
+                    requestor_trade_roster.start_date, requestor_trade_roster.start_time
+                ):
+                    error_messages.append(
+                        "Insufficient gap between requestor's shifts."
+                    )
+
+                if (
+                    datetime.combine(
+                        requestee_swap_roster.end_date, requestee_swap_roster.end_time
+                    )
+                    + timedelta(
+                        hours=workRule.gap_between_shift_end_to_the_next_shift_start_time
+                    )
+                ) > datetime.combine(
+                    requestee_swap_roster.start_date, requestee_swap_roster.start_time
+                ):
+                    error_messages.append(
+                        "Insufficient gap between requestee's shifts."
+                    )
+
+                # Female shift time
+                if requestor_swap_roster.gender == "F":
+                    if not (
+                        workRule.female_shift_start_time
+                        <= requestor_swap_roster.start_time
+                        <= workRule.female_shift_end_time
+                    ):
+                        error_messages.append(
+                            "Requestor's shift does not comply with female shift time limits."
                         )
-                        if dayCanBeSwapedResult is True:
-                            logging.info(logString("Days can be swapped", 3))
-
-                            ####################################################
-                            # Gap between shift end to the next shift start time
-                            logging.info(logString("Gap Check", 2))
-                            gapCheckingResult = (
-                                checkGapBetweenShiftEndToTheNextShiftStartTime(
-                                    employee=employee,
-                                    requestee=requestee,
-                                    swapDateID=swapDateID,
-                                    tradeDateID=tradeDateID,
-                                    workRule=workRule,
-                                    request=request,
-                                )
-                            )
-                            if gapCheckingResult:
-                                logging.info(logString("Gap Check", 3))
-                                ###################
-                                # Female Shift time
-
-                                # Made the flag true first as if the employee is male we do not need to check
-                                employeeGenderResult = True
-                                if employee.gender == "F":
-                                    logging.info(
-                                        logString("Female Shift Time - <Employee>", 2)
-                                    )
-                                    employeeGenderResult = (
-                                        checkFemaleShiftTimeFollowsWorkRule(
-                                            startTime=employeeTradeRoster.start_time,
-                                            endTime=employeeTradeRoster.end_time,
-                                            workRule=workRule,
-                                            request=request,
-                                        )
-                                    )
-                                # Made the flag true first as if the requeste is male we do not need to check
-                                requesteeGenderResult = True
-                                if requestee.gender == "F":
-                                    logging.info(
-                                        logString("Female Shift Time - <Requestee>", 2)
-                                    )
-                                    requesteeGenderResult = (
-                                        checkFemaleShiftTimeFollowsWorkRule(
-                                            startTime=requesteeTradeRoster.start_time,
-                                            endTime=requesteeTradeRoster.end_time,
-                                            workRule=workRule,
-                                            request=request,
-                                        )
-                                    )
-                                if (
-                                    employeeGenderResult is True
-                                    and requesteeGenderResult is True
-                                ):
-                                    logging.info(logString("Female Shift Time", 3))
-                                    ########################
-                                    # Regular Shift Duration
-                                    logging.info(logString("Regular Shift Duration", 2))
-                                    # Check Regular shift duration of the roster of the requestee which the employee want to swap with
-                                    employeeRegularShiftDurationResult = (
-                                        checkRegularShiftDuration(
-                                            roster=employeeTradeRoster,
-                                            workRule=workRule,
-                                            request=request,
-                                        )
-                                    )
-                                    #   Check Regular shift duration of the roster of the employee which the requestee want to swap with
-                                    requesteeRegularShiftDurationResult = (
-                                        checkRegularShiftDuration(
-                                            roster=requesteeTradeRoster,
-                                            workRule=workRule,
-                                            request=request,
-                                        )
-                                    )
-                                    if (
-                                        employeeRegularShiftDurationResult is True
-                                        and requesteeRegularShiftDurationResult is True
-                                    ):
-                                        logging.info(
-                                            logString("Regular Shift Duration", 3)
-                                        )
-                                        ###################################################################
-                                        # Check Roster end time of a shift is between the prohibitted time
-                                        logging.info(
-                                            logString(
-                                                "Roster end time of a shift is between the prohibitted time",
-                                                2,
-                                            )
-                                        )
-                                        employeeProhibitedTimeResult = (
-                                            checkShiftEndInProhibitedTime(
-                                                roster=employeeTradeRoster,
-                                                workRule=workRule,
-                                            )
-                                        )
-                                        if employeeProhibitedTimeResult is False:
-                                            dayOffTradingExists = DayOffTrading.objects.filter(
-                                                Q(requestor=employee),
-                                                Q(requestee=requestee),
-                                                Q(
-                                                    requestor_swap_roster=employeeSwapDayRoster
-                                                ),
-                                                Q(
-                                                    requestor_trade_roster=employeeTradeDayRoster
-                                                ),
-                                                Q(
-                                                    requestee_swap_roster=requesteeSwapDayRoster
-                                                ),
-                                                Q(
-                                                    requestee_trade_roster=requesteeTradeDayRoster
-                                                ),
-                                                Q(trading_status="in process")
-                                                | Q(trading_status="accepted"),
-                                            ).exists()
-                                            if dayOffTradingExists is True:
-                                                messages.error(
-                                                    request,
-                                                    "Trading already exists",
-                                                )
-                                            else:
-                                                try:
-                                                    dayOffTradingInstance = DayOffTrading(
-                                                        requestor=employee,
-                                                        requestee=requestee,
-                                                        requestor_swap_roster=employeeSwapDayRoster,
-                                                        requestor_trade_roster=employeeTradeDayRoster,
-                                                        requestee_swap_roster=requesteeSwapDayRoster,
-                                                        requestee_trade_roster=requesteeTradeDayRoster,
-                                                        trading_status="in process",
-                                                    )
-                                                    dayOffTradingInstance.save()
-                                                    return redirect(
-                                                        PageInfoCollection.DAYOFFTRADING_VIEW.urlName
-                                                    )
-                                                except Exception as e:
-                                                    logging.info(
-                                                        logString(
-                                                            f"Could not create Day off Trading. Exception:{e}",
-                                                            4,
-                                                        )
-                                                    )
-                                                    messages.error(
-                                                        request,
-                                                        "Could not create Day off Trading",
-                                                    )
-                                    else:
-                                        logging.info(
-                                            logString("Regular Shift Duration", 4)
-                                        )
-                                        messages.error(
-                                            request, "Could not create Day off Trading"
-                                        )
-                                else:
-                                    logging.info(logString("Female Shift Time", 4))
-                                    messages.error(
-                                        request, "Could not create Day off Trading"
-                                    )
-                            else:
-                                logging.info(logString("Gap Check", 4))
-                                messages.error(
-                                    request, "Could not create Day off Trading"
-                                )
-                        else:
-                            logging.info(logString("Days can be swapped", 4))
-                            messages.error(request, "Could not create Day off Trading")
-                    else:
-                        logging.info(
-                            logString("Consecutive Working Days <Requestee>", 4)
+                if requestee_swap_roster.gender == "F":
+                    if not (
+                        workRule.female_shift_start_time
+                        <= requestee_swap_roster.start_time
+                        <= workRule.female_shift_end_time
+                    ):
+                        error_messages.append(
+                            "Requestee's shift does not comply with female shift time limits."
                         )
-                        messages.error(request, "Could not create Day off Trading")
 
+                # Prohibited time for end of a shift
+                if (
+                    workRule.prohibited_time_for_end_of_a_shift_start_time
+                    <= requestor_swap_roster.end_time
+                    <= workRule.prohibited_time_for_end_of_a_shift_end_time
+                ):
+                    error_messages.append(
+                        "Requestor's shift ends in the prohibited time interval."
+                    )
+                if (
+                    workRule.prohibited_time_for_end_of_a_shift_start_time
+                    <= requestee_swap_roster.end_time
+                    <= workRule.prohibited_time_for_end_of_a_shift_end_time
+                ):
+                    error_messages.append(
+                        "Requestee's shift ends in the prohibited time interval."
+                    )
+
+                if error_messages:
+                    for error in error_messages:
+                        messages.error(request, error)
                 else:
-                    logging.info(logString("Consecutive Working Days <Employee>", 4))
-                    messages.error(request, "Could not create Day off Trading")
+                    # Save the day off trading request
+                    DayOffTrading.objects.create(
+                        requestor=employee,
+                        requestee_id=requesteeID,
+                        requestor_swap_roster=requestor_swap_roster,
+                        requestor_trade_roster=requestor_trade_roster,
+                        requestee_swap_roster=requestee_swap_roster,
+                        requestee_trade_roster=requestor_trade_roster,  # should be appropriate
+                        trading_status="in process",
+                    )
+                    messages.success(
+                        request, "Day Off Trading request created successfully."
+                    )
+                    return redirect("day_off_trading_list")
 
+            except Roster.DoesNotExist:
+                messages.error(request, "Roster does not exist.")
     else:
         form1 = DayOffTradingForm(
             employee=employee, swapDateID=None, tradeDateID=None, requesteeID=None
@@ -986,19 +1213,18 @@ class DayOffTradingListJson(BaseDatatableView):
         # Filter ShiftTimeTrading instances for the current user
         if self.request.user.is_Employee():
             employee = getEmployee(self.request.user.id)
-            if employee.is_supervisor():
-                isSupervisor = True
-                supervised_employees = Employee.objects.filter(
-                    Q(supervisor_1=employee) | Q(supervisor_2=employee)
-                )
-                return DayOffTrading.objects.filter(
-                    Q(requestor__in=supervised_employees)
-                    | Q(requestee__in=supervised_employees)
-                ).order_by("-created_At")
-            else:
-                return DayOffTrading.objects.filter(
-                    Q(requestor=employee) | Q(requestee=employee)
-                ).order_by("-created_At")
+            return DayOffTrading.objects.filter(
+                Q(requestor=employee) | Q(requestee=employee)
+            ).order_by("-created_At")
+        elif self.request.user.is_Supervisor():
+            employee = getEmployee(self.request.user.id)
+            supervised_employees = Employee.objects.filter(
+                Q(supervisor_1=employee) | Q(supervisor_2=employee)
+            )
+            return DayOffTrading.objects.filter(
+                Q(requestor__in=supervised_employees)
+                | Q(requestee__in=supervised_employees)
+            ).order_by("-created_At")
         elif self.request.user.is_WFM() or self.request.user.is_MIS_GROUP_1():
             return DayOffTrading.objects.all()
 
