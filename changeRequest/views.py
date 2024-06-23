@@ -87,7 +87,7 @@ def createDayOffTrading(request):
             logging.error(
                 logString(f"Employee with ID {requesteeID} does not exist", 5)
             )
-            messages.error("Requestee does not exist")
+            messages.error(request, "Requestee does not exist")
             return render(request, template, context)
         #   REQUESTOR SWAP DAY
         try:
@@ -98,7 +98,7 @@ def createDayOffTrading(request):
                     f"RequestorSwapDayRoster with ID {swapDateID} does not exist", 5
                 )
             )
-            messages.error("Requestor Swap Roster does not exist")
+            messages.error(request, "Requestor Swap Roster does not exist")
             return render(request, template, context)
         #   REQUESTOR TRADE DAY
         try:
@@ -106,10 +106,10 @@ def createDayOffTrading(request):
         except Roster.DoesNotExist:
             logging.error(
                 logString(
-                    f"RequestorTradeDayRoster with ID {swapDateID} does not exist", 5
+                    f"RequestorTradeDayRoster with ID {tradeDateID} does not exist", 5
                 )
             )
-            messages.error("Requestor Trade Roster does not exist")
+            messages.error(request, "Requestor Trade Roster does not exist")
             return render(request, template, context)
         #   REQUESTEE SWAP DAY
         try:
@@ -122,7 +122,7 @@ def createDayOffTrading(request):
                     f"RequesteeSwapDayRoster with ID {swapDateID} does not exist", 5
                 )
             )
-            messages.error("Requestee Swap Roster does not exist")
+            messages.error(request, "Requestee Swap Roster does not exist")
             return render(request, template, context)
         #   REQUESTEE TRADE DAY
         try:
@@ -135,7 +135,7 @@ def createDayOffTrading(request):
                     f"RequesteeTradeDayRoster with ID {swapDateID} does not exist", 5
                 )
             )
-            messages.error("Requestee Trade Roster does not exist")
+            messages.error(request, "Requestee Trade Roster does not exist")
             return render(request, template, context)
 
         ###########################
@@ -166,7 +166,7 @@ def createDayOffTrading(request):
             logging.error(
                 f"Requestor consecutive working days check failed: {requestorConsecutiveWorkingDayError}"
             )
-            messages.error(requestorConsecutiveWorkingDayError)
+            messages.error(request, requestorConsecutiveWorkingDayError)
             return render(request, template, context)
         ################################
         # Consecutive Working Days for REQUESTEE
@@ -183,7 +183,7 @@ def createDayOffTrading(request):
             logging.error(
                 f"Requestee consecutive working days check failed: {requestorConsecutiveWorkingDayError}"
             )
-            messages.error(requesteeConsecutiveWorkingDayError)
+            messages.error(request, requesteeConsecutiveWorkingDayError)
             return render(request, template, context)
         ################################
         # Day Swap
@@ -194,7 +194,7 @@ def createDayOffTrading(request):
         )
         if not dayCanBeSwapedResult:
             logging.error(logString("Days can be swapped", 4))
-            messages.error(dayCanBeSwapedError)
+            messages.error(request, dayCanBeSwapedError)
             return render(request, template, context)
 
         ####################################################
@@ -211,7 +211,7 @@ def createDayOffTrading(request):
         )
         if not requesteeConsecutiveWorkingDaysResult:
             logging.error(f"Gap Checking failed: {gapCheckingError}")
-            messages.error(gapCheckingError)
+            messages.error(request, gapCheckingError)
             return render(request, template, context)
 
         #########################################################
@@ -231,7 +231,7 @@ def createDayOffTrading(request):
                 logging.error(
                     f"Requestor Female Shift Time check failed : {requestorFemaleShifttimeError}"
                 )
-                messages.error(requestorFemaleShifttimeError)
+                messages.error(request, requestorFemaleShifttimeError)
                 return render(request, template, context)
         else:
             logging.info(f"Female Shift Time check skipped as requestor is male")
@@ -250,7 +250,7 @@ def createDayOffTrading(request):
                 logging.error(
                     f"Requestee Female Shift Time check failed : {requesteeFemaleShifttimeError}"
                 )
-                messages.error(requesteeFemaleShifttimeError)
+                messages.error(request, requesteeFemaleShifttimeError)
                 return render(request, template, context)
         else:
             logging.info(f"Female Shift Time check skipped as requestee is male")
@@ -269,7 +269,7 @@ def createDayOffTrading(request):
             logging.error(
                 f"Requestor Regular Shift Duration check failed : {requestorRegularShiftDurationError}"
             )
-            messages.error(requestorRegularShiftDurationError)
+            messages.error(request, requestorRegularShiftDurationError)
             return render(request, template, context)
 
         #   Check Regular shift duration of the roster of the employee which the requestee want to swap with
@@ -280,7 +280,7 @@ def createDayOffTrading(request):
             logging.error(
                 f"Requestee Regular Shift Duration check failed : {requesteeRegularShiftDurationError}"
             )
-            messages.error(requesteeRegularShiftDurationError)
+            messages.error(request, requesteeRegularShiftDurationError)
             return render(request, template, context)
 
         ###################################################################
@@ -302,7 +302,7 @@ def createDayOffTrading(request):
             logging.error(
                 f"Requestor Prohibitted Time check failed : {requestorProhibitedTimeError}"
             )
-            messages.error(requestorProhibitedTimeError)
+            messages.error(request, requestorProhibitedTimeError)
             return render(request, template, context)
 
         # Check if the Day Off Trading already exists
