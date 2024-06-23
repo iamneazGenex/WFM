@@ -235,7 +235,7 @@ def checkGapBetweenShiftEndToTheNextShiftStartTime(
 
         # Check gap for requestor
         requestorGapCheck = gapCheck(
-            roster=swapDateRoster, requestor=requestor, workRule=workRule
+            roster=swapDateRoster, employee=requestor, workRule=workRule
         )
         if not requestorGapCheck:
             error_message = "Employee gap between shift end to the next shift start time does not follow work rule"
@@ -247,7 +247,7 @@ def checkGapBetweenShiftEndToTheNextShiftStartTime(
             employee=requestee, start_date=tradeDateRoster.start_date
         )
         requesteeGapCheck = gapCheck(
-            roster=requesteeRoster, requestor=requestee, workRule=workRule
+            roster=requesteeRoster, employee=requestee, workRule=workRule
         )
         if not requesteeGapCheck:
             error_message = "Requestee gap between shift end to the next shift start time does not follow work rule"
