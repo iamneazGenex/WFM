@@ -213,14 +213,14 @@ def createDayOffTrading(request):
         logging.info(logString("Gap Check", 2))
         gapCheckingResult, gapCheckingError = (
             checkGapBetweenShiftEndToTheNextShiftStartTime(
-                employee=requestor,
+                requestor=requestor,
                 requestee=requestee,
                 swapDateID=swapDateID,
                 tradeDateID=tradeDateID,
                 workRule=workRule,
             )
         )
-        if not requesteeConsecutiveWorkingDaysResult:
+        if not gapCheckingResult:
             logging.error(f"Gap Checking failed: {gapCheckingError}")
             messages.error(request, gapCheckingError)
             return render(request, template, context)
