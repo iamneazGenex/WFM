@@ -58,7 +58,18 @@ def createDayOffTrading(request):
         PageInfoCollection.DAYOFFTRADING_CREATE,
     ]
     requestor = getEmployee(request.user.id)
-
+    context = {
+        "form1": form1,
+        "breadCrumbList": breadCrumbList,
+        "currentBreadCrumb": PageInfoCollection.DAYOFFTRADING_CREATE.pageName,
+        "details": {
+            "name": "delete",
+            "type": "process",
+        },
+        "ajaxUrl": PageInfoCollection.PROCESS_JSON.urlName,
+        "createUrl": PageInfoCollection.DAYOFFTRADING_CREATE.urlName,
+        "dayOffTradingActive": "active",
+    }
     if request.method == "POST" and "btnform1" in request.POST:
         logging.info(logString("Day Off Trading", 1))
         swapDateID = int(request.POST.get("swapDate"))
@@ -347,22 +358,10 @@ def createDayOffTrading(request):
             return render(request, template, context)
 
     else:
-
         form1 = DayOffTradingForm(
             employee=requestor, swapDateID=None, tradeDateID=None, requesteeID=None
         )
-    context = {
-        "form1": form1,
-        "breadCrumbList": breadCrumbList,
-        "currentBreadCrumb": PageInfoCollection.DAYOFFTRADING_CREATE.pageName,
-        "details": {
-            "name": "delete",
-            "type": "process",
-        },
-        "ajaxUrl": PageInfoCollection.PROCESS_JSON.urlName,
-        "createUrl": PageInfoCollection.DAYOFFTRADING_CREATE.urlName,
-        "dayOffTradingActive": "active",
-    }
+
     return render(request, template, context)
 
 
