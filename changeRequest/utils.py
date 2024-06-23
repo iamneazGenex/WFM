@@ -208,7 +208,7 @@ def gapCheck(roster, employee, workRule):
 
 
 def checkGapBetweenShiftEndToTheNextShiftStartTime(
-    requestor, requestee, swapDateID, tradeDateID, workRule, request
+    requestor, requestee, swapDateID, tradeDateID, workRule
 ):
     """
     Check the gap between shift end to the next shift start time
@@ -261,9 +261,9 @@ def checkGapBetweenShiftEndToTheNextShiftStartTime(
                 "Gap between shift end to the next shift start time follows work rule for both requestor and requestee"
             )
         else:
-            logger.error(
-                "Gap between shift end to the next shift start time does not follow work rule for either requestor or requestee"
-            )
+            error_message = "Gap between shift end to the next shift start time does not follow work rule for either requestor or requestee"
+            logger.error(error_message)
+            error_messages.append(error_message)
 
     except Roster.DoesNotExist as e:
         error_message = f"Roster not found: {e}"
@@ -281,7 +281,7 @@ def checkGapBetweenShiftEndToTheNextShiftStartTime(
     return result, "\n".join(error_messages)
 
 
-def checkFemaleShiftTimeFollowsWorkRule(startTime, endTime, workRule, request):
+def checkFemaleShiftTimeFollowsWorkRule(startTime, endTime, workRule):
     """
     Check if the female shift time follows the work rule of female shift time.
 
@@ -341,8 +341,8 @@ def checkFemaleShiftTimeFollowsWorkRule(startTime, endTime, workRule, request):
         logger.error(error_message)
         error_messages.append(error_message)
 
-    error_message_str = ", ".join(error_messages)
-    return result, error_message_str
+    error_message_string = ", ".join(error_messages)
+    return result, error_message_string
 
 
 def checkFemaleShiftTimeFollowsWorkRuleOLD(startTime, endTime, workRule, request):
