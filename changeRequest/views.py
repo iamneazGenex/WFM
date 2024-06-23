@@ -59,7 +59,6 @@ def createDayOffTrading(request):
     ]
     requestor = getEmployee(request.user.id)
     context = {
-        "form1": form1,
         "breadCrumbList": breadCrumbList,
         "currentBreadCrumb": PageInfoCollection.DAYOFFTRADING_CREATE.pageName,
         "details": {
@@ -82,6 +81,7 @@ def createDayOffTrading(request):
             tradeDateID=tradeDateID,
             requesteeID=requesteeID,
         )
+        context["form1"] = form1
         #   WORKRULE
         try:
             workRule = WorkRule.objects.get(id=1)
@@ -361,6 +361,7 @@ def createDayOffTrading(request):
         form1 = DayOffTradingForm(
             employee=requestor, swapDateID=None, tradeDateID=None, requesteeID=None
         )
+        context["form1"] = form1
 
     return render(request, template, context)
 
