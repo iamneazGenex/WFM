@@ -91,12 +91,12 @@ class DayOffTrading(BaseModel):
                 tradeDate=self.requestee_trade_roster.start_date,
                 swapDate=self.requestee_swap_roster.start_date,
             )
-            # recipientList = [
-            #     self.requestee.user.email,
-            # ]
             recipientList = [
-                "alamin.neaz@genexinfosys.com",
+                self.requestee.user.email,
             ]
+            # recipientList = [
+            #     "alamin.neaz@genexinfosys.com",
+            # ]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
@@ -115,12 +115,12 @@ class DayOffTrading(BaseModel):
                 tradeDate=self.requestor_trade_roster.start_date,
                 swapDate=self.requestor_swap_roster.start_date,
             )
-            # recipientList = [
-            #     self.requestor.user.email,
-            # ]
             recipientList = [
-                "alamin.neaz@genexinfosys.com",
+                self.requestor.user.email,
             ]
+            # recipientList = [
+            #     "alamin.neaz@genexinfosys.com",
+            # ]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
@@ -155,12 +155,12 @@ class DayOffTrading(BaseModel):
                 requesteeSwapDate=self.requestee_swap_roster.start_date,
                 supervisorName=supervisor.user.name,
             )
-            # recipientList = [
-            #     supervisor.user.email,
-            # ]
             recipientList = [
-                "alamin.neaz@genexinfosys.com",
+                supervisor.user.email,
             ]
+            # recipientList = [
+            #     "alamin.neaz@genexinfosys.com",
+            # ]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
@@ -192,12 +192,12 @@ class DayOffTrading(BaseModel):
                 requesteeSwapDate=self.requestee_swap_roster.start_date,
                 supervisorName=supervisor.user.name,
             )
-            # recipientList = [
-            #     supervisor.user.email,
-            # ]
             recipientList = [
-                "alamin.neaz@genexinfosys.com",
+                supervisor.user.email,
             ]
+            # recipientList = [
+            #     "alamin.neaz@genexinfosys.com",
+            # ]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
@@ -224,12 +224,12 @@ class DayOffTrading(BaseModel):
                 requesteeName=self.requestee.user.name,
                 requestorName=self.requestor.user.name,
             )
-            # recipientList = [
-            #     self.requestor.user.email,
-            # ]
             recipientList = [
-                "alamin.neaz@genexinfosys.com",
+                self.requestor.user.email,
             ]
+            # recipientList = [
+            #     "alamin.neaz@genexinfosys.com",
+            # ]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
@@ -261,11 +261,11 @@ class DayOffTrading(BaseModel):
             message = "The Day Off trade Request has been granted by {supervisorName}\n\nT".format(
                 supervisorName=self.supervisor.user.name,
             )
-            # recipientList = [
-            #     self.requestor.user.email,
-            #     self.requestee.user.email,
-            # ]
-            recipientList = ["alamin.neaz@genexinfosys.com", "neazahmedneaz@gmail.com"]
+            recipientList = [
+                self.requestor.user.email,
+                self.requestee.user.email,
+            ]
+            # recipientList = ["alamin.neaz@genexinfosys.com", "neazahmedneaz@gmail.com"]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
@@ -295,11 +295,11 @@ class DayOffTrading(BaseModel):
             message = "The Day Off trade Request has been rejected by {supervisorName}\n\nT".format(
                 supervisorName=self.supervisor.user.name,
             )
-            # recipientList = [
-            #     self.requestor.user.email,
-            #     self.requestee.user.email,
-            # ]
-            recipientList = ["alamin.neaz@genexinfosys.com", "neazahmedneaz@gmail.com"]
+            recipientList = [
+                self.requestor.user.email,
+                self.requestee.user.email,
+            ]
+            # recipientList = ["alamin.neaz@genexinfosys.com", "neazahmedneaz@gmail.com"]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
