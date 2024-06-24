@@ -4,7 +4,7 @@
 <h6 id="userName" class="invisible">{{ user.name }}</h6>
 {% include 'breadcrumb.html' %}
 {% include 'messages.html' %}
-{% if user.is_WFM or user.is_MIS_GROUP_1 %}
+{% if user.is_WFM or user.is_MIS_GROUP_1 or user.is_Supervisor%}
 <div class="card ">
   <div class="card-body">
       <div class="row">
