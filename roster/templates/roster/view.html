@@ -82,7 +82,7 @@
         url: "{% url 'viewRosterJson' %}",
         type: "GET",
         data: function (dtParms) {
-          dtParms.search_user = isButton1Pressed ? "{{ user.name }}" : "";
+          dtParms.search_user = isButton1Pressed ? "{{ user.id }}" : "";
           return dtParms;
         },
         error: function (xhr, error, thrown) {

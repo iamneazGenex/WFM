@@ -635,7 +635,7 @@ def checkConsecutiveWorkingDays(swapRosterID, tradeRosterID, employee, workRule)
         swap_roster = Roster.objects.get(id=swapRosterID)
         consecutiveWorkingDays = workRule.consecutive_working_days
         logging.info(
-            f"Checking Consecutive Working Days ({consecutiveWorkingDays}) for Employee(id:{employee.id})"
+            f"Checking Consecutive Working Days ({consecutiveWorkingDays}) for {employee.user.name}(id:{employee.id})"
         )
 
         # Create a combined list of dates to check
@@ -709,12 +709,16 @@ def checkConsecutiveWorkingDays(swapRosterID, tradeRosterID, employee, workRule)
                 break
 
             if consecutiveCount > consecutiveWorkingDays:
-                message = f"Consecutive working days ({consecutiveCount}) exceed the limit ({consecutiveWorkingDays})"
+                message = f"Consecutive working days ({consecutiveCount}) exceed the limit ({consecutiveWorkingDays}) for {employee.user.name}"
                 logging.info(message)
                 error_messages.append(message)
                 return False, "\n".join(error_messages)
 
-        result = True if consecutiveCount < consecutiveWorkingDays else False
+        if consecutiveCount <= consecutiveWorkingDays:
+            result = True
+        else:
+            result = False
+            logging.info(f"Consecutive working days:({consecutiveCount})\n ")
 
     except Roster.DoesNotExist:
         error_message = f"One of the rosters with IDs {tradeRosterID} or {swapRosterID} does not exist: {e}"

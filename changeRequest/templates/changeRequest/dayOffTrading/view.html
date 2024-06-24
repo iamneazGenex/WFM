@@ -2,6 +2,7 @@
 <h6 id="usertype" hidden>{{ user.userType }}</h6>
 {% include 'breadcrumb.html' %}
 {% include 'messages.html' %}
+{% if user.is_Employee %}
 <div class="card ">
   <div class="card-body">
     <ul class="nav justify-content-end">
@@ -13,6 +14,7 @@
     </ul>
   </div>
 </div>
+{% endif %}
 <div class="card mt-3">
   <div class="card-body">
     <table

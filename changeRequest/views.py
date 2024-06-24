@@ -174,9 +174,8 @@ def createDayOffTrading(request):
         )
 
         if not requestorConsecutiveWorkingDaysResult:
-            logging.error(
-                f"Requestor consecutive working days check failed: {requestorConsecutiveWorkingDayError}"
-            )
+            error_message = f"Requestor consecutive working days check failed: {requestorConsecutiveWorkingDayError}"
+            logging.error(error_message)
             messages.error(request, requestorConsecutiveWorkingDayError)
             return render(request, template, context)
         ################################
@@ -191,9 +190,8 @@ def createDayOffTrading(request):
             workRule=workRule,
         )
         if not requesteeConsecutiveWorkingDaysResult:
-            logging.error(
-                f"Requestee consecutive working days check failed: {requestorConsecutiveWorkingDayError}"
-            )
+            error_message = f"Requestee consecutive working days check failed: {requesteeConsecutiveWorkingDayError}"
+            logging.error(error_message)
             messages.error(request, requesteeConsecutiveWorkingDayError)
             return render(request, template, context)
         ################################

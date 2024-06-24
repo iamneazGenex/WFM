@@ -212,9 +212,15 @@ class viewRosterJson(BaseDatatableView):
             )
         elif self.request.user.is_Employee():
             employee = getEmployee(self.request.user.id)
-            return Roster.objects.filter(
-                Q(employee=employee.id) | Q(employee__lob=employee.lob)
-            ).order_by("-created_At")
+            user_id = self.request.GET.get("search_user")
+            if user_id:
+                return Roster.objects.filter(Q(employee=employee.id)).order_by(
+                    "-created_At"
+                )
+            else:
+                return Roster.objects.filter(
+                    Q(employee=employee.id) | Q(employee__lob=employee.lob)
+                ).order_by("-created_At")
         else:
             return Roster.objects.none()
 
@@ -1268,7 +1274,7 @@ class viewForecastingListJson(BaseDatatableView):
     def render_column(self, row, column):
         return super(viewForecastingListJson, self).render_column(row, column)
 
-    def get_actions_html(self, item):
+    def get_edit_html(self, item):
         edit_url = reverse(PageInfoCollection.FORECASTING_EDIT.urlName, args=[item.id])
 
         edit_link = format_html(
@@ -1278,7 +1284,7 @@ class viewForecastingListJson(BaseDatatableView):
 
         return edit_link
 
-    def get_actions_html(self, item):
+    def get_delete_html(self, item):
         delete_url = reverse(
             PageInfoCollection.FORECASTING_DELETE.urlName, args=[item.id]
         )

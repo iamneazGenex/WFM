@@ -514,7 +514,7 @@ def createBulkLoginLogoutTime(request):
 #   Reporting One
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1, GroupEnum.supervisor)
 def viewReportingOne(request):
 
     templateName = "reportingOne/view.html"
@@ -809,7 +809,7 @@ class viewReportingOneListJson(View):
 #   Reporting Two
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1, GroupEnum.supervisor)
 def viewReportingTwo(request):
 
     templateName = "reportingTwo/view.html"
@@ -891,7 +891,7 @@ class viewReportingTwoListJson(View):
 #   Reporting Three
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
+@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1, GroupEnum.supervisor)
 def viewReportingThree(request):
 
     templateName = "reportingThree/view.html"
