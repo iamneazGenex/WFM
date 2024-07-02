@@ -40,7 +40,7 @@
   function openRejectModal(rejectUrl) {
     var rejectModal = document.getElementById("rejectModal");
     var rejectButton = rejectModal.querySelector(".btn-danger");
-
+    const loadingScreen = document.getElementById('loadingScreen');
     // Set the "Confirm" button's href attribute to the reject URL
     rejectButton.setAttribute("href", rejectUrl);
 
@@ -64,7 +64,8 @@
         type: "GET",
         success: function (response) {
           // Hide loading indicator on success
-          $("#loading").hide();
+          
+          
           $("#rejectModal").modal("hide");
           showSweetAlert(response.message, "success");
           console.log(response);
@@ -72,7 +73,8 @@
         },
         error: function (error) {
           // Hide loading indicator on error
-          $("#loading").hide();
+          
+          
           $("#rejectModal").modal("hide");
           showSweetAlert(response.message, "error");
           $("#loading").hide();

@@ -1,14 +1,22 @@
 {% extends 'base.html' %} {% load crispy_forms_tags %} {% block main %}
 {% include 'breadcrumb.html'%}
 {% include 'messages.html' %}
+{% include 'loadingScreen.html' %}
 <div class="card">
   <div class="card-body">
     {% include 'messages.html' %}
-    <form method="post" action="{% url formUrl id=id %}">
+    <form id="myForm" method="post" action="{% url formUrl id=id %}">
       {% csrf_token %} {{ form|crispy }}
       <button type="submit" class="btn btn-primary btn-block">Update</button>
     </form>
   </div>
 </div>
-
+<script>
+  $(document).ready(function () {
+    const loadingScreen = document.getElementById('loadingScreen');
+    document.getElementById('myForm').addEventListener('submit', function() {
+      loadingScreen.classList.toggle('hidden');
+  });
+  });
+</script>
 {% endblock %}

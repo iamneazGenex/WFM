@@ -1,9 +1,10 @@
 {% extends 'base.html' %} {% load crispy_forms_tags %} {% block main %}
 {% include 'breadcrumb.html'%}
 {% include 'messages.html' %}
+{% include 'loadingScreen.html' %}
 <div class="card">
   <div class="card-body">
-    <form method="post" action="{% url formUrl %}">
+    <form id="myForm" method="post" action="{% url formUrl %}">
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ next }}" />
       {{ form|crispy }}
@@ -11,4 +12,12 @@
     </form>
   </div>
 </div>
+<script>
+  $(document).ready(function () {
+    const loadingScreen = document.getElementById('loadingScreen');
+    document.getElementById('myForm').addEventListener('submit', function() {
+      loadingScreen.classList.toggle('hidden');
+  });
+  });
+</script>
 {% endblock %}
