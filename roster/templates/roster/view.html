@@ -1,7 +1,7 @@
 {% extends 'base.html' %} {% block main %}
 
-<h6 id="usertype" class="invisible">{{ user.userType }}</h6>
-<h6 id="userName" class="invisible">{{ user.name }}</h6>
+<h6 id="usertype" class="hidden">{{ user.userType }}</h6>
+<h6 id="userName" class="hidden">{{ user.name }}</h6>
 {% include 'breadcrumb.html' %}
 {% include 'messages.html' %}
 {% if user.is_WFM or user.is_MIS_GROUP_1%}

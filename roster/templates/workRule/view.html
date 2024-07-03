@@ -2,6 +2,7 @@
 <h6 id="usertype" class="invisible">{{ user.userType }}</h6>
 {% include 'breadcrumb.html'%}
 {% include 'messages.html' %}
+{% if user.is_WFM or user.is_MIS_GROUP_1%}
 <div class="card">
   <div class="card-body">
     <ul class="nav justify-content-end">
@@ -13,6 +14,7 @@
     </ul>
   </div>
 </div>
+{% endif%}
 {% if workRule != None %} 
 <!-- single card  -->
 <div class="col-12 mt-3">

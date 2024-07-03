@@ -199,3 +199,7 @@ class PageInfoCollection:
     USER_EDIT = PageInfo("Edit", "editUser")
     USER_DELETE = PageInfo("Delete", "deleteUser")
     USER_JSON = PageInfo("JSON", "viewUserJson")
+    ################################################################
+    #   Trading Rules
+    ################################################################
+    TRADINGRULES_VIEW = PageInfo("Trading Rules", "viewWorkRule")

@@ -898,26 +898,47 @@ def deleteRosterSeatCount(request, id):
 #   Work RULE
 ################################################################
 @login_required(login_url="/login/")
-@check_user_able_to_see_page(GroupEnum.wfm, GroupEnum.mis_group_1)
+@check_user_able_to_see_page(
+    GroupEnum.wfm, GroupEnum.mis_group_1, GroupEnum.supervisor, GroupEnum.employee
+)
 def viewWorkRule(request):
     templateName = "workRule/view.html"
-    breadCrumbList = [PageInfoCollection.SETTINGS, PageInfoCollection.WORKRULE_VIEW]
+
     try:
         workRule = WorkRule.objects.get(id=1)
     except Exception as e:
         workRule = None
         logger.info(f"|Failed| Roster Count Creation failed.Exception: {e}")
         messages.error(request, "WorkRule does not exist.")
-    context = {
-        "breadCrumbList": breadCrumbList,
-        "currentBreadCrumb": PageInfoCollection.WORKRULE_VIEW.pageName,
-        "workRule": workRule,
-        "ajaxUrl": PageInfoCollection.EMPLOYEE_JSON.urlName,
-        "createUrl": PageInfoCollection.WORKRULE_CREATE.urlName,
-        "editUrl": PageInfoCollection.WORKRULE_EDIT.urlName,
-        "settingsActive": "active open",
-        "workRuleActive": "active",
-    }
+
+    if (
+        request.user.groups.filter(name=GroupEnum.wfm).exists()
+        or request.user.groups.filter(name=GroupEnum.mis_group_1).exists()
+    ):
+        print("wfm")
+        breadCrumbList = [PageInfoCollection.SETTINGS, PageInfoCollection.WORKRULE_VIEW]
+        context = {
+            "breadCrumbList": breadCrumbList,
+            "currentBreadCrumb": PageInfoCollection.WORKRULE_VIEW.pageName,
+            "workRule": workRule,
+            "ajaxUrl": PageInfoCollection.EMPLOYEE_JSON.urlName,
+            "createUrl": PageInfoCollection.WORKRULE_CREATE.urlName,
+            "editUrl": PageInfoCollection.WORKRULE_EDIT.urlName,
+            "settingsActive": "active open",
+            "workRuleActive": "active",
+        }
+    else:
+        breadCrumbList = [PageInfoCollection.TRADINGRULES_VIEW]
+        context = {
+            "breadCrumbList": breadCrumbList,
+            "currentBreadCrumb": PageInfoCollection.TRADINGRULES_VIEW.pageName,
+            "workRule": workRule,
+            "ajaxUrl": PageInfoCollection.EMPLOYEE_JSON.urlName,
+            "createUrl": PageInfoCollection.WORKRULE_CREATE.urlName,
+            "editUrl": PageInfoCollection.WORKRULE_EDIT.urlName,
+            "tradingRulesActive": "active",
+        }
+
     return render(request, templateName, context)
 
 

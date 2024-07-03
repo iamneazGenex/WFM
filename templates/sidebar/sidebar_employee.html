@@ -38,6 +38,12 @@
                 <div class="text-truncate"> Home</div>
             </a>
         </li>
+        <li class="menu-item {{ tradingRulesActive }}">
+            <a href="{% url 'viewWorkRule' %}" class="menu-link ">
+                <i class="menu-icon tf-icons fa fa-gavel"></i>
+                <div class="text-truncate"> Trading Rules</div>
+            </a>
+        </li>
         <li class="menu-item {{ dayOffTradingActive }}">
             <a href="{% url 'viewDayOffTradingRequests' %}" class="menu-link ">
                 <i class="menu-icon tf-icons fa fa-sun-o"></i>
@@ -70,6 +76,7 @@
                 <i class="menu-icon tf-icons fa-solid fa-clipboard-user"></i><div>Roster</div>
             </a>
         </li>
+        
         {% if user.is_Supervisor%}
         <li class="menu-item {{ reportingActive }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
