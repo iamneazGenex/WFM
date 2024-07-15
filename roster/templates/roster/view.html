@@ -4,24 +4,73 @@
 <h6 id="userName" class="hidden">{{ user.name }}</h6>
 {% include 'breadcrumb.html' %}
 {% include 'messages.html' %}
-{% if user.is_WFM or user.is_MIS_GROUP_1%}
+
 <div class="card ">
   <div class="card-body">
-    <ul class="nav justify-content-end">
-      <li class="nav-item mr-2">
-        <a class="btn btn-primary" href="{% url createUrl %}" role="button"
-          >Create</a
-        >
-      </li>
-      <li class="nav-item">
-        <a class="btn btn-primary" href="{% url bulkUrl %}" role="button"
-          >Bulk</a
-        >
-      </li>
-    </ul>
+    
+        <ul class="nav justify-content-end align-self-center">
+          <li class="nav-item mr-2">
+            <button type="button" class="btn btn-primary btn-block" id="searchByDate">
+              Search By Date
+            </button>
+          </li>
+          {% if user.is_WFM or user.is_MIS_GROUP_1%}
+          <li class="nav-item mr-2">
+            <a class="btn btn-primary" href="{% url createUrl %}" role="button"
+              >Create</a
+            >
+          </li>
+          <li class="nav-item">
+            <a class="btn btn-primary" href="{% url bulkUrl %}" role="button"
+              >Bulk</a
+            >
+          </li>
+          {% endif %}
+        </ul>
+      
+  
   </div>
 </div>
-{% endif %}
+<div class="card mt-3" style="display:none;" id="div_Date_Search">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-4">
+        <label for="searchDate">From Date:</label>
+        <input
+          type="date"
+          class="form-control"
+          id="search_from_date"
+          name="search_date"
+          placeholder="Select Date"
+        />
+      </div>
+      <div class="col-md-4">
+        <label for="searchDate">Search Date:</label>
+        <input
+          type="date"
+          class="form-control"
+          id="search_to_date"
+          name="search_date"
+          placeholder="Select Date"
+        />
+      </div>
+      <div class="col-md-2">
+        <label for="searchDate">&nbsp;</label>
+        <button type="button" class="btn btn-primary btn-block" id="searchButton">
+          Search
+        </button>
+      </div>
+      <div class="col-md-2">
+        <label for="resetDateButton">&nbsp;</label>
+        <button type="button" class="btn btn-primary btn-block" id="resetDateButton">
+          Reset
+        </button>
+      </div>
+      
+  </div>
+  </div>
+</div>
+
 <div class="card mt-3" style="overflow-x:auto;">
   <div class="card-body">
     <!-- Dropdown for column selection -->
@@ -73,16 +122,26 @@
     // Get the text content of the h6 tag
     var userTypeValue = userTypeTag.textContent || userTypeTag.innerText;
     console.log(userTypeValue);
-    //$('#myTable tfoot tr').appendTo('#myTable thead');
+    
+    // Date Search
+    var searchFromDate = '';
+    var searchToDate = '';
+
     var table = $("#myTable").DataTable({
       processing: true,
       serverSide: true,
       paging: true,
+      lengthMenu: [
+        [10, 25, 50, -1],
+        [10, 25, 50, 'All']
+    ],
       ajax: {
         url: "{% url 'viewRosterJson' %}",
         type: "GET",
         data: function (dtParms) {
           dtParms.search_user = isButton1Pressed ? "{{ user.id }}" : "";
+          dtParms.fromDate = searchFromDate;
+          dtParms.toDate = searchToDate;
           return dtParms;
         },
         error: function (xhr, error, thrown) {
@@ -127,14 +186,12 @@
           },
         },
       ],
-      dom: 'PQlBfritp',
-      buttons: [
-      {
+      dom: 'PQlBfrtip',
+      buttons: [{
         extend: 'colvis',
         className: 'ml-4',
         text: 'Column Visibility'
-      },
-      {
+      },{
         text: buttonName,
         action: function ( e, dt, node, config ) {
           isButton1Pressed = !isButton1Pressed;
@@ -144,8 +201,7 @@
         attr: {
           id: 'button1'  // Assign an ID to the button
         }
-      }
-      ],
+      },'copy', 'excel', 'pdf','csv','print'] ,
       initComplete: function () {
         // Check the condition based on userTypeValue
       if (userTypeValue === "Employee") {
@@ -156,6 +212,37 @@
         $('#button1').hide();
       }
       }
+    });
+
+    $('#searchButton').on('click', function () {
+      // Get the selected skill and search date values
+      searchFromDate = $('#search_from_date').val();
+      searchToDate = $('#search_to_date').val();
+      console.log("searchFromDate : "+ searchFromDate)
+      console.log("searchToDate : "+ searchToDate)
+      // Check if both skill and date are selected
+
+      if (searchFromDate ==='') {
+        // Show an alert or perform any other handling if skill and date are not selected
+        alert('Please select From Date');
+          
+      } 
+      else if(searchToDate ===''){
+        alert('Please select To Date');
+      }
+      else {
+          // Perform AJAX call
+          table.page.len(-1).draw();
+      }
+    });
+
+    $('#resetDateButton').on('click', function () {
+      // Get the selected skill and search date values
+      $('#search_from_date').val('');
+      $('#search_to_date').val('');
+      searchFromDate ='';
+      searchToDate = '';
+      table.page.len(10).draw();
     });
   });
   // Function to open the accept modal
@@ -197,5 +284,18 @@
       event.target.style.display = "none";
     }
   });
+
+  document.getElementById("searchByDate").onclick = function() {
+    var divDateSearch = document.getElementById("div_Date_Search");
+    if (divDateSearch.style.display === "none") {
+      divDateSearch.style.display = "block";
+    } else {
+      divDateSearch.style.display = "none";
+      
+    }
+  };
+
+
+
 </script>
 {% endblock %}

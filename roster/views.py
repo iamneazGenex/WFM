@@ -196,31 +196,53 @@ class viewRosterJson(BaseDatatableView):
 
     def get_initial_queryset(self):
         # Log the request
+        fromDate = self.request.GET.get("fromDate")
+        toDate = self.request.GET.get("toDate")
         if self.request.user.is_WFM() or self.request.user.is_MIS_GROUP_1():
-            return (
-                Roster.objects.all()
-                .order_by("-created_At")
-                .select_related("shiftLegend")
-            )
+            if fromDate.strip() == "":
+                return (
+                    Roster.objects.all()
+                    .order_by("-created_At")
+                    .select_related("shiftLegend")
+                )
+            else:
+                return (
+                    Roster.objects.filter(
+                        Q(start_date__gte=fromDate) & Q(start_date__lte=toDate)
+                    )
+                    .order_by("-created_At")
+                    .select_related("shiftLegend")
+                )
         elif self.request.user.is_Supervisor():
             employee = getEmployee(self.request.user.id)
             supervised_employees = Employee.objects.filter(
                 Q(supervisor_1=employee) | Q(supervisor_2=employee)
             )
-            return Roster.objects.filter(Q(employee__in=supervised_employees)).order_by(
-                "-created_At"
-            )
+            rosters = Roster.objects.filter(
+                Q(employee__in=supervised_employees)
+            ).order_by("-created_At")
+            if fromDate.strip() != "":
+                rosters = rosters.filter(
+                    Q(start_date__gte=fromDate) & Q(start_date__lte=toDate)
+                )
+            return rosters
         elif self.request.user.is_Employee():
             employee = getEmployee(self.request.user.id)
             user_id = self.request.GET.get("search_user")
+            rosters = None
             if user_id:
-                return Roster.objects.filter(Q(employee=employee.id)).order_by(
+                rosters = Roster.objects.filter(Q(employee=employee.id)).order_by(
                     "-created_At"
                 )
             else:
-                return Roster.objects.filter(
+                rosters = Roster.objects.filter(
                     Q(employee=employee.id) | Q(employee__lob=employee.lob)
                 ).order_by("-created_At")
+            if fromDate.strip() != "":
+                rosters = rosters.filter(
+                    Q(start_date__gte=fromDate) & Q(start_date__lte=toDate)
+                )
+            return rosters
         else:
             return Roster.objects.none()
 
