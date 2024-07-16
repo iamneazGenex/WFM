@@ -274,6 +274,9 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = "iamneazForRMS@outlook.com"
 EMAIL_HOST_PASSWORD = "genex24x7!"
+DEFAULT_FROM_EMAIL = "iamneazForRMS@outlook.com"
+# EMAIL_FILE_PATH = BASE_DIR / "sent_emails"
+
 
 DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 DJANGO_TABLES2_TABLE_ATTRS = {

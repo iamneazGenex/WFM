@@ -17,15 +17,25 @@ from rms.page_info_collection import PageInfoCollection
 from django.db.models import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from rms.constants import GroupEnum
-from django.contrib.auth.views import PasswordChangeView
+from django.contrib.auth.views import (
+    PasswordChangeView,
+    PasswordResetView,
+    PasswordResetConfirmView,
+    PasswordResetDoneView,
+)
 from django.contrib.auth.forms import PasswordChangeForm
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.http import HttpResponseForbidden
 from django.db import transaction
+from django.contrib.messages.views import SuccessMessageMixin
 
 logger = logging.getLogger(__name__)
+
+
+def test_template(request):
+    return render(request, "registration/password_reset.html")
 
 
 class CustomPasswordChangeView(PasswordChangeView):
@@ -61,6 +71,31 @@ class CustomPasswordChangeView(PasswordChangeView):
             self.request, "There was an error changing your password. Please try again."
         )  # Add error message
         return response
+
+
+class CustomPasswordResetView(SuccessMessageMixin, PasswordResetView):
+    template_name = "registration/password_reset.html"
+    email_template_name = "registration/password_reset_email.html"
+    subject_template_name = "registration/password_reset_subject.txt"
+    success_message = (
+        "We've emailed you instructions for setting your password, "
+        "if an account exists with the email you entered. You should receive them shortly."
+        " If you don't receive an email, "
+        "please make sure you've entered the address you registered with, and check your spam folder."
+    )
+    success_url = reverse_lazy("password_reset_complete")
+
+    def get_template_names(self):
+        print(f"Using template: {self.template_name}")
+        return [self.template_name]
+
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = "registration/password_reset_confirm.html"
+
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = "registration/password_reset_done.html"
 
 
 @login_required(login_url="/login/")
