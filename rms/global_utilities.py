@@ -3,6 +3,10 @@ from django import forms
 from django.utils import timezone
 import logging
 from django.contrib import messages
+import smtplib
+from ntlm_auth.ntlm import NtlmContext
+from django.conf import settings
+from base64 import b64encode
 
 logger = logging.getLogger(__name__)
 
@@ -116,3 +120,44 @@ def get_or_none(model, value):
     except Exception as e:
         logger.error(f"Error retrieving {model.__name__} for value '{value}': {e}")
         return None
+
+
+def send_email_ntlm(subject, message, recipient_list):
+    """
+    Sends an email using NTLM authentication.
+
+    Args:
+        subject (str): The subject of the email.
+        message (str): The body of the email.
+        recipient_list (list): A list of recipient email addresses.
+
+    Returns:
+        bool: True if the email is sent successfully, False otherwise.
+    """
+    try:
+        # Define your NTLM authentication credentials
+        username = settings.EMAIL_HOST_USER
+        password = settings.EMAIL_HOST_PASSWORD
+        domain = settings.EMAIL_DOMAIN
+        # Create an SMTP connection
+        smtp = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        smtp.starttls()
+
+        # Authenticate using NTLM
+        auth_string = f"{domain}\\{username}:{password}"
+        auth = f"NTLM {b64encode(auth_string.encode()).decode()}"
+        smtp.docmd("AUTH", auth)
+
+        # Format the email message
+        from_email = settings.DEFAULT_FROM_EMAIL
+        email_message = f"Subject: {subject}\nFrom: {from_email}\nTo: {', '.join(recipient_list)}\n\n{message}"
+
+        # Send the email
+        smtp.sendmail(from_email, recipient_list, email_message)
+
+        # Close the SMTP connection
+        smtp.quit()
+        return True
+    except Exception as e:
+        print(f" An error occurred while sending email: {e}")
+        return False

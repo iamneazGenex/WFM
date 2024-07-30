@@ -1,9 +1,14 @@
+from enum import verify
 from django.test import TestCase
 from accounts.models import *
 from roster.models import *
 from reporting.utils import *
 import datetime
 import pprint
+import smtplib
+import base64
+from rms.global_utilities import *
+import time
 
 # Create your tests here.
 
@@ -101,4 +106,85 @@ def getAgentHourlyPerformanceMappingWithRosterByMonthTest(month, year, skill):
     return agentHourlyPerformanceMapping
 
 
-runtest()
+from exchangelib import DELEGATE, Account, Credentials, Configuration
+import requests
+
+
+def runSMTPTest():
+    email_address = "wfm.notification@genexsvc.com"
+    email_password = "Genex@4312#$"
+    smtp_server = "172.23.28.31"  # Use the FQDN from the debug output
+
+    try:
+        credentials = Credentials(email_address, email_password)
+        config = Configuration(server=smtp_server, credentials=credentials)
+        account = Account(
+            primary_smtp_address=email_address,
+            config=config,
+            autodiscover=False,
+            access_type=DELEGATE,
+        )
+
+        print("Authentication successful")
+
+        # Optional: Try to access the inbox to confirm the connection
+        inbox = account.inbox
+        print(f"Inbox folder name: {inbox.name}")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    # email_address = "your_email@example.com"
+    # email_password = "your_password"
+
+    # encoded_email = base64.b64encode(email_address.encode()).decode()
+    # encoded_password = base64.b64encode(email_password.encode()).decode()
+
+    # print(f"Encoded email: {encoded_email}")
+    # print(f"Encoded password: {encoded_password}")
+
+
+from django.core.mail import send_mail
+from django.conf import settings
+
+
+def send_email(subject, message, recipient_list):
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            recipient_list,
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        print(f"An error occurred while sending email: {e}")
+        return False
+
+
+# send_email("TEST Subject", "Test Message", ["m.nizam@genexsvc.com"])
+
+
+# send_email_ntlm(
+#     f"TEST Subject - {time.time()}",
+#     "Test Message",
+#     ["alamin.neaz@genexinfosys.com"],
+# )
+
+from django.core.mail import send_mail
+
+# send_mail(
+#     "Subject here",
+#     "Here is the message.",
+#     "wfm.notification@genexsvc.com",
+#     ["alamin.neaz@genexinfosys.com"],
+#     fail_silently=False,
+# )
+
+send_mail(
+    "Subject here",
+    "Here is the message.",
+    "wfm.notification@genexsvc.com",
+    ["neaz@genexsvc.com"],
+    fail_silently=False,
+)

@@ -268,15 +268,56 @@ logging.config.dictConfig(
 )
 
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp-mail.outlook.com"
-EMAIL_USE_TLS = True
-EMAIL_PORT = 587
-EMAIL_HOST_USER = "iamneazForRMS@outlook.com"
-EMAIL_HOST_PASSWORD = "genex24x7!"
-DEFAULT_FROM_EMAIL = "iamneazForRMS@outlook.com"
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp-mail.outlook.com"
+# EMAIL_USE_TLS = True
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = "iamneazForRMS@outlook.com"
+# EMAIL_HOST_PASSWORD = "genex24x7!"
+# DEFAULT_FROM_EMAIL = "iamneazForRMS@outlook.com"
 # EMAIL_FILE_PATH = BASE_DIR / "sent_emails"
+# -------------------------------------------
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "172.23.28.31"
+# EMAIL_USE_TLS = False
+# EMAIL_USE_SSL = False
+# EMAIL_PORT = 25
+# EMAIL_HOST_USER = "wfm.notification"
+# EMAIL_HOST_PASSWORD = "Genex@4312#$"
+# DEFAULT_FROM_EMAIL = "wfm.notification@genexsvc.com"
+# ---------------------------------------------------
+# Enable NTLM authentication
+EMAIL_BACKEND = "django_smtp_ntlm_backend.NTLMEmail"
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_DOMAIN = "genexservices"
+EMAIL_HOST = "172.23.28.31"
+EMAIL_PORT = 25
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False
+# EMAIL_HOST_USER = "GENEXSVC\wfm.notification"
+EMAIL_HOST_USER = "genexservices\wfm.notification"
+EMAIL_HOST_PASSWORD = "Genex@4312#$"
+DEFAULT_FROM_EMAIL = "wfm.notification@genexsvc.com"
+EMAIL_AUTH = (EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
 
+# ------------------------------------------------------
+# EMAIL_NTLM_DOMAIN = "genexsvc"  # Replace with your domain name
+# EMAIL_NTLM_USERNAME = "wfm.notification"
+# EMAIL_NTLM_PASSWORD = "Genex@4312#$"
+
+# EMAIL_BACKEND_OPTIONS = {
+#     "host": EMAIL_HOST,
+#     "port": 25,
+#     "username": EMAIL_NTLM_USERNAME,
+#     "password": EMAIL_NTLM_PASSWORD,
+#     "ntlm_domain": EMAIL_NTLM_DOMAIN,
+# }
+# -------------------------------------------------------------
+# EMAIL_BACKEND = "rms.utils.exchange_backend.ExchangeEmailBackend"
+# EXCHANGE_USERNAME = "wfm.notification@genexsvc.com"
+# EXCHANGE_PASSWORD = "Genex@4312#$"
+# EXCHANGE_EMAIL = "wfm.notification@genexsvc.com"
+# EXCHANGE_SERVER = "172.23.28.31"
 
 DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 DJANGO_TABLES2_TABLE_ATTRS = {
