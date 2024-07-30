@@ -277,28 +277,29 @@ logging.config.dictConfig(
 # DEFAULT_FROM_EMAIL = "iamneazForRMS@outlook.com"
 # EMAIL_FILE_PATH = BASE_DIR / "sent_emails"
 # -------------------------------------------
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "172.23.28.31"
-# EMAIL_USE_TLS = False
-# EMAIL_USE_SSL = False
-# EMAIL_PORT = 25
-# EMAIL_HOST_USER = "wfm.notification"
-# EMAIL_HOST_PASSWORD = "Genex@4312#$"
-# DEFAULT_FROM_EMAIL = "wfm.notification@genexsvc.com"
-# ---------------------------------------------------
-# Enable NTLM authentication
-EMAIL_BACKEND = "django_smtp_ntlm_backend.NTLMEmail"
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_DOMAIN = "genexservices"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "172.23.28.31"
-EMAIL_PORT = 25
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = False
-# EMAIL_HOST_USER = "GENEXSVC\wfm.notification"
-EMAIL_HOST_USER = "genexservices\wfm.notification"
+EMAIL_PORT = 25
+EMAIL_HOST_USER = "wfm.notification"
 EMAIL_HOST_PASSWORD = "Genex@4312#$"
 DEFAULT_FROM_EMAIL = "wfm.notification@genexsvc.com"
-EMAIL_AUTH = (EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
+EMAIL_DOMAIN = "genexservices"
+# ---------------------------------------------------
+# Enable NTLM authentication
+# EMAIL_BACKEND = "django_smtp_ntlm_backend.NTLMEmail"
+# # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_DOMAIN = "genexservices"
+# EMAIL_HOST = "172.23.28.31"
+# EMAIL_PORT = 25
+# EMAIL_USE_TLS = False
+# EMAIL_USE_SSL = False
+# # EMAIL_HOST_USER = "GENEXSVC\wfm.notification"
+# EMAIL_HOST_USER = "genexservices\wfm.notification"
+# EMAIL_HOST_PASSWORD = "Genex@4312#$"
+# DEFAULT_FROM_EMAIL = "wfm.notification@genexsvc.com"
+# EMAIL_AUTH = (EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
 
 # ------------------------------------------------------
 # EMAIL_NTLM_DOMAIN = "genexsvc"  # Replace with your domain name
