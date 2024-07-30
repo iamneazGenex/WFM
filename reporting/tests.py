@@ -1,4 +1,3 @@
-from enum import verify
 from django.test import TestCase
 from accounts.models import *
 from roster.models import *
