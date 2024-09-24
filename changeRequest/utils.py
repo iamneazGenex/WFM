@@ -579,7 +579,7 @@ def sendEmail(subject, message, recipientList):
         bool: True if the email was sent successfully, False otherwise.
     """
     logger.info(f"Attempting to send email to: {', '.join(recipientList)}")
-    
+
     try:
         # Attempt to send the email
         send_mail(
@@ -594,33 +594,43 @@ def sendEmail(subject, message, recipientList):
 
     except Exception as e:
         # Log the exception with additional details
-        logger.error(f"Failed to send email to {', '.join(recipientList)}. Error: {str(e)}")
+        logger.error(
+            f"Failed to send email to {', '.join(recipientList)}. Error: {str(e)}"
+        )
         return False
 
 
-def swapRosterTimes(roster1, roster2):
+def swapRosterTimes(roster1ID, roster2ID):
     """
     Swap the Time between two Roster
     """
     logger.info(
         "Trying to Swap the time between Roster1:{roster1} and Roster2:{roster2}".format(
-            roster1=roster1, roster2=roster2
+            roster1=roster1ID, roster2=roster2ID
         )
     )
     result = False
     try:
+        roster1 = Roster.objects.get(id=roster1ID)
+        roster2 = Roster.objects.get(id=roster2ID)
+        print(roster1.start_time)
         roster1StartTime = roster1.start_time
         roster1EndTime = roster1.end_time
 
         roster2StartTime = roster2.start_time
         roster2EndTime = roster2.end_time
 
+        roster1ShiftLegend = roster1.shiftLegend
+        roster2ShiftLegend = roster2.shiftLegend
+
         with transaction.atomic():
             roster2.start_time = roster1StartTime
             roster2.end_time = roster1EndTime
+            roster2.shiftLegend = roster1ShiftLegend
             roster2.save()
             roster1.start_time = roster2StartTime
             roster1.end_time = roster2EndTime
+            roster1.shiftLegend = roster2ShiftLegend
             roster1.save()
             result = True
             logger.info("Swapped successfully")

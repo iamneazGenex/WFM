@@ -866,11 +866,11 @@ def acceptDayOffTrading(request, id):
         employee = getEmployee(request.user.id)
         if record.supervisor_approval_status == None:
             firstSwapResult = swapRosterTimes(
-                record.requestor_swap_roster, record.requestee_trade_roster
+                record.requestor_swap_roster.id, record.requestee_trade_roster.id
             )
             if firstSwapResult is True:
                 secondSwapResult = swapRosterTimes(
-                    record.requestor_trade_roster, record.requestee_swap_roster
+                    record.requestor_trade_roster.id, record.requestee_swap_roster.id
                 )
                 if secondSwapResult is True:
                     try:
