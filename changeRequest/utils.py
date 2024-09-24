@@ -408,11 +408,12 @@ def checkRegularShiftDuration(roster, workRule):
             rosterStartDateTime = datetime.datetime.combine(
                 roster.start_date, roster.start_time
             )
-            # Check if the end time is midnight
-            if roster.end_time == datetime.time(0, 0, 0):
-                # If so, increment the date by one day
+
+            # Check if the end time is midnight and handle the case
+            if roster.end_time == datetime.time(0, 0):
+                # If end time is midnight, ensure the end date is the next day
                 rosterEndDateTime = datetime.datetime.combine(
-                    roster.end_date + datetime.timedelta(days=1), roster.end_time
+                    roster.start_date + datetime.timedelta(days=1), roster.end_time
                 )
             else:
                 rosterEndDateTime = datetime.datetime.combine(
@@ -420,6 +421,7 @@ def checkRegularShiftDuration(roster, workRule):
                 )
 
             gap = gapInHours(rosterEndDateTime, rosterStartDateTime)
+            logger.info(f"The gap is {gap}")
 
             if (
                 gap <= workRule.maximum_regular_shift_duration
@@ -523,7 +525,7 @@ def checkShiftEndInProhibitedTime(roster, workRule):
             roster.end_time >= workRule.prohibited_time_for_end_of_a_shift_start_time
             and roster.end_time <= workRule.prohibited_time_for_end_of_a_shift_end_time
         ):
-            result = True
+            result = False
             warning_message = "Roster end time falls between the prohibited time"
             logger.warning(f"|Failed| {warning_message}")
             error_messages.append(warning_message)
@@ -531,6 +533,7 @@ def checkShiftEndInProhibitedTime(roster, workRule):
             logger.info(
                 "|Passed| Roster end time DOES NOT fall between the prohibited time"
             )
+            result = True
 
     except Exception as e:
         error_message = f"Exception occurred during shift end time check: {e}"
@@ -565,22 +568,34 @@ def checkShiftEndInProhibitedTimeOLD(roster, workRule):
 
 def sendEmail(subject, message, recipientList):
     """
-    Send an email
+    Sends an email using the configured SMTP backend.
+
+    Args:
+        subject (str): Subject of the email.
+        message (str): Body of the email.
+        recipientList (list): List of recipient email addresses.
+
+    Returns:
+        bool: True if the email was sent successfully, False otherwise.
     """
-    logger.info(
-        "Trying to send and email to {recipientList}".format(
-            recipientList=",".join(recipientList)
-        )
-    )
-    result = True
-    emailFrom = settings.EMAIL_HOST_USER
+    logger.info(f"Attempting to send email to: {', '.join(recipientList)}")
+    
     try:
-        send_mail(subject, message, emailFrom, recipientList)
-        logger.info("|Success| Email sent successfully")
+        # Attempt to send the email
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=recipientList,
+            fail_silently=False,
+        )
+        logger.info(f"Email sent successfully to {', '.join(recipientList)}")
+        return True
+
     except Exception as e:
-        result = False
-        logger.error("|Failed| Exception:{exception}".format(exception=e))
-    return result
+        # Log the exception with additional details
+        logger.error(f"Failed to send email to {', '.join(recipientList)}. Error: {str(e)}")
+        return False
 
 
 def swapRosterTimes(roster1, roster2):

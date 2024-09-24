@@ -179,11 +179,13 @@ from django.core.mail import send_mail
 #     ["alamin.neaz@genexinfosys.com"],
 #     fail_silently=False,
 # )
-
-send_mail(
-    "Subject here",
-    "Here is the message.",
-    "wfm.notification@genexsvc.com",
-    ["neaz@genexsvc.com"],
-    fail_silently=False,
-)
+try:
+    send_mail(
+        "Subject here",
+        "Here is the message.",
+        settings.DEFAULT_FROM_EMAIL,
+        ["alamin.neaz@genexinfosys.com"],
+        fail_silently=False,
+    )
+except Exception as e:
+    print(f"An error occurred while sending email: {e}")

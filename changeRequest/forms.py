@@ -29,15 +29,15 @@ class DayOffTradingForm(forms.Form):
         self.fields["tradeDate"].widget.attrs.update({"class": "select2"})
         self.fields["requestee"].widget.attrs.update({"class": "select2"})
 
-        # currentDate = timezone.now()
-        currentDate = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        currentDate = timezone.localtime().date()
+        # currentDate = datetime(2024, 1, 1, tzinfo=timezone.utc)
 
         # Build the querysets for swapDate and tradeDate
         swap_date_queryset = Roster.objects.filter(
-            Q(employee=employee) & ~Q(start_time=None) & Q(start_date__gte=currentDate)
+            Q(employee=employee) & ~Q(start_time=None) & Q(start_date__gt=currentDate)
         )
         trade_date_queryset = Roster.objects.filter(
-            Q(employee=employee) & Q(start_time=None) & Q(start_date__gte=currentDate)
+            Q(employee=employee) & Q(start_time=None) & Q(start_date__gt=currentDate)
         )
         requestee_queryset = Employee.objects.filter(
             Q(process=employee.process)

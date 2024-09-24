@@ -97,6 +97,7 @@ class DayOffTrading(BaseModel):
             # recipientList = [
             #     "alamin.neaz@genexinfosys.com",
             # ]
+
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
@@ -124,92 +125,56 @@ class DayOffTrading(BaseModel):
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
-            if result is True:
-                logging.info(
-                    "Email sent to {user} SUCCESSFULLY".format(
-                        user=self.requestor.user.email
-                    )
-                )
-            else:
-                logging.error(
-                    "FAILED to send Email to {user}".format(
-                        user=self.requestor.user.email
-                    )
-                )
-            #   Send Email notification to the supervisors
-            #   Requestor supervisors
+
+            # Send Email notification to the supervisors
+
+            # Requestor's supervisor email
             logging.info(
-                "Trying to send email to requestor({requestor})  Supervisor({supervisor}) after requestee({requestee}) approval".format(
-                    requestor=self.requestor.user.email,
-                    supervisor=self.requestor.supervisor_1.user.email,
-                    requestee=self.requestee.user.email,
-                )
+                f"Trying to send email to requestor({self.requestor.user.email}) Supervisor({self.requestor.supervisor_1.user.email}) after requestee({self.requestee.user.email}) approval"
             )
-            supervisor = self.requestor.supervisor_1
-            message = "Dear {supervisorName},\n{requestorName} has sent day trade off request to {requesteeName}.\nRequestor Trade Details:\nTrade Day:{requestorTradeDate}\nSwap Day: {requestorSwapDate}\n\nRequestee Trade Details:\nTrade Day:{requesteeTradeDate}\nSwap Day: {requesteeSwapDate}\n\nPlease Visit the website to accept or decline the request.".format(
+
+            requestor_supervisor = self.requestor.supervisor_1
+            message = "Dear {supervisorName},\n{requestorName} has sent a day trade off request to {requesteeName}.\nRequestor Trade Details:\nTrade Day: {requestorTradeDate}\nSwap Day: {requestorSwapDate}\n\nRequestee Trade Details:\nTrade Day: {requesteeTradeDate}\nSwap Day: {requesteeSwapDate}\n\nPlease visit the website to accept or decline the request.".format(
                 requesteeName=self.requestee.user.name,
                 requestorName=self.requestor.user.name,
                 requestorTradeDate=self.requestor_trade_roster.start_date,
                 requestorSwapDate=self.requestor_swap_roster.start_date,
                 requesteeTradeDate=self.requestee_trade_roster.start_date,
                 requesteeSwapDate=self.requestee_swap_roster.start_date,
-                supervisorName=supervisor.user.name,
+                supervisorName=requestor_supervisor.user.name,
             )
-            recipientList = [
-                supervisor.user.email,
-            ]
+
             # recipientList = [
-            #     "alamin.neaz@genexinfosys.com",
+            #     "alamin.neaz@genexinfosys.com"
             # ]
+            recipientList = [requestor_supervisor.user.email]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
-            if result is True:
+
+            # Requestee's supervisor email (only if different from requestor's supervisor)
+            if self.requestor.supervisor_1 != self.requestee.supervisor_1:
                 logging.info(
-                    "Email sent to {user} SUCCESSFULLY".format(
-                        user=supervisor.user.name
-                    )
+                    f"Trying to send email to requestee({self.requestee.user.email}) Supervisor({self.requestee.supervisor_1.user.email}) after requestee approval"
                 )
-            else:
-                logging.error(
-                    "FAILED to send Email to {user}".format(user=supervisor.user.name)
+
+                requestee_supervisor = self.requestee.supervisor_1
+                message = "Dear {supervisorName},\n{requestorName} has sent a day trade off request to {requesteeName}.\nRequestor Trade Details:\nTrade Day: {requestorTradeDate}\nSwap Day: {requestorSwapDate}\n\nRequestee Trade Details:\nTrade Day: {requesteeTradeDate}\nSwap Day: {requesteeSwapDate}\n\nPlease visit the website to accept or decline the request.".format(
+                    requesteeName=self.requestee.user.name,
+                    requestorName=self.requestor.user.name,
+                    requestorTradeDate=self.requestor_trade_roster.start_date,
+                    requestorSwapDate=self.requestor_swap_roster.start_date,
+                    requesteeTradeDate=self.requestee_trade_roster.start_date,
+                    requesteeSwapDate=self.requestee_swap_roster.start_date,
+                    supervisorName=requestee_supervisor.user.name,
                 )
-            #   Requestee supervisors
-            logging.info(
-                "Trying to send email to requestor({requestor})  Supervisor({supervisor}) after requestee({requestee}) approval".format(
-                    requestor=self.requestor.user.email,
-                    supervisor=self.requestee.supervisor_1.user.email,
-                    requestee=self.requestee.user.email,
-                )
-            )
-            supervisor = self.requestee.supervisor_1
-            message = "Dear {supervisorName},\n{requestorName} has sent day trade off request to {requesteeName}.\nRequestor Trade Details:\nTrade Day:{requestorTradeDate}\nSwap Day: {requestorSwapDate}\n\nRequestee Trade Details:\nTrade Day:{requesteeTradeDate}\nSwap Day: {requesteeSwapDate}\n\nPlease Visit the website to accept or decline the request.".format(
-                requesteeName=self.requestee.user.name,
-                requestorName=self.requestor.user.name,
-                requestorTradeDate=self.requestor_trade_roster.start_date,
-                requestorSwapDate=self.requestor_swap_roster.start_date,
-                requesteeTradeDate=self.requestee_trade_roster.start_date,
-                requesteeSwapDate=self.requestee_swap_roster.start_date,
-                supervisorName=supervisor.user.name,
-            )
-            recipientList = [
-                supervisor.user.email,
-            ]
-            # recipientList = [
-            #     "alamin.neaz@genexinfosys.com",
-            # ]
-            result = sendEmail(
-                subject=subject, message=message, recipientList=recipientList
-            )
-            if result is True:
-                logging.info(
-                    "Email sent to {user} SUCCESSFULLY".format(
-                        user=supervisor.user.name
-                    )
-                )
-            else:
-                logging.error(
-                    "FAILED to send Email to {user}".format(user=supervisor.user.name)
+
+                # recipientList = [
+                #     "alamin.neaz@genexinfosys.com"
+                # ] 
+                recipientList = [requestee_supervisor.user.email] 
+                result = sendEmail(
+                    subject=subject, message=message, recipientList=recipientList
                 )
 
         def sendEmailToPeopleWhenRequesteeRejects():
@@ -233,18 +198,6 @@ class DayOffTrading(BaseModel):
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
-            if result is True:
-                logging.info(
-                    "Email sent to {user} SUCCESSFULLY".format(
-                        user=self.requestor.user.name
-                    )
-                )
-            else:
-                logging.error(
-                    "FAILED to send Email to {user}".format(
-                        user=self.requestor.user.name
-                    )
-                )
 
         def sendEmailToPeopleWhenSupervisorApproves():
             """
@@ -265,20 +218,10 @@ class DayOffTrading(BaseModel):
                 self.requestor.user.email,
                 self.requestee.user.email,
             ]
-            # recipientList = ["alamin.neaz@genexinfosys.com", "neazahmedneaz@gmail.com"]
+            #recipientList = ["alamin.neaz@genexinfosys.com", "neazahmedneaz@gmail.com"]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
-            if result is True:
-                logging.info(
-                    "Email sent to {user} SUCCESSFULLY".format(
-                        user="".join(recipientList)
-                    )
-                )
-            else:
-                logging.error(
-                    "FAILED to send Email to {user}".format(user="".join(recipientList))
-                )
 
         def sendEmailToPeopleWhenSupervisorDeclines():
             """
@@ -299,20 +242,10 @@ class DayOffTrading(BaseModel):
                 self.requestor.user.email,
                 self.requestee.user.email,
             ]
-            # recipientList = ["alamin.neaz@genexinfosys.com", "neazahmedneaz@gmail.com"]
+            #recipientList = ["alamin.neaz@genexinfosys.com", "neazahmedneaz@gmail.com"]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
-            if result is True:
-                logging.info(
-                    "Email sent to {user} SUCCESSFULLY".format(
-                        user="".join(recipientList)
-                    )
-                )
-            else:
-                logging.error(
-                    "FAILED to send Email to {user}".format(user="".join(recipientList))
-                )
 
         # you can check if object just created by comparing "pk" attr to None
         # you can also use _state attr see doc link below

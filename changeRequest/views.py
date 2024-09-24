@@ -10,6 +10,7 @@ from .tables import *
 import django_tables2 as tables
 import logging
 import datetime
+from datetime import datetime, timezone
 from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.http import JsonResponse
 from rms.global_utilities import *
@@ -149,6 +150,16 @@ def createDayOffTrading(request):
             messages.error(request, "Requestee Trade Roster does not exist")
             return render(request, template, context)
 
+        logging.info(
+            f"Requestor:{requestor} |id:{requestor.id}|\nRequestee:{requestee} |id:{requestee.id}|\n"
+        )
+        logging.info(
+            f"Requestor Swap Day Roster:{requestorSwapDayRoster} |id:{requestorSwapDayRoster.id}|\n Requestor Trade Day Roster:{requestorTradeDayRoster} |id:{requestorTradeDayRoster.id}|\n"
+        )
+        logging.info(
+            f"Requestee Swap Day Roster:{requesteeSwapDayRoster} |id:{requesteeSwapDayRoster.id}|\n Requestee Trade Day Roster:{requesteeTradeDayRoster} |id:{requesteeTradeDayRoster.id}|\n"
+        )
+
         ###########################
         ##  Checking Business rules
         ###########################
@@ -270,7 +281,7 @@ def createDayOffTrading(request):
         # Check Regular shift duration of the roster of the requestee which the employee want to swap with
         requestorRegularShiftDurationResult, requestorRegularShiftDurationError = (
             checkRegularShiftDuration(
-                roster=requestorTradeDayRoster,
+                roster=requestorSwapDayRoster,
                 workRule=workRule,
             )
         )
@@ -283,7 +294,7 @@ def createDayOffTrading(request):
 
         #   Check Regular shift duration of the roster of the employee which the requestee want to swap with
         requesteeRegularShiftDurationResult, requesteeRegularShiftDurationError = (
-            checkRegularShiftDuration(roster=requesteeTradeDayRoster, workRule=workRule)
+            checkRegularShiftDuration(roster=requesteeSwapDayRoster, workRule=workRule)
         )
         if not requesteeRegularShiftDurationResult:
             logging.error(
@@ -302,7 +313,7 @@ def createDayOffTrading(request):
         )
         requestorProhibitedTimeResult, requestorProhibitedTimeError = (
             checkShiftEndInProhibitedTime(
-                roster=requestorTradeDayRoster,
+                roster=requestorSwapDayRoster,
                 workRule=workRule,
             )
         )
@@ -312,6 +323,20 @@ def createDayOffTrading(request):
                 f"Requestor Prohibitted Time check failed : {requestorProhibitedTimeError}"
             )
             messages.error(request, requestorProhibitedTimeError)
+            return render(request, template, context)
+
+        requesteeProhibitedTimeResult, requesteeProhibitedTimeError = (
+            checkShiftEndInProhibitedTime(
+                roster=requesteeSwapDayRoster,
+                workRule=workRule,
+            )
+        )
+
+        if not requesteeProhibitedTimeResult:
+            logging.error(
+                f"Requestee Prohibitted Time check failed : {requesteeProhibitedTimeError}"
+            )
+            messages.error(request, requesteeProhibitedTimeError)
             return render(request, template, context)
 
         # Check if the Day Off Trading already exists
@@ -821,66 +846,62 @@ def acceptDayOffTrading(request, id):
     errorMessage = "Failed to Accept"
     successMessage = ""
     if request.user.is_Employee():
-        employee = getEmployee(request.user.id)
-        if employee.is_supervisor():
-            if record.supervisor_approval_status == None:
-                firstSwapResult = swapRosterTimes(
-                    record.requestor_swap_roster, record.requestee_trade_roster
+        if record.requestee_approval_status == None:
+            try:
+                record.requestee_approval_status = "approved"
+                record.requestee_approval_status_datetime = datetime.datetime.now()
+                record.save()
+                success = True
+                logging.info(
+                    f"|Success| DayOffTrading |id:{id}| Accepted Successfully by Employee {request.user}"
                 )
-                if firstSwapResult is True:
-                    secondSwapResult = swapRosterTimes(
-                        record.requestor_trade_roster, record.requestee_swap_roster
-                    )
-                    if secondSwapResult is True:
-                        try:
-                            record.supervisor = employee
-                            record.supervisor_approval_status = "approved"
-                            record.supervisor_approval_status_datetime = (
-                                datetime.datetime.now()
-                            )
-                            record.trading_status = "approved"
-                            record.save()
-                            success = True
-                            logging.info(
-                                f"|Success| DayOffTrading |id:{id}| Accepted Successfully by Supervisor {request.user}"
-                            )
-                            successMessage = "Accepted Successfully"
-                        except Exception as e:
-                            logging.error(
-                                f"|Failed| DayOffTrading |id:{id}| Exception:{e}"
-                            )
-                    else:
-                        errorMessage = "Internal error occurred"
-                        logging.warning(
-                            f"|Failed| {errorMessage} - Second swap failed |id:{id}|"
+                successMessage = "Accepted Successfully. Sent to Approver for Approval"
+            except Exception as e:
+                logging.error(f"|Failed| DayOffTrading |id:{id}| Exception:{e}")
+        else:
+            errorMessage = "Decision already taken"
+            logging.error(f"|Failed| DayOffTrading |id:{id}| {errorMessage} ")
+
+    elif request.user.is_Supervisor():
+        employee = getEmployee(request.user.id)
+        if record.supervisor_approval_status == None:
+            firstSwapResult = swapRosterTimes(
+                record.requestor_swap_roster, record.requestee_trade_roster
+            )
+            if firstSwapResult is True:
+                secondSwapResult = swapRosterTimes(
+                    record.requestor_trade_roster, record.requestee_swap_roster
+                )
+                if secondSwapResult is True:
+                    try:
+                        record.supervisor = employee
+                        record.supervisor_approval_status = "approved"
+                        record.supervisor_approval_status_datetime = (
+                            datetime.datetime.now()
                         )
+                        record.trading_status = "approved"
+                        record.save()
+                        success = True
+                        logging.info(
+                            f"|Success| DayOffTrading |id:{id}| Accepted Successfully by Supervisor {request.user}"
+                        )
+                        successMessage = "Accepted Successfully"
+                    except Exception as e:
+                        logging.error(f"|Failed| DayOffTrading |id:{id}| Exception:{e}")
                 else:
                     errorMessage = "Internal error occurred"
                     logging.warning(
-                        f"|Failed| {errorMessage} - First swap failed |id:{id}|"
+                        f"|Failed| {errorMessage} - Second swap failed |id:{id}|"
                     )
             else:
-                errorMessage = "Decision already taken"
-                logging.warning(f"|Failed| {errorMessage} |id:{id}|")
-
+                errorMessage = "Internal error occurred"
+                logging.warning(
+                    f"|Failed| {errorMessage} - First swap failed |id:{id}|"
+                )
         else:
-            if record.requestee_approval_status == None:
-                try:
-                    record.requestee_approval_status = "approved"
-                    record.requestee_approval_status_datetime = datetime.datetime.now()
-                    record.save()
-                    success = True
-                    logging.info(
-                        f"|Success| DayOffTrading |id:{id}| Accepted Successfully by Employee {request.user}"
-                    )
-                    successMessage = (
-                        "Accepted Successfully. Sent to Approver for Approval"
-                    )
-                except Exception as e:
-                    logging.error(f"|Failed| DayOffTrading |id:{id}| Exception:{e}")
-            else:
-                errorMessage = "Decision already taken"
-                logging.error(f"|Failed| DayOffTrading |id:{id}| {errorMessage} ")
+            errorMessage = "Decision already taken"
+            logging.warning(f"|Failed| {errorMessage} |id:{id}|")
+
     response = JsonResponse(
         {
             "success": success,
@@ -899,41 +920,41 @@ def rejectDayOffTrading(request, id):
     successMessage = ""
     if request.user.is_Employee():
         employee = getEmployee(request.user.id)
-        if employee.is_supervisor():
-            if record.supervisor_approval_status == None:
-                try:
-                    record.supervisor = employee
-                    record.supervisor_approval_status = "rejected"
-                    record.supervisor_approval_status_datetime = datetime.datetime.now()
-                    record.trading_status = "rejected"
-                    record.save()
-                    success = True
-                    logging.info(
-                        f"|Success| DayOffTrading |id:{id}| Rejected Successfully by Supervisor {request.user}"
-                    )
-                    successMessage = "Rejected Successfully"
-                except Exception as e:
-                    logging.error(f"|Failed| DayOffTrading |id:{id}| Exception:{e}")
-            else:
-                errorMessage = "Decision already taken"
-                logging.warning(f"|Failed| {errorMessage} |id:{id}|")
+        if record.requestee_approval_status == None:
+            try:
+                record.requestee_approval_status = "rejected"
+                record.requestee_approval_status_datetime = datetime.datetime.now()
+                record.trading_status = "rejected"
+                record.save()
+                success = True
+                logging.info(
+                    f"|Success| DayOffTrading |id:{id}| Rejected Successfully by Employee {request.user}"
+                )
+                successMessage = "Rejected Successfully"
+            except Exception as e:
+                logging.error(f"|Failed| DayOffTrading |id:{id}| Exception:{e}")
         else:
-            if record.requestee_approval_status == None:
-                try:
-                    record.requestee_approval_status = "rejected"
-                    record.requestee_approval_status_datetime = datetime.datetime.now()
-                    record.trading_status = "rejected"
-                    record.save()
-                    success = True
-                    logging.info(
-                        f"|Success| DayOffTrading |id:{id}| Rejected Successfully by Employee {request.user}"
-                    )
-                    successMessage = "Rejected Successfully"
-                except Exception as e:
-                    logging.error(f"|Failed| DayOffTrading |id:{id}| Exception:{e}")
-            else:
-                errorMessage = "Decision already taken"
-                logging.error(f"|Failed| DayOffTrading |id:{id}| {errorMessage} ")
+            errorMessage = "Decision already taken"
+            logging.error(f"|Failed| DayOffTrading |id:{id}| {errorMessage} ")
+    elif request.user.is_Supervisor():
+        employee = getEmployee(request.user.id)
+        if record.supervisor_approval_status == None:
+            try:
+                record.supervisor = employee
+                record.supervisor_approval_status = "rejected"
+                record.supervisor_approval_status_datetime = datetime.datetime.now()
+                record.trading_status = "rejected"
+                record.save()
+                success = True
+                logging.info(
+                    f"|Success| DayOffTrading |id:{id}| Rejected Successfully by Supervisor {request.user}"
+                )
+                successMessage = "Rejected Successfully"
+            except Exception as e:
+                logging.error(f"|Failed| DayOffTrading |id:{id}| Exception:{e}")
+        else:
+            errorMessage = "Decision already taken"
+            logging.warning(f"|Failed| {errorMessage} |id:{id}|")
     response = JsonResponse(
         {
             "success": success,
@@ -1133,7 +1154,7 @@ class ShiftTimeTradingListJson(BaseDatatableView):
                         "requestee_end_time": item.requestee_end_time.strftime(
                             "%H:%M %p"
                         ),
-                        "trading_status": item.trading_status.title(),
+                        "trading_status": item.trading_status.title().title(),
                         "actions": (
                             ""
                             if item.supervisor_approval_status != None
@@ -1160,7 +1181,7 @@ class ShiftTimeTradingListJson(BaseDatatableView):
                         "requestee_end_time": item.requestee_end_time.strftime(
                             "%H:%M %p"
                         ),
-                        "trading_status": item.trading_status.title(),
+                        "trading_status": item.trading_status.title().title(),
                         "actions": (
                             ""
                             if self.request.user == item.requestor.user
@@ -1200,7 +1221,7 @@ class DayOffTradingListJson(BaseDatatableView):
         "requestee",
         "requestee_swap_roster",
         "requestee_trade_roster",
-        "actions",
+        "trading_status" "actions",
     ]
     order_columns = [
         "requestor",
@@ -1209,25 +1230,83 @@ class DayOffTradingListJson(BaseDatatableView):
         "requestee",
         "requestee_swap_roster",
         "requestee_trade_roster",
+        "trading_status",
         "actions",
     ]
 
     def get_initial_queryset(self):
         # Filter ShiftTimeTrading instances for the current user
+        now = timezone.localtime()
+        # now = datetime(2024, 9, 20, 14, 00, 45)
         if self.request.user.is_Employee():
             employee = getEmployee(self.request.user.id)
-            return DayOffTrading.objects.filter(
-                Q(requestor=employee) | Q(requestee=employee)
-            ).order_by("-created_At")
+            return (
+                DayOffTrading.objects.filter(
+                    Q(requestor=employee) | Q(requestee=employee)
+                )
+                .exclude(
+                    Q(requestor_swap_roster__start_date__lt=now.date())
+                    | Q(requestor_trade_roster__start_date__lt=now.date())
+                    | (
+                        Q(requestor_swap_roster__start_date=now.date())
+                        & Q(requestor_swap_roster__start_time__lt=now.time())
+                    )
+                    | (
+                        Q(requestor_trade_roster__start_date=now.date())
+                        & Q(requestor_trade_roster__start_time__lt=now.time())
+                    )
+                )
+                .exclude(
+                    Q(requestee_swap_roster__start_date__lt=now.date())
+                    | Q(requestee_trade_roster__start_date__lt=now.date())
+                    | (
+                        Q(requestee_swap_roster__start_date=now.date())
+                        & Q(requestee_swap_roster__start_time__lt=now.time())
+                    )
+                    | (
+                        Q(requestee_trade_roster__start_date=now.date())
+                        & Q(requestee_trade_roster__start_time__lt=now.time())
+                    )
+                )
+                .order_by("-created_At")
+            )
         elif self.request.user.is_Supervisor():
             employee = getEmployee(self.request.user.id)
             supervised_employees = Employee.objects.filter(
                 Q(supervisor_1=employee) | Q(supervisor_2=employee)
             )
-            return DayOffTrading.objects.filter(
-                Q(requestor__in=supervised_employees)
-                | Q(requestee__in=supervised_employees)
-            ).order_by("-created_At")
+
+            return (
+                DayOffTrading.objects.filter(
+                    Q(requestor__in=supervised_employees)
+                    | Q(requestee__in=supervised_employees)
+                )
+                .exclude(
+                    Q(requestor_swap_roster__start_date__lt=now.date())
+                    | Q(requestor_trade_roster__start_date__lt=now.date())
+                    | (
+                        Q(requestor_swap_roster__start_date=now.date())
+                        & Q(requestor_swap_roster__start_time__lt=now.time())
+                    )
+                    | (
+                        Q(requestor_trade_roster__start_date=now.date())
+                        & Q(requestor_trade_roster__start_time__lt=now.time())
+                    )
+                )
+                .exclude(
+                    Q(requestee_swap_roster__start_date__lt=now.date())
+                    | Q(requestee_trade_roster__start_date__lt=now.date())
+                    | (
+                        Q(requestee_swap_roster__start_date=now.date())
+                        & Q(requestee_swap_roster__start_time__lt=now.time())
+                    )
+                    | (
+                        Q(requestee_trade_roster__start_date=now.date())
+                        & Q(requestee_trade_roster__start_time__lt=now.time())
+                    )
+                )
+                .order_by("-created_At")
+            )
         elif self.request.user.is_WFM() or self.request.user.is_MIS_GROUP_1():
             return DayOffTrading.objects.all()
 
@@ -1242,43 +1321,47 @@ class DayOffTradingListJson(BaseDatatableView):
     def prepare_results(self, qs):
         data = []
         if self.request.user.is_Employee():
-            employee = getEmployee(self.request.user.id)
-            if employee.is_supervisor():
-                for item in qs:
-                    # Fetch the related field and use it directly in the data dictionary
-                    row = {
-                        "requestor": item.requestor.user.name,
-                        "requestor_swap_roster": item.requestor_swap_roster.start_date,
-                        "requestor_trade_roster": item.requestor_trade_roster.start_date,
-                        "requestee": item.requestee.user.name,
-                        "requestee_swap_roster": item.requestee_swap_roster.start_date,
-                        "requestee_trade_roster": item.requestee_trade_roster.start_date,
-                        "actions": (
-                            ""
-                            if item.supervisor_approval_status != None
-                            or item.requestee_approval_status != None
-                            else self.get_actions_html(item)
-                        ),
-                    }
-                    data.append(row)
-            else:
-                for item in qs:
-                    # Fetch the related field and use it directly in the data dictionary
-                    row = {
-                        "requestor": item.requestor.user.name,
-                        "requestor_swap_roster": item.requestor_swap_roster.start_date,
-                        "requestor_trade_roster": item.requestor_trade_roster.start_date,
-                        "requestee": item.requestee.user.name,
-                        "requestee_swap_roster": item.requestee_swap_roster.start_date,
-                        "requestee_trade_roster": item.requestee_trade_roster.start_date,
-                        "actions": (
-                            ""
-                            if self.request.user == item.requestor.user
-                            or item.requestee_approval_status != None
-                            else self.get_actions_html(item)
-                        ),
-                    }
-                    data.append(row)
+            for item in qs:
+                # Fetch the related field and use it directly in the data dictionary
+                row = {
+                    "requestor": item.requestor.user.name,
+                    "requestor_swap_roster": item.requestor_swap_roster.start_date,
+                    "requestor_trade_roster": item.requestor_trade_roster.start_date,
+                    "requestee": item.requestee.user.name,
+                    "requestee_swap_roster": item.requestee_swap_roster.start_date,
+                    "requestee_trade_roster": item.requestee_trade_roster.start_date,
+                    "trading_status": item.trading_status.title(),
+                    "actions": (
+                        ""
+                        if self.request.user == item.requestor.user
+                        or item.requestee_approval_status != None
+                        else self.get_actions_html(item)
+                    ),
+                }
+                data.append(row)
+        elif self.request.user.is_Supervisor():
+            for item in qs:
+                # Fetch the related field and use it directly in the data dictionary
+                logger.info(f"supervisor approval:{item.supervisor_approval_status}")
+                logger.info(f"requestee approval:{item.requestee_approval_status}")
+                actions = ""
+
+                if item.trading_status in ["approved", "rejected"]:
+                    actions = ""
+                else:
+                    if item.requestee_approval_status is not None:
+                        actions = self.get_actions_html(item)
+                row = {
+                    "requestor": item.requestor.user.name,
+                    "requestor_swap_roster": item.requestor_swap_roster.start_date,
+                    "requestor_trade_roster": item.requestor_trade_roster.start_date,
+                    "requestee": item.requestee.user.name,
+                    "requestee_swap_roster": item.requestee_swap_roster.start_date,
+                    "requestee_trade_roster": item.requestee_trade_roster.start_date,
+                    "trading_status": item.trading_status.title(),
+                    "actions": actions,
+                }
+                data.append(row)
         return data
 
     def render_column(self, row, column):
