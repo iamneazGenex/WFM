@@ -849,7 +849,7 @@ def acceptDayOffTrading(request, id):
         if record.requestee_approval_status == None:
             try:
                 record.requestee_approval_status = "approved"
-                record.requestee_approval_status_datetime = datetime.datetime.now()
+                record.requestee_approval_status_datetime = datetime.now()
                 record.save()
                 success = True
                 logging.info(
@@ -876,9 +876,7 @@ def acceptDayOffTrading(request, id):
                     try:
                         record.supervisor = employee
                         record.supervisor_approval_status = "approved"
-                        record.supervisor_approval_status_datetime = (
-                            datetime.datetime.now()
-                        )
+                        record.supervisor_approval_status_datetime = datetime.now()
                         record.trading_status = "approved"
                         record.save()
                         success = True
@@ -923,7 +921,7 @@ def rejectDayOffTrading(request, id):
         if record.requestee_approval_status == None:
             try:
                 record.requestee_approval_status = "rejected"
-                record.requestee_approval_status_datetime = datetime.datetime.now()
+                record.requestee_approval_status_datetime = datetime.now()
                 record.trading_status = "rejected"
                 record.save()
                 success = True
@@ -942,7 +940,7 @@ def rejectDayOffTrading(request, id):
             try:
                 record.supervisor = employee
                 record.supervisor_approval_status = "rejected"
-                record.supervisor_approval_status_datetime = datetime.datetime.now()
+                record.supervisor_approval_status_datetime = datetime.now()
                 record.trading_status = "rejected"
                 record.save()
                 success = True
@@ -982,9 +980,7 @@ def acceptShiftTimeTrading(request, id):
                     try:
                         record.supervisor = employee
                         record.supervisor_approval_status = "approved"
-                        record.supervisor_approval_status_datetime = (
-                            datetime.datetime.now()
-                        )
+                        record.supervisor_approval_status_datetime = datetime.now()
                         record.trading_status = "approved"
                         record.save()
                         success = True
@@ -1005,7 +1001,7 @@ def acceptShiftTimeTrading(request, id):
             if record.requestee_approval_status == None:
                 try:
                     record.requestee_approval_status = "approved"
-                    record.requestee_approval_status_datetime = datetime.datetime.now()
+                    record.requestee_approval_status_datetime = datetime.now()
                     record.save()
                     success = True
                     logging.info(
@@ -1043,7 +1039,7 @@ def rejectShiftTimeTrading(request, id):
                 try:
                     record.supervisor = employee
                     record.supervisor_approval_status = "rejected"
-                    record.supervisor_approval_status_datetime = datetime.datetime.now()
+                    record.supervisor_approval_status_datetime = datetime.now()
                     record.trading_status = "rejected"
                     record.save()
                     success = True
@@ -1060,7 +1056,7 @@ def rejectShiftTimeTrading(request, id):
             if record.requestee_approval_status == None:
                 try:
                     record.requestee_approval_status = "rejected"
-                    record.requestee_approval_status_datetime = datetime.datetime.now()
+                    record.requestee_approval_status_datetime = datetime.now()
                     record.trading_status = "rejected"
                     record.save()
                     success = True
