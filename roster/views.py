@@ -215,12 +215,15 @@ class viewRosterJson(BaseDatatableView):
                 )
         elif self.request.user.is_Supervisor():
             employee = getEmployee(self.request.user.id)
+            user = CustomUser.objects.get(id=self.request.user.id)
             supervised_employees = Employee.objects.filter(
                 Q(supervisor_1=employee) | Q(supervisor_2=employee)
             )
-            rosters = Roster.objects.filter(
-                Q(employee__in=supervised_employees)
-            ).order_by("-created_At")
+            rosters = (
+                Roster.objects.filter(Q(employee__in=supervised_employees))
+                .filter(Q(supervisor_1=user))
+                .order_by("-created_At")
+            )
             if fromDate.strip() != "":
                 rosters = rosters.filter(
                     Q(start_date__gte=fromDate) & Q(start_date__lte=toDate)
