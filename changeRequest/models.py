@@ -6,6 +6,7 @@ from .emailUtils_shiftTimeTrading import *
 from django.db.models.signals import post_save
 from django.db.models.signals import Signal
 from django.dispatch import receiver
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -91,12 +92,14 @@ class DayOffTrading(BaseModel):
                 tradeDate=self.requestee_trade_roster.start_date,
                 swapDate=self.requestee_swap_roster.start_date,
             )
-            recipientList = [
-                self.requestee.user.email,
-            ]
-            # recipientList = [
-            #     "alamin.neaz@genexinfosys.com",
-            # ]
+            if settings.PRODUCTION_TYPE == "local":
+                recipientList = [
+                    "alamin.neaz@genexinfosys.com",
+                ]
+            else:
+                recipientList = [
+                    self.requestee.user.email,
+                ]
 
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
@@ -116,12 +119,15 @@ class DayOffTrading(BaseModel):
                 tradeDate=self.requestor_trade_roster.start_date,
                 swapDate=self.requestor_swap_roster.start_date,
             )
-            recipientList = [
-                self.requestor.user.email,
-            ]
-            # recipientList = [
-            #     "alamin.neaz@genexinfosys.com",
-            # ]
+            if settings.PRODUCTION_TYPE == "local":
+                recipientList = [
+                    "alamin.neaz@genexinfosys.com",
+                ]
+            else:
+                recipientList = [
+                    self.requestor.user.email,
+                ]
+
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
@@ -143,11 +149,10 @@ class DayOffTrading(BaseModel):
                 requesteeSwapDate=self.requestee_swap_roster.start_date,
                 supervisorName=requestor_supervisor.user.name,
             )
-
-            # recipientList = [
-            #     "alamin.neaz@genexinfosys.com"
-            # ]
-            recipientList = [requestor_supervisor.user.email]
+            if settings.PRODUCTION_TYPE == "local":
+                recipientList = ["alamin.neaz@genexinfosys.com"]
+            else:
+                recipientList = [requestor_supervisor.user.email]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
@@ -168,11 +173,10 @@ class DayOffTrading(BaseModel):
                     requesteeSwapDate=self.requestee_swap_roster.start_date,
                     supervisorName=requestee_supervisor.user.name,
                 )
-
-                # recipientList = [
-                #     "alamin.neaz@genexinfosys.com"
-                # ] 
-                recipientList = [requestee_supervisor.user.email] 
+                if settings.PRODUCTION_TYPE == "local":
+                    recipientList = ["alamin.neaz@genexinfosys.com"]
+                else:
+                    recipientList = [requestee_supervisor.user.email]
                 result = sendEmail(
                     subject=subject, message=message, recipientList=recipientList
                 )
@@ -189,12 +193,14 @@ class DayOffTrading(BaseModel):
                 requesteeName=self.requestee.user.name,
                 requestorName=self.requestor.user.name,
             )
-            recipientList = [
-                self.requestor.user.email,
-            ]
-            # recipientList = [
-            #     "alamin.neaz@genexinfosys.com",
-            # ]
+            if settings.PRODUCTION_TYPE == "local":
+                recipientList = [
+                    "alamin.neaz@genexinfosys.com",
+                ]
+            else:
+                recipientList = [
+                    self.requestor.user.email,
+                ]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
@@ -214,11 +220,17 @@ class DayOffTrading(BaseModel):
             message = "The Day Off trade Request has been granted by {supervisorName}\n\nT".format(
                 supervisorName=self.supervisor.user.name,
             )
-            recipientList = [
-                self.requestor.user.email,
-                self.requestee.user.email,
-            ]
-            #recipientList = ["alamin.neaz@genexinfosys.com", "neazahmedneaz@gmail.com"]
+
+            if settings.PRODUCTION_TYPE == "local":
+                recipientList = [
+                    "alamin.neaz@genexinfosys.com",
+                    "neazahmedneaz@gmail.com",
+                ]
+            else:
+                recipientList = [
+                    self.requestor.user.email,
+                    self.requestee.user.email,
+                ]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )
@@ -238,11 +250,17 @@ class DayOffTrading(BaseModel):
             message = "The Day Off trade Request has been rejected by {supervisorName}\n\nT".format(
                 supervisorName=self.supervisor.user.name,
             )
-            recipientList = [
-                self.requestor.user.email,
-                self.requestee.user.email,
-            ]
-            #recipientList = ["alamin.neaz@genexinfosys.com", "neazahmedneaz@gmail.com"]
+
+            if settings.PRODUCTION_TYPE == "local":
+                recipientList = [
+                    "alamin.neaz@genexinfosys.com",
+                    "neazahmedneaz@gmail.com",
+                ]
+            else:
+                recipientList = [
+                    self.requestor.user.email,
+                    self.requestee.user.email,
+                ]
             result = sendEmail(
                 subject=subject, message=message, recipientList=recipientList
             )

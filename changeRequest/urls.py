@@ -34,7 +34,11 @@ urlpatterns = [
     ################################################################
     #   Shift Time Trading
     ################################################################
-    path("shiftTimeTrading", views.shiftTimeTrading, name="shiftTimeTrading"),
+    path(
+        "shiftTimeTrading",
+        views.createshiftTimeTrading,
+        name=PageInfoCollection.SHIFTTIMETRADING_CREATE.urlName,
+    ),
     path(
         "viewShiftTimeTradingRequests",
         views.viewShiftTimeTradingRequests,

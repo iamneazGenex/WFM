@@ -115,7 +115,7 @@ class PageInfoCollection:
         "Shift Time Trading", "viewShiftTimeTradingRequests"
     )
     SHIFTTIMETRADING_JSON = PageInfo("JSON", "shift_time_trading_list_json")
-    SHIFTTIMETRADING_CREATE = PageInfo("Create", "shiftTimeTrading")
+    SHIFTTIMETRADING_CREATE = PageInfo("Create", "createshiftTimeTrading")
     SHIFTTIMETRADING_EDIT = PageInfo("Edit", "viewDayOffTradingRequests")
     SHIFTTIMETRADING_DELETE = PageInfo("Delete", "viewDayOffTradingRequests")
     SHIFTTIMETRADING_BULK = PageInfo("Bulk", "viewDayOffTradingRequests")

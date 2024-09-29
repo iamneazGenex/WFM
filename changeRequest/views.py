@@ -18,6 +18,7 @@ from rms.page_info_collection import PageInfoCollection
 from django.contrib.auth.decorators import login_required
 from rms.constants import GroupEnum
 from rms.decorators import check_user_able_to_see_page
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -150,14 +151,19 @@ def createDayOffTrading(request):
             messages.error(request, "Requestee Trade Roster does not exist")
             return render(request, template, context)
 
+        logging.info(f"--Requestor:{requestor} |id:{requestor.id}|")
         logging.info(
-            f"Requestor:{requestor} |id:{requestor.id}|\nRequestee:{requestee} |id:{requestee.id}|\n"
+            f"--Requestor Swap Day Roster:{requestorSwapDayRoster} |id:{requestorSwapDayRoster.id}|"
         )
         logging.info(
-            f"Requestor Swap Day Roster:{requestorSwapDayRoster} |id:{requestorSwapDayRoster.id}|\n Requestor Trade Day Roster:{requestorTradeDayRoster} |id:{requestorTradeDayRoster.id}|\n"
+            f"--Requestor Trade Day Roster:{requestorTradeDayRoster} |id:{requestorTradeDayRoster.id}|"
+        )
+        logging.info(f"--Requestee:{requestee} |id:{requestee.id}|")
+        logging.info(
+            f"--Requestee Swap Day Roster:{requesteeSwapDayRoster} |id:{requesteeSwapDayRoster.id}|"
         )
         logging.info(
-            f"Requestee Swap Day Roster:{requesteeSwapDayRoster} |id:{requesteeSwapDayRoster.id}|\n Requestee Trade Day Roster:{requesteeTradeDayRoster} |id:{requesteeTradeDayRoster.id}|\n"
+            f"--Requestee Trade Day Roster:{requesteeTradeDayRoster} |id:{requesteeTradeDayRoster.id}|"
         )
 
         ###########################
@@ -241,10 +247,9 @@ def createDayOffTrading(request):
             logging.info(logString("Female Shift Time - <Employee>", 2))
             requestorFemaleShifttimeResult, requestorFemaleShifttimeError = (
                 checkFemaleShiftTimeFollowsWorkRule(
-                    startTime=requestorTradeDayRoster.start_time,
-                    endTime=requestorTradeDayRoster.end_time,
+                    startTime=requestorSwapDayRoster.start_time,
+                    endTime=requestorSwapDayRoster.end_time,
                     workRule=workRule,
-                    request=request,
                 )
             )
             if not requestorFemaleShifttimeResult:
@@ -260,10 +265,9 @@ def createDayOffTrading(request):
             logging.info(logString("Female Shift Time - <Requestee>", 2))
             requesteeFemaleShifttimeResult, requesteeFemaleShifttimeError = (
                 checkFemaleShiftTimeFollowsWorkRule(
-                    startTime=requesteeTradeDayRoster.start_time,
-                    endTime=requesteeTradeDayRoster.end_time,
+                    startTime=requesteeSwapDayRoster.start_time,
+                    endTime=requesteeSwapDayRoster.end_time,
                     workRule=workRule,
-                    request=request,
                 )
             )
             if not requesteeFemaleShifttimeResult:
@@ -597,9 +601,24 @@ def createDayOffTradingOLD(request):
 @check_user_able_to_see_page(
     GroupEnum.wfm, GroupEnum.supervisor, GroupEnum.employee, GroupEnum.mis_group_1
 )
-def shiftTimeTrading(request):
-    template = "changeRequest/shift_time_trading.html"
-    employee = getEmployee(request.user.id)
+def createshiftTimeTrading(request):
+    template = "changeRequest/shiftTimeTrading/create.html"
+    breadCrumbList = [
+        PageInfoCollection.SHIFTTIMETRADING_VIEW,
+        PageInfoCollection.SHIFTTIMETRADING_CREATE,
+    ]
+    context = {
+        "breadCrumbList": breadCrumbList,
+        "currentBreadCrumb": PageInfoCollection.SHIFTTIMETRADING_CREATE.pageName,
+        "details": {
+            "name": "delete",
+            "type": "process",
+        },
+        "ajaxUrl": PageInfoCollection.PROCESS_JSON.urlName,
+        "createUrl": PageInfoCollection.SHIFTTIMETRADING_CREATE.urlName,
+        "shiftTimeTradingActive": "active",
+    }
+    requestor = getEmployee(request.user.id)
 
     if request.method == "POST" and "btnform1" in request.POST:
         result = False
@@ -607,11 +626,12 @@ def shiftTimeTrading(request):
         requesteeID = int(request.POST.get("requestee"))
 
         form1 = ShiftTimeTradingForm(
-            employee=employee,
+            employee=requestor,
             swapDateID=swapDateID,
             requesteeID=requesteeID,
         )
-
+        context["form1"] = form1
+        requestorRoster = Roster.objects.get(id=swapDateID)
         try:
             workRule = WorkRule.objects.get(id=1)
             logger.info("|Passed|WorkRule exists")
@@ -619,45 +639,61 @@ def shiftTimeTrading(request):
             workRule = None
             messages.error(request, "WorkRule does not exist")
             logger.error("|Failed|WorkRule does not exist")
-        if workRule is not None:
+            return render(request, template, context)
+        #   REQUESTEE
+        try:
             requestee = Employee.objects.get(id=requesteeID)
+        except Employee.DoesNotExist:
+            logging.error(
+                logString(f"Employee with ID {requesteeID} does not exist", 5)
+            )
+            messages.error(request, "Requestee does not exist")
+            return render(request, template, context)
+        logging.info(
+            f"Requestor:{requestor} |id:{requestor.id}|\nRequestee:{requestee} |id:{requestee.id}|\n"
+        )
+        #   REQUESTEE Roster
+        try:
+            requesteeRoster = Roster.objects.filter(
+                Q(employee=requestee),
+                Q(start_date=requestorRoster.start_date),
+                Q(end_date=requestorRoster.end_date),
+            ).first()
+        except Exception as e:
+            messages.error(request, "Requestee Roster Not Found")
+            logger.error(f"|Failed|Requestee Roster Not Found:{e}")
+            return render(request, template, context)
+        ###
+        ##  Checking Business rules
+        ###
+        ##  Gap check
+        employeeSwappedTimeRoster = Roster(
+            employee=requestor,
+            start_date=requestorRoster.start_date,
+            start_time=requesteeRoster.start_time,
+            end_date=requestorRoster.end_date,
+            end_time=requesteeRoster.end_time,
+        )
+        employeeRosterGapCheck = gapCheck(
+            roster=employeeSwappedTimeRoster,
+            employee=requestor,
+            workRule=workRule,
+        )
+        if employeeRosterGapCheck is False:
+            pass
+        if workRule is not None:
 
-            employeeRoster = Roster.objects.get(id=swapDateID)
-            try:
-                requesteeRosterFilter = Roster.objects.filter(
-                    Q(employee=requestee),
-                    Q(start_date=employeeRoster.start_date),
-                    Q(end_date=employeeRoster.end_date),
-                    # ~Q(start_time=employeeRoster.start_time),
-                )
-            except Exception as e:
-                logger.error("Exception:{exception}".format(exception=e))
-            if requesteeRosterFilter.count() > 0:
-                requesteeRoster = requesteeRosterFilter.first()
-                ###
-                ##  Checking Business rules
-                ###
+            if 1 > 0:
 
                 ##  Gap check
-                employeeSwappedTimeRoster = Roster(
-                    employee=employee,
-                    start_date=employeeRoster.start_date,
-                    start_time=requesteeRoster.start_time,
-                    end_date=employeeRoster.end_date,
-                    end_time=requesteeRoster.end_time,
-                )
-                employeeRosterGapCheck = gapCheck(
-                    roster=employeeSwappedTimeRoster,
-                    employee=employee,
-                    workRule=workRule,
-                )
+
                 if employeeRosterGapCheck is True:
                     requesteeSwappedTimeRoster = Roster(
                         employee=requestee,
                         start_date=requesteeRoster.start_date,
-                        start_time=employeeRoster.start_time,
+                        start_time=requestorRoster.start_time,
                         end_date=requesteeRoster.end_date,
-                        end_time=employeeRoster.end_time,
+                        end_time=requestorRoster.end_time,
                     )
 
                     requesteeRosterGapCheck = gapCheck(
@@ -667,13 +703,13 @@ def shiftTimeTrading(request):
                     )
                     logger.info(
                         "Gap of {employee} and {requestee} EXISTS".format(
-                            employee=employee.user.name, requestee=requestee.user.name
+                            employee=requestor.user.name, requestee=requestee.user.name
                         )
                     )
                     if requesteeRosterGapCheck is True:
                         ## Female Shift time
                         employeeGenderResult = True
-                        if employee.gender == "F":
+                        if requestor.gender == "F":
                             employeeGenderResult = checkFemaleShiftTimeFollowsWorkRule(
                                 startTime=employeeSwappedTimeRoster.start_time,
                                 endTime=employeeSwappedTimeRoster.end_time,
@@ -735,9 +771,9 @@ def shiftTimeTrading(request):
                                     logger.info("|Passed|Prohibited Time Check")
                                     shiftTimeTradingExist = (
                                         ShiftTimeTrading.objects.filter(
-                                            Q(requestor=employee),
+                                            Q(requestor=requestor),
                                             Q(requestee=requestee),
-                                            Q(requestor_swap_roster=employeeRoster),
+                                            Q(requestor_swap_roster=requestorRoster),
                                             Q(requestee_swap_roster=requesteeRoster),
                                             Q(requestee_approval_status="accepted"),
                                             Q(trading_status="in process")
@@ -754,11 +790,11 @@ def shiftTimeTrading(request):
                                     else:
                                         try:
                                             shiftTimeTradingInstance = ShiftTimeTrading(
-                                                requestor=employee,
+                                                requestor=requestor,
                                                 requestee=requestee,
-                                                requestor_swap_roster=employeeRoster,
-                                                requestor_start_time=employeeRoster.start_time,
-                                                requestor_end_time=employeeRoster.end_time,
+                                                requestor_swap_roster=requestorRoster,
+                                                requestor_start_time=requestorRoster.start_time,
+                                                requestor_end_time=requestorRoster.end_time,
                                                 requestee_swap_roster=requesteeRoster,
                                                 requestee_start_time=requesteeRoster.start_time,
                                                 requestee_end_time=requesteeRoster.end_time,
@@ -801,10 +837,10 @@ def shiftTimeTrading(request):
 
     else:
         form1 = ShiftTimeTradingForm(
-            employee=employee, swapDateID=None, requesteeID=None
+            employee=requestor, swapDateID=None, requesteeID=None
         )
+        context["form1"] = form1
 
-    context = {"form1": form1}
     return render(request, template, context)
 
 

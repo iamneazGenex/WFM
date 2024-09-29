@@ -30,7 +30,7 @@ class DayOffTradingForm(forms.Form):
         self.fields["requestee"].widget.attrs.update({"class": "select2"})
 
         currentDate = timezone.localtime().date()
-        # currentDate = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        #currentDate = datetime(2024, 1, 1, tzinfo=timezone.utc)
 
         # Build the querysets for swapDate and tradeDate
         swap_date_queryset = Roster.objects.filter(
@@ -84,6 +84,11 @@ class ShiftTimeTradingForm(forms.Form):
     requestee = forms.ModelChoiceField(
         queryset=Employee.objects.none(), label="Requestee"
     )
+    time_display = forms.CharField(
+        label="Time Details",
+        required=False,
+        widget=forms.TextInput(attrs={"readonly": "readonly"}),
+    )
 
     def __init__(self, employee, swapDateID, requesteeID, *args, **kwargs):
         super(ShiftTimeTradingForm, self).__init__(*args, **kwargs)
@@ -108,3 +113,17 @@ class ShiftTimeTradingForm(forms.Form):
             self.fields["swapDate"].initial = swapDateID
         if requesteeID is not None:
             self.fields["requestee"].initial = requesteeID
+        if requesteeID is not None and swapDateID is not None:
+            self.set_time_details(requesteeID, swapDateID)
+
+    def set_time_details(self, requesteeID, swapDateID):
+        # Fetch the roster entry for the selected requestee and swap date
+        try:
+            roster_entry = Roster.objects.get(
+                employee__id=requesteeID, start_date=swapDateID
+            )
+            self.fields["time_display"].initial = (
+                f"Start: {roster_entry.start_time}, End: {roster_entry.end_time}"
+            )
+        except Roster.DoesNotExist:
+            self.fields["time_display"].initial = "No roster entry found."

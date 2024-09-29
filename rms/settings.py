@@ -13,9 +13,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from django.contrib.messages import constants as messages
 import logging.config
+from dotenv import load_dotenv
 import os
 from django.utils.log import DEFAULT_LOGGING
-from dotenv import load_dotenv
+
 from logging.handlers import TimedRotatingFileHandler
 from concurrent_log_handler import ConcurrentTimedRotatingFileHandler
 
@@ -106,8 +107,7 @@ WSGI_APPLICATION = "rms.wsgi.application"
 # }
 # -------------------------------------------------------------
 # For MySQL
-Production_Type = os.getenv("Production_Type")
-
+PRODUCTION_TYPE = os.getenv("Production_Type", "local")
 # Define the default database settings
 ubuntu_mysql_database_settings = {
     "ENGINE": "django.db.backends.mysql",
@@ -127,7 +127,7 @@ windows_mysql_database_settings = {
 DATABASES = {
     "default": (
         windows_mysql_database_settings
-        if Production_Type == "local"
+        if PRODUCTION_TYPE == "local"
         else ubuntu_mysql_database_settings
     )
 }

@@ -20,13 +20,34 @@ def customUserCreation(request, data, groupName):
         error = "User with this email: {email} already exist".format(
             email=data["email"]
         )
-        messages.error(request, error)
+        user.name = data["name"]
+        user.employee_id = data["employee_id"]
+        user.system_id = data["system_id"]
+        user.updated_by = CustomUser.objects.get(id=request.user.id)
+        if "is_active" in data:
+            user.is_active = data["is_active"]
+        else:
+            user.is_active = True
+        user.save()
+        employeeGroup = Group.objects.get(name=groupName)
+        user.groups.add(employeeGroup)
+        user.save()
         logger.error(f"----{error}")
         skip = True
     except CustomUser.DoesNotExist:
         try:
-            CustomUser.objects.get(employee_id=data["employee_id"])
-            user = None
+            user = CustomUser.objects.get(employee_id=data["employee_id"])
+            user.name = data["name"]
+            user.system_id = data["system_id"]
+            user.updated_by = CustomUser.objects.get(id=request.user.id)
+            if "is_active" in data:
+                user.is_active = data["is_active"]
+            else:
+                user.is_active = True
+            user.save()
+            employeeGroup = Group.objects.get(name=groupName)
+            user.groups.add(employeeGroup)
+            user.save()
             error = "User with this Employee Id: {employee_id} already exist".format(
                 employee_id=data["employee_id"]
             )
@@ -127,17 +148,36 @@ def employeeCreation(data, request, bulk, group="Employee", index=0):
     success = False
     with transaction.atomic():
         userCreationResult, user, skip = customUserCreation(request, data, group)
+        process = get_or_none(Process, data.get("process"))
+        site = get_or_none(Site, data.get("site"))
+        workRole = get_or_none(WorkRole, data.get("work_role"))
+        lob = get_or_none(LOB, data.get("lob"))
         if skip == True:
-            success = True
-            message = f"Skipping {group} creation for index {index}"
+            message = f"Updating info as employee already exist. Group- {group}  Index {index}"
             logging.info(f"----{message}")
-            messages.success(request, message)
+            try:
+                employee = Employee.objects.get(user=user)
+                employee.process = process
+                employee.gender = data["gender"]
+                employee.site = site
+                employee.work_role = workRole
+                employee.lob = lob
+                employee.pick_drop_location = data["pick_drop_location"]
+                employee.supervisor_1 = data["supervisor_1"]
+                employee.supervisor_2 = data["supervisor_2"]
+                employee.updated_by = CustomUser.objects.get(id=request.user.id)
+                employee.save()
+                if bulk == False:
+                    logging.info("Employee Updated successfully.")
+                    messages.success(request, "Employee Updated successfully.")
+                success = True
+            except Exception as e:
+                user.delete()
+                logging.error("Exception:{exception}".format(exception=e))
+                messages.error(request, "Exception:{exception}".format(exception=e))
         else:
             if userCreationResult == True:
-                process = get_or_none(Process, data.get("process"))
-                site = get_or_none(Site, data.get("site"))
-                workRole = get_or_none(WorkRole, data.get("work_role"))
-                lob = get_or_none(LOB, data.get("lob"))
+
                 try:
                     employee = Employee(
                         user=user,

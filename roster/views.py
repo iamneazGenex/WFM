@@ -219,15 +219,17 @@ class viewRosterJson(BaseDatatableView):
             supervised_employees = Employee.objects.filter(
                 Q(supervisor_1=employee) | Q(supervisor_2=employee)
             )
+
             rosters = (
                 Roster.objects.filter(Q(employee__in=supervised_employees))
                 .filter(Q(supervisor_1=user))
                 .order_by("-created_At")
+                .select_related("shiftLegend")
             )
             if fromDate.strip() != "":
                 rosters = rosters.filter(
                     Q(start_date__gte=fromDate) & Q(start_date__lte=toDate)
-                )
+                ).select_related("shiftLegend")
             return rosters
         elif self.request.user.is_Employee():
             employee = getEmployee(self.request.user.id)
@@ -238,13 +240,23 @@ class viewRosterJson(BaseDatatableView):
                     "-created_At"
                 )
             else:
-                rosters = Roster.objects.filter(
-                    Q(employee=employee.id) | Q(employee__lob=employee.lob)
-                ).order_by("-created_At")
-            if fromDate.strip() != "":
-                rosters = rosters.filter(
-                    Q(start_date__gte=fromDate) & Q(start_date__lte=toDate)
+                rosters = (
+                    Roster.objects.filter(
+                        Q(employee=employee.id) | Q(employee__lob=employee.lob)
+                    )
+                    .select_related("shiftLegend")
+                    .order_by("-created_At")
                 )
+            if fromDate.strip() != "":
+                rosters = (
+                    rosters.filter(
+                        Q(start_date__gte=fromDate) & Q(start_date__lte=toDate)
+                    )
+                    .select_related("shiftLegend")
+                    .order_by("-created_At")
+                )
+                for roster in rosters:
+                    logger.info(roster.id)
             return rosters
         else:
             return Roster.objects.none()
