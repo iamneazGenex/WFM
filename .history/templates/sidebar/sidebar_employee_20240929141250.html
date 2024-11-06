@@ -1,0 +1,134 @@
+{% load static %}
+<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+    <!-- ! Hide app brand if navbar-full -->
+    <div class="app-brand demo">
+        <a href="{% url 'home' %}" class="app-brand-link">
+            <span class="app-brand-logo demo ml-2">
+                <img
+                src="{% static '/images/favicon.ico' %}"
+                width="100%"
+                height="30"
+                class="d-inline-block align-top"
+                alt=""
+                />
+            </span>
+            <span class="app-brand-logo demo ml-5">
+                <img
+                src="{% static '/images/Genex-Logo.png' %}"
+                width="100%"
+                height="30"
+                class="d-inline-block align-top"
+                alt=""
+                />
+            </span>
+            
+        </a>
+
+        <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+            <i class="bx bx-chevron-left bx-sm align-middle"></i>
+        </a>
+    </div>
+
+    <div class="menu-inner-shadow"></div>
+
+    <ul class="menu-inner py-1">
+        <li class="menu-item {% if request.path == '/' %}active{% endif %}">
+            <a href="{% url 'home' %}" class="menu-link ">
+                <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                <div class="text-truncate"> Home</div>
+            </a>
+        </li>
+        <li class="menu-item {{ tradingRulesActive }}">
+            <a href="{% url 'viewWorkRule' %}" class="menu-link ">
+                <i class="menu-icon tf-icons fa fa-gavel"></i>
+                <div class="text-truncate"> Trading Rules</div>
+            </a>
+        </li>
+        <li class="menu-item {{ dayOffTradingActive }}">
+            <a href="{% url 'viewDayOffTradingRequests' %}" class="menu-link ">
+                <i class="menu-icon tf-icons fa fa-sun-o"></i>
+                <div class="text-truncate"> Day Off Trading</div>
+            </a>
+        </li>
+        {% comment %} <li class="menu-item {{ shiftTimeTradingActive }}">
+            <a href="{% url 'viewShiftTimeTradingRequests' %}" class="menu-link ">
+                <i class="menu-icon tf-icons fa fa-hourglass-start"></i>
+                <div class="text-truncate"> Shift Time Trading</div>
+            </a>
+        </li> {% endcomment %}
+
+        {% comment %} <li class="menu-item {{ usersActive }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons bx bx-user"></i>
+                <div class="text-truncate">Users</div>
+            </a>
+
+            <ul class="menu-sub">
+                <li class="menu-item {{ employeeActive }}">
+                    <a href="{% url 'viewEmployee' %}" class="menu-link">
+                        <div>Employee</div>
+                    </a>
+                </li>
+            </ul>
+        </li> {% endcomment %}
+        <li class="menu-item {{ rosterActive }}">
+            <a href="{% url 'viewRoster' %}" class="menu-link ">
+                <i class="menu-icon tf-icons fa-solid fa-clipboard-user"></i><div>Roster</div>
+            </a>
+        </li>
+        
+        {% if user.is_Supervisor%}
+        <li class="menu-item {{ reportingActive }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons fa-solid fa-arrow-right-arrow-left"></i>
+                <div class="text-truncate">Reporting</div>
+            </a>
+            <ul class="menu-sub">
+                <li class="menu-item {{ reportingOneActive }}">
+                    <a href="{% url 'viewReportingOne' %}" class="menu-link ">
+                        <div>Forecast & Plan Vs Actual Report</div>
+                    </a>
+                </li>
+            </ul>
+            <ul class="menu-sub">
+                <li class="menu-item {{ reportingTwoActive }}">
+                    <a href="{% url 'viewReportingTwo' %}" class="menu-link ">
+                        <div>Staffed Report</div>
+                    </a>
+                </li>
+            </ul>
+            <ul class="menu-sub">
+                <li class="menu-item {{ reportingThreeActive }}">
+                    <a href="{% url 'viewReportingThree' %}" class="menu-link ">
+                        <div>Agent Staffed Report</div>
+                    </a>
+                </li>
+            </ul>
+        </li>
+        {% endif%}
+        {% comment %} <li class="menu-item {{ rosterManagementActive }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons fa-solid fa-clipboard-user"></i>
+                <div class="text-truncate">Roster Management</div>
+            </a>
+
+            <ul class="menu-sub">
+                <li class="menu-item {{ rosterActive }}">
+                    <a href="{% url 'viewRoster' %}" class="menu-link ">
+                        <div>Roster</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ rosterCountActive }}">
+                    <a href="{% url 'viewRosterCount' %}" class="menu-link ">
+                        <div>Roster Count</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ rosterSeatCountActive }}">
+                    <a href="{% url 'viewRosterSeatCount' %}" class="menu-link ">
+                        <div> Roster Seat Count</div>
+                    </a>
+                </li>
+            </ul>
+        </li> {% endcomment %}
+    </ul>
+</aside>

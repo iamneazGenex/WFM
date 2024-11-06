@@ -1,0 +1,67 @@
+{% extends 'base.html' %} {% load crispy_forms_tags %} {% block main %}
+{% include 'breadcrumb.html' %}
+{% include 'messages.html' %}
+<div class="card">
+  <div class="card-body">
+    <form method="post" action="{% url createUrl %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}" />
+      
+      {{ form1|crispy }}
+      
+      <button type="submit" class="btn btn-primary btn-block" name="btnform1">
+        Submit
+      </button>
+    </form>
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectRequesteeForm = document.querySelector("#select-requestee-form");
+    const requesteeField = document.querySelector("#id_requestee");
+    const swapDateField = document.querySelector("#id_swapDate");
+    const timeDisplayField = document.querySelector("#id_time_display");
+    const submitButton = document.querySelector('button[name="btnform1"]');
+
+    // Disable the "Submit" button initially
+    submitButton.disabled = true;
+
+    function updateTimeDetails() {
+      const requesteeID = requesteeField.value;
+      const swapDateID = swapDateField.value;
+
+      if (requesteeID && swapDateID) {
+        fetch(`/get_roster_details/?requestee_id=${requesteeID}&swap_date_id=${swapDateID}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.start_time && data.end_time) {
+              timeDisplayField.value = `Start: ${data.start_time}, End: ${data.end_time}`;
+            } else {
+              timeDisplayField.value = "No roster entry found.";
+            }
+            submitButton.disabled = false;
+          })
+          .catch(error => {
+            console.error('Error fetching roster details:', error);
+            timeDisplayField.value = "Error fetching roster details.";
+            submitButton.disabled = true;
+          });
+      } else {
+        timeDisplayField.value = "";
+        submitButton.disabled = true;
+      }
+    }
+
+    // Listen for changes on both fields
+    requesteeField.addEventListener("change", updateTimeDetails);
+    swapDateField.addEventListener("change", updateTimeDetails);
+
+    selectRequesteeForm.addEventListener("submit", function (event) {
+      if (submitButton.disabled) {
+        event.preventDefault();
+      }
+    });
+  });
+</script>
+
+{% endblock %}
