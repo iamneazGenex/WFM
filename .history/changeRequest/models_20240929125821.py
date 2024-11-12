@@ -86,16 +86,12 @@ class DayOffTrading(BaseModel):
             """
             Send Email notification to requestee
             """
-            if settings.PRODUCTION_TYPE != "test":
-                message = "Dear {requesteeName},\n{requestorName} has sent you a day trade off request.\nYour Trade Details:\nTrade Day:{tradeDate}\nSwap Day: {swapDate}\n\n Please Visit the website to accept or decline the request.".format(
-                    requesteeName=self.requestee.user.name,
-                    requestorName=self.requestor.user.name,
-                    tradeDate=self.requestee_trade_roster.start_date,
-                    swapDate=self.requestee_swap_roster.start_date,
-                )
-            else:
-                message = "This is a test from WFM. Please disregard this email."
-
+            message = "Dear {requesteeName},\n{requestorName} has sent you a day trade off request.\nYour Trade Details:\nTrade Day:{tradeDate}\nSwap Day: {swapDate}\n\n Please Visit the website to accept or decline the request.".format(
+                requesteeName=self.requestee.user.name,
+                requestorName=self.requestor.user.name,
+                tradeDate=self.requestee_trade_roster.start_date,
+                swapDate=self.requestee_swap_roster.start_date,
+            )
             if settings.PRODUCTION_TYPE == "local":
                 recipientList = [
                     "alamin.neaz@genexinfosys.com",
@@ -116,16 +112,13 @@ class DayOffTrading(BaseModel):
                     requestee=self.requestee.user.email,
                 )
             )
-            if settings.PRODUCTION_TYPE != "test":
-                #   Send Email notification to requestor after approved
-                message = "Dear {requestorName},\n{requesteeName} has accepted your day trade off request. Your trade request is being forwared to the superviosors for further approval.\nYour Trade Details:\nTrade Day:{tradeDate}\nSwap Day: {swapDate}.".format(
-                    requesteeName=self.requestee.user.name,
-                    requestorName=self.requestor.user.name,
-                    tradeDate=self.requestor_trade_roster.start_date,
-                    swapDate=self.requestor_swap_roster.start_date,
-                )
-            else:
-                message = "This is a test from WFM. Please disregard this email."
+            #   Send Email notification to requestor after approved
+            message = "Dear {requestorName},\n{requesteeName} has accepted your day trade off request. Your trade request is being forwared to the superviosors for further approval.\nYour Trade Details:\nTrade Day:{tradeDate}\nSwap Day: {swapDate}.".format(
+                requesteeName=self.requestee.user.name,
+                requestorName=self.requestor.user.name,
+                tradeDate=self.requestor_trade_roster.start_date,
+                swapDate=self.requestor_swap_roster.start_date,
+            )
             if settings.PRODUCTION_TYPE == "local":
                 recipientList = [
                     "alamin.neaz@genexinfosys.com",
@@ -147,18 +140,15 @@ class DayOffTrading(BaseModel):
             )
 
             requestor_supervisor = self.requestor.supervisor_1
-            if settings.PRODUCTION_TYPE != "test":
-                message = "Dear {supervisorName},\n{requestorName} has sent a day trade off request to {requesteeName}.\nRequestor Trade Details:\nTrade Day: {requestorTradeDate}\nSwap Day: {requestorSwapDate}\n\nRequestee Trade Details:\nTrade Day: {requesteeTradeDate}\nSwap Day: {requesteeSwapDate}\n\nPlease visit the website to accept or decline the request.".format(
-                    requesteeName=self.requestee.user.name,
-                    requestorName=self.requestor.user.name,
-                    requestorTradeDate=self.requestor_trade_roster.start_date,
-                    requestorSwapDate=self.requestor_swap_roster.start_date,
-                    requesteeTradeDate=self.requestee_trade_roster.start_date,
-                    requesteeSwapDate=self.requestee_swap_roster.start_date,
-                    supervisorName=requestor_supervisor.user.name,
-                )
-            else:
-                message = "This is a test from WFM. Please disregard this email."
+            message = "Dear {supervisorName},\n{requestorName} has sent a day trade off request to {requesteeName}.\nRequestor Trade Details:\nTrade Day: {requestorTradeDate}\nSwap Day: {requestorSwapDate}\n\nRequestee Trade Details:\nTrade Day: {requesteeTradeDate}\nSwap Day: {requesteeSwapDate}\n\nPlease visit the website to accept or decline the request.".format(
+                requesteeName=self.requestee.user.name,
+                requestorName=self.requestor.user.name,
+                requestorTradeDate=self.requestor_trade_roster.start_date,
+                requestorSwapDate=self.requestor_swap_roster.start_date,
+                requesteeTradeDate=self.requestee_trade_roster.start_date,
+                requesteeSwapDate=self.requestee_swap_roster.start_date,
+                supervisorName=requestor_supervisor.user.name,
+            )
             if settings.PRODUCTION_TYPE == "local":
                 recipientList = ["alamin.neaz@genexinfosys.com"]
             else:
@@ -174,18 +164,15 @@ class DayOffTrading(BaseModel):
                 )
 
                 requestee_supervisor = self.requestee.supervisor_1
-                if settings.PRODUCTION_TYPE != "test":
-                    message = "Dear {supervisorName},\n{requestorName} has sent a day trade off request to {requesteeName}.\nRequestor Trade Details:\nTrade Day: {requestorTradeDate}\nSwap Day: {requestorSwapDate}\n\nRequestee Trade Details:\nTrade Day: {requesteeTradeDate}\nSwap Day: {requesteeSwapDate}\n\nPlease visit the website to accept or decline the request.".format(
-                        requesteeName=self.requestee.user.name,
-                        requestorName=self.requestor.user.name,
-                        requestorTradeDate=self.requestor_trade_roster.start_date,
-                        requestorSwapDate=self.requestor_swap_roster.start_date,
-                        requesteeTradeDate=self.requestee_trade_roster.start_date,
-                        requesteeSwapDate=self.requestee_swap_roster.start_date,
-                        supervisorName=requestee_supervisor.user.name,
-                    )
-                else:
-                    message = "This is a test from WFM. Please disregard this email."
+                message = "Dear {supervisorName},\n{requestorName} has sent a day trade off request to {requesteeName}.\nRequestor Trade Details:\nTrade Day: {requestorTradeDate}\nSwap Day: {requestorSwapDate}\n\nRequestee Trade Details:\nTrade Day: {requesteeTradeDate}\nSwap Day: {requesteeSwapDate}\n\nPlease visit the website to accept or decline the request.".format(
+                    requesteeName=self.requestee.user.name,
+                    requestorName=self.requestor.user.name,
+                    requestorTradeDate=self.requestor_trade_roster.start_date,
+                    requestorSwapDate=self.requestor_swap_roster.start_date,
+                    requesteeTradeDate=self.requestee_trade_roster.start_date,
+                    requesteeSwapDate=self.requestee_swap_roster.start_date,
+                    supervisorName=requestee_supervisor.user.name,
+                )
                 if settings.PRODUCTION_TYPE == "local":
                     recipientList = ["alamin.neaz@genexinfosys.com"]
                 else:
@@ -202,13 +189,10 @@ class DayOffTrading(BaseModel):
                 )
             )
             #   Send Email notification to requestor after rejected
-            if settings.PRODUCTION_TYPE != "test":
-                message = "Dear {requestorName},\n{requesteeName} has rejected your day trade off request.".format(
-                    requesteeName=self.requestee.user.name,
-                    requestorName=self.requestor.user.name,
-                )
-            else:
-                message = "This is a test from WFM. Please disregard this email."
+            message = "Dear {requestorName},\n{requesteeName} has rejected your day trade off request.".format(
+                requesteeName=self.requestee.user.name,
+                requestorName=self.requestor.user.name,
+            )
             if settings.PRODUCTION_TYPE == "local":
                 recipientList = [
                     "alamin.neaz@genexinfosys.com",
@@ -233,12 +217,9 @@ class DayOffTrading(BaseModel):
                 )
             )
             #   Send Email notification to requestor after approved
-            if settings.PRODUCTION_TYPE != "test":
-                message = "The Day Off trade Request has been granted by {supervisorName}\n\nT".format(
-                    supervisorName=self.supervisor.user.name,
-                )
-            else:
-                message = "This is a test from WFM. Please disregard this email."
+            message = "The Day Off trade Request has been granted by {supervisorName}\n\nT".format(
+                supervisorName=self.supervisor.user.name,
+            )
 
             if settings.PRODUCTION_TYPE == "local":
                 recipientList = [
@@ -266,12 +247,9 @@ class DayOffTrading(BaseModel):
                 )
             )
             #   Send Email notification to requestor after approved
-            if settings.PRODUCTION_TYPE != "test":
-                message = "The Day Off trade Request has been rejected by {supervisorName}\n\nT".format(
-                    supervisorName=self.supervisor.user.name,
-                )
-            else:
-                message = "This is a test from WFM. Please disregard this email."
+            message = "The Day Off trade Request has been rejected by {supervisorName}\n\nT".format(
+                supervisorName=self.supervisor.user.name,
+            )
 
             if settings.PRODUCTION_TYPE == "local":
                 recipientList = [
