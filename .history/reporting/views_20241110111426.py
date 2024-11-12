@@ -626,7 +626,7 @@ def viewReportingOne(request):
     #     #print(json_string)
     # else:
     #     tableData = None
-    skills = Skill.objects.filter(Q(name="premium") | Q(name="medium"))
+    skills = Skill.objects.all()
     context = {
         "breadCrumbList": breadCrumbList,
         "currentBreadCrumb": PageInfoCollection.REPORTINGONE_VIEW.pageName,
@@ -666,7 +666,7 @@ class viewReportingOneListJson(View):
 
         try:
             skill = Skill.objects.get(id=skillID)
-            logger.info("Retrieved skill: %s", skill.name)
+            logger.debug("Retrieved skill: %s", skill.name)
         except Skill.DoesNotExist:
             logger.error("Skill with ID %s does not exist", skillID)
             return JsonResponse({"error": "Skill not found"}, status=404)
@@ -689,13 +689,13 @@ class viewReportingOneListJson(View):
                 lob = LOB.objects.get(
                     name="premium" if skill.name == "premium" else "mass"
                 )
-                logger.info("Retrieved process: %s, lob: %s", process.name, lob.name)
+                logger.debug("Retrieved process: %s, lob: %s", process.name, lob.name)
             except (Process.DoesNotExist, LOB.DoesNotExist) as e:
                 logger.error("Process or LOB not found: %s", e)
                 return JsonResponse({"error": "Process or LOB not found"}, status=404)
 
         # Create forecast mapping
-        logger.info("Creating Forecast Mapping")
+        logger.debug("Creating Forecast Mapping")
         if intervalType == "date":
             forecasts = Forecast.objects.filter(
                 date=date, process=process, lob=lob
@@ -703,7 +703,7 @@ class viewReportingOneListJson(View):
             forecast_mapping = {
                 f.interval: (f.forecast, f.required_hc) for f in forecasts
             }
-            logger.info("Forecast mapping by interval created for date: %s", date)
+            logger.debug("Forecast mapping by interval created for date: %s", date)
         else:
             forecasts = (
                 Forecast.objects.filter(date__month=month, process=process, lob=lob)
@@ -713,7 +713,7 @@ class viewReportingOneListJson(View):
             for f in forecasts:
                 formatted_date = f["date"].strftime("%Y-%m-%d")
                 forecast_mapping[formatted_date] = (f["forecast"], f["required_hc"])
-            logger.info(
+            logger.debug(
                 "Forecast mapping by date created for month: %s, year: %s",
                 month,
                 year,
@@ -732,7 +732,7 @@ class viewReportingOneListJson(View):
                 month=month, year=year, skill=skill
             )
             agentHourlyPerformanceMapping = (
-                getAgentHourlyPerformanceMappingWithRosterByMonthAI(
+                getAgentHourlyPerformanceMappingWithRosterByMonth(
                     month=month, year=year, skill=skill
                 )
             )
@@ -815,7 +815,7 @@ def viewReportingTwo(request):
     breadCrumbList = [
         PageInfoCollection.REPORTINGTWO_VIEW,
     ]
-    skills = Skill.objects.filter(Q(name="premium") | Q(name="medium"))
+    skills = Skill.objects.all()
     context = {
         "breadCrumbList": breadCrumbList,
         "currentBreadCrumb": PageInfoCollection.REPORTINGTWO_VIEW.pageName,
@@ -950,7 +950,7 @@ def viewReportingThree(request):
                     if key != "hour":
                         item[key] = 0  # Set default value if not found
 
-    skills = Skill.objects.filter(Q(name="premium") | Q(name="medium"))
+    skills = Skill.objects.all()
     process = Process.objects.get(name="gp")
     employees = Employee.objects.filter(process=process)
     context = {
@@ -1005,59 +1005,40 @@ class viewReportingThreeListJson(BaseDatatableView):
 
     def get_initial_queryset(self):
         # Log the request
-        # Start timing the execution
-        start_time = time.time()
-        queryset = None
-        if self.request.user.is_WFM() or self.request.user.is_Supervisor():
+        if self.request.user.is_WFM():
+            qs = AgentHourlyPerformance.objects.all()
 
-            search_employee = int(self.request.GET.get("search_employee"))
-            search_skill = int(self.request.GET.get("search_skill"))
-            search_date = self.request.GET.get("search_date")
-            logger.info(
-                f"Received parameters - Employee: {search_employee}, Skill: {search_skill}, Date: {search_date}"
-            )
             # Annotate the queryset to get the sum of fields GroupEnumed by date and employee
-            if search_date:
-                queryset = AgentHourlyPerformance.objects.filter(date=search_date)
-                if search_employee != 0:
-                    queryset = queryset.filter(employee=search_employee)
-                if search_skill != 0:
-                    queryset = queryset.filter(skill=search_skill)
-                queryset = queryset.values(
-                    "date", "employee__user__employee_id", "employee__user__name"
-                ).annotate(
-                    total_staffed_time=Sum("staffed_time"),
-                    total_ready_time=Sum("ready_time"),
-                    total_short_break=Sum("short_break"),
-                    total_lunch_break=Sum("lunch_break"),
-                    total_training=Sum("training"),
-                    total_meeting=Sum("meeting"),
-                    total_cfs_meeting=Sum("cfs_meeting"),
-                    total_one_to_one=Sum("one_to_one"),
-                    total_outbound_callback=Sum("outbound_callback"),
-                )
-            else:
-                queryset = AgentHourlyPerformance.objects.none()
+            qs = qs.values(
+                "date", "employee__user__employee_id", "employee__user__name"
+            ).annotate(
+                total_staffed_time=Sum("staffed_time"),
+                total_ready_time=Sum("ready_time"),
+                total_short_break=Sum("short_break"),
+                total_lunch_break=Sum("lunch_break"),
+                total_training=Sum("training"),
+                total_meeting=Sum("meeting"),
+                total_cfs_meeting=Sum("cfs_meeting"),
+                total_one_to_one=Sum("one_to_one"),
+                total_outbound_callback=Sum("outbound_callback"),
+            )
 
+            return qs
         else:
-            queryset = AgentHourlyPerformance.objects.none()
-
-        execution_time = time.time() - start_time
-        logger.info(f"get_initial_queryset executed in {execution_time:.4f} seconds")
-        return queryset
+            return AgentHourlyPerformance.objects.none()
 
     def filter_queryset(self, qs):
         # print(f"employee:{self.request.GET.get('search_employee')}",f"skill:{self.request.GET.get('search_skill')}",f"date:{self.request.GET.get('search_date')}",)
-        # search_employee = int(self.request.GET.get("search_employee"))
-        # search_skill = int(self.request.GET.get("search_skill"))
-        # search_date = self.request.GET.get("search_date")
-        # # print(search_employee, search_date, search_skill)
-        # if search_employee != 0:
-        #     qs = qs.filter(employee=search_employee)
-        # if search_skill != 0:
-        #     qs = qs.filter(skill=search_skill)
-        # if search_date:
-        #     qs = qs.filter(date=search_date)
+        search_employee = int(self.request.GET.get("search_employee"))
+        search_skill = int(self.request.GET.get("search_skill"))
+        search_date = self.request.GET.get("search_date")
+        # print(search_employee, search_date, search_skill)
+        if search_employee != 0:
+            qs = qs.filter(employee=search_employee)
+        if search_skill != 0:
+            qs = qs.filter(skill=search_skill)
+        if search_date:
+            qs = qs.filter(date=search_date)
         return qs
 
     def prepare_results(self, qs):

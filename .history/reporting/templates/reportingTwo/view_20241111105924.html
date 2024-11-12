@@ -128,7 +128,6 @@
 
       // Check if both skill and date are selected
       if (selectedSkill && searchDate) {
-        $("#loadingScreen").removeClass("hidden");
           // Perform AJAX call
           $.ajax({
               url: '{% url ajaxUrl %}',  // Replace with your actual endpoint
@@ -147,10 +146,6 @@
               },
               error: function (error) {
                   console.error('Error fetching data:', error);
-              },
-              complete: function () {
-                  // Hide loading screen when AJAX call is complete
-                  $("#loadingScreen").addClass("hidden");
               }
           });
       } else {
@@ -160,5 +155,58 @@
   });
   });
   // Attach a click event handler to the search button
+  $('#searchButton').on('click', function () {
+    console.log("clicked");
+    // Get the selected skill and search date values
+    var intervalType = $('#toggleIntervalType').val();
+    var selectedSkill = $('#skillSelect').val();
+    var searchDate = $('#search_date').val();
+    var checkIfSelected = false
+    if(intervalType == "date"){
+      if (selectedSkill && searchDate){
+        checkIfSelected = true
+      }
+    } else {
+      if (selectedSkill && searchMonth){
+        checkIfSelected = true
+      }
+    }
+    // Check if both skill and date are selected
+    if (checkIfSelected) {
+      // Show loading screen
+      $("#loadingScreen").removeClass("hidden");
+        // Perform AJAX call
+        $.ajax({
+            url: '{% url ajaxUrl %}',  // Replace with your actual endpoint
+            method: 'POST',
+            data: {
+              intervalType: intervalType,
+              skill: selectedSkill,
+              date: searchDate,
+              month: searchMonth
+            },
+            dataType: 'json',
+            success: function (data) {
+                // Clear existing DataTable data
+                
+                table.clear();
+
+                // Add new data to DataTable
+                table.rows.add(data).draw();
+                
+            },
+            error: function (error) {
+                console.error('Error fetching data:', error);
+            },
+            complete: function () {
+                // Hide loading screen when AJAX call is complete
+                $("#loadingScreen").addClass("hidden");
+            }
+        });
+    } else {
+        // Show an alert or perform any other handling if skill and date are not selected
+        alert('Please select both Skill and Search Date');
+    }
+});
 </script>
 {% endblock %}

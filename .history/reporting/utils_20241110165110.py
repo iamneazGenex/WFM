@@ -250,17 +250,15 @@ def getAvayaCDRMappingByMonth(month, year, skill):
 
 
 def getAgentHourlyPerformanceMapping(date, skill):
-    """Get Agent Hourly Performance Mapping with Execution Time
+    """Get Agent Hourly Performance Mapping
 
     Args:
         date (datetime): date
         skill (Skill): selected skill
 
     Returns:
-        dict: Agent Hourly Performance Mapping, list of field names, execution time
+        dict: Agent Hourly Performance Mapping
     """
-    start_time = time.time()  # Start timer
-
     agentHourlyPerformances = AgentHourlyPerformance.objects.filter(
         date=date,
         skill=skill,
@@ -295,14 +293,6 @@ def getAgentHourlyPerformanceMapping(date, skill):
     agentHourlyPerformanceMapping = {
         performance["hour"]: performance for performance in aggregated_data
     }
-
-    end_time = time.time()  # End timer
-    execution_time = end_time - start_time  # Calculate execution time
-
-    # Log the execution time
-    logger.info(
-        f"Execution time for getAgentHourlyPerformanceMapping: {execution_time:.4f} seconds"
-    )
 
     return agentHourlyPerformanceMapping, fieldNames
 
@@ -881,6 +871,8 @@ def getAgentHourlyPerformanceMappingWithRosterByMonthAI(month, year, skill):
     agentHourlyPerformanceMapping = {
         date: {"shiftCount": 0, "absent": 0} for date in dates
     }
+    for map in agentHourlyPerformanceMapping:
+        logger.info(map)
 
     # Fetch all AgentHourlyPerformance records in a single query
     agentHourlyPerformances = (
@@ -898,25 +890,16 @@ def getAgentHourlyPerformanceMappingWithRosterByMonthAI(month, year, skill):
     # Accumulate shift count and absent status per date
     for record in agentHourlyPerformances:
         date = record["date"]
-
-        # Ensure the date is in the correct format (e.g., string)
-        date_str = (
-            date.strftime("%Y-%m-%d") if isinstance(date, datetime.date) else date
-        )
-
         shift_count = record["shift_count"] or 0
         is_absent = record["is_absent"] or 0
-
+        logger.info(f"Date:{date} Shift Count:{shift_count} Is Absent:{is_absent}")
         # Ensure the date exists in agentHourlyPerformanceMapping
-        if date_str in agentHourlyPerformanceMapping:
-            agentHourlyPerformanceMapping[date_str]["shiftCount"] += shift_count
-            agentHourlyPerformanceMapping[date_str]["absent"] += is_absent
+        if date in agentHourlyPerformanceMapping:
+            agentHourlyPerformanceMapping[date]["shiftCount"] += shift_count
+            agentHourlyPerformanceMapping[date]["absent"] += is_absent
         else:
-            logger.error(f"Date {date_str} not found in the initial mapping.")
-    for date in agentHourlyPerformanceMapping:
-        shift_count = agentHourlyPerformanceMapping[date]["shiftCount"]
-        absent = agentHourlyPerformanceMapping[date]["absent"]
-        logger.info(f"Date: {date}, Shift Count: {shift_count}, Absent: {absent}")
+            logger.error(f"Date {date} not found in the initial mapping.")
+
     execution_time = time.time() - start_time
     logger.info(
         f"Total execution time for Agent Hourly Performance Mapping: {execution_time:.4f} seconds"

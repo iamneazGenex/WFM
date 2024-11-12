@@ -134,7 +134,7 @@ def viewUsers(request):
 )
 def home(request):
     templateName = "home/view.html"
-    skills = Skill.objects.filter(Q(name="premium") | Q(name="medium"))
+    skills = Skill.objects.all()
     if request.user.is_Employee():
         employee = Employee.objects.get(user=request.user.id)
         if employee.is_previously_logged_in == False:

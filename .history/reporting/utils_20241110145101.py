@@ -9,7 +9,6 @@ from django.db.models import Sum, F, Case, When, Value, IntegerField, Q
 import datetime
 import calendar
 import time
-from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -250,17 +249,15 @@ def getAvayaCDRMappingByMonth(month, year, skill):
 
 
 def getAgentHourlyPerformanceMapping(date, skill):
-    """Get Agent Hourly Performance Mapping with Execution Time
+    """Get Agent Hourly Performance Mapping
 
     Args:
         date (datetime): date
         skill (Skill): selected skill
 
     Returns:
-        dict: Agent Hourly Performance Mapping, list of field names, execution time
+        dict: Agent Hourly Performance Mapping
     """
-    start_time = time.time()  # Start timer
-
     agentHourlyPerformances = AgentHourlyPerformance.objects.filter(
         date=date,
         skill=skill,
@@ -295,14 +292,6 @@ def getAgentHourlyPerformanceMapping(date, skill):
     agentHourlyPerformanceMapping = {
         performance["hour"]: performance for performance in aggregated_data
     }
-
-    end_time = time.time()  # End timer
-    execution_time = end_time - start_time  # Calculate execution time
-
-    # Log the execution time
-    logger.info(
-        f"Execution time for getAgentHourlyPerformanceMapping: {execution_time:.4f} seconds"
-    )
 
     return agentHourlyPerformanceMapping, fieldNames
 
@@ -817,109 +806,65 @@ def getAgentHourlyPerformanceMappingWithRosterByMonth(month, year, skill):
     tableData = generate_date_table_data(month, year)
     logger.info(f"Generated date table data for {len(tableData)} days.")
 
-    # Iterate through each date in the table data
+    # Pre-fetch all rosters for the month
+    # We will fetch all the rosters for the given month and skill at once to minimize DB calls.
+    rosters = Roster.objects.filter(
+        agentHourlyPerformance_roster__date__month=month,
+        agentHourlyPerformance_roster__date__year=year,
+        agentHourlyPerformance_roster__skill=skill,
+    ).select_related("shiftLegend")
+
+    # Map roster_id to their corresponding shift count and absence status
+    roster_mapping = {
+        roster.id: {
+            "shift_count": roster.shiftLegend.shift_count,
+            "is_absent": roster.is_absent,
+        }
+        for roster in rosters
+    }
+
+    # Fetch all agent hourly performances in one query
+    agentHourlyPerformances = AgentHourlyPerformance.objects.filter(
+        date__month=month, date__year=year, skill=skill, roster_id__isnull=False
+    ).select_related("roster__shiftLegend")
+
+    logger.info(
+        f"Fetched {agentHourlyPerformances.count()} agent hourly performance records."
+    )
+
+    # Initialize shift count and absent for each date in the month
     for item in tableData:
-        item_start_time = time.time()
         date = item["date"]
-        try:
-            distinct_roster_ids = (
-                AgentHourlyPerformance.objects.filter(
-                    date=date, skill=skill, roster_id__isnull=False
-                )
-                .values_list("roster_id", flat=True)
-                .distinct()
-            )
+        shiftCount = 0
+        absent = 0
 
-            # Step 2: Sum the shift_count and is_absent for these distinct rosters
-            totals = Roster.objects.filter(id__in=distinct_roster_ids).aggregate(
-                total_shift_count=Sum("shiftLegend__shift_count"),
-                total_absent=Sum("is_absent"),
-            )
+        # Filter the agent hourly performances for the current date
+        day_performances = agentHourlyPerformances.filter(date=date)
 
-            # Access the total shift count and total absent directly
-            total_shift_count = totals["total_shift_count"] or 0  # Default to 0 if None
-            total_absent = totals["total_absent"] or 0  # Default to 0 if None
-            # Update the mapping for the date
-            agentHourlyPerformanceMapping[date] = {
-                "shiftCount": total_shift_count,
-                "absent": total_absent,
-            }
+        # Use a set to track unique rosters
+        unique_roster_ids = set(day_performances.values_list("roster_id", flat=True))
 
-            logger.info(
-                f"Processed date {date} | ShiftCount: {total_shift_count} | Absent: {total_absent}"
-            )
+        # Aggregate the shift count and absenteeism based on the roster data
+        for roster_id in unique_roster_ids:
+            roster_data = roster_mapping.get(roster_id)
+            if roster_data:
+                shiftCount += roster_data["shift_count"]
+                absent += roster_data["is_absent"]
 
-        except Exception as e:
-            logger.error(f"Error processing date {date}: {str(e)}")
-            agentHourlyPerformanceMapping[date] = {
-                "shiftCount": 0,
-                "absent": 0,
-            }
-        item_execution_time = time.time() - item_start_time
-        logger.info(f"Execution time for {date}: {item_execution_time:.4f} seconds")
+        # Store the results in the mapping
+        agentHourlyPerformanceMapping[date] = {
+            "shiftCount": shiftCount,
+            "absent": absent,
+        }
+
+        logger.info(
+            f"Processed date {date} | ShiftCount: {shiftCount} | Absent: {absent}"
+        )
+
     # Calculate the execution time
     execution_time = time.time() - start_time
     logger.info(
         f"Execution time for Agent Hourly Performance Mapping: {execution_time:.4f} seconds"
-    )
-
-    return agentHourlyPerformanceMapping
-
-
-def getAgentHourlyPerformanceMappingWithRosterByMonthAI(month, year, skill):
-    """Get Agent Hourly Performance Mapping for the given month and year"""
-
-    start_time = time.time()
-    logger.info(
-        f"Generating Agent Hourly Performance Mapping for Month: {month}, Year: {year}, Skill: {skill}"
-    )
-
-    tableData = generate_date_table_data(month, year)
-    dates = [item["date"] for item in tableData]
-
-    # Initialize mapping with all dates from tableData
-    agentHourlyPerformanceMapping = {
-        date: {"shiftCount": 0, "absent": 0} for date in dates
-    }
-
-    # Fetch all AgentHourlyPerformance records in a single query
-    agentHourlyPerformances = (
-        AgentHourlyPerformance.objects.filter(
-            date__in=dates, skill=skill, roster_id__isnull=False
-        )
-        .select_related("roster__shiftLegend")
-        .values("date", "roster_id")
-        .annotate(
-            shift_count=Sum("roster__shiftLegend__shift_count", distinct=True),
-            is_absent=Sum("roster__is_absent", distinct=True),
-        )
-    )
-
-    # Accumulate shift count and absent status per date
-    for record in agentHourlyPerformances:
-        date = record["date"]
-
-        # Ensure the date is in the correct format (e.g., string)
-        date_str = (
-            date.strftime("%Y-%m-%d") if isinstance(date, datetime.date) else date
-        )
-
-        shift_count = record["shift_count"] or 0
-        is_absent = record["is_absent"] or 0
-
-        # Ensure the date exists in agentHourlyPerformanceMapping
-        if date_str in agentHourlyPerformanceMapping:
-            agentHourlyPerformanceMapping[date_str]["shiftCount"] += shift_count
-            agentHourlyPerformanceMapping[date_str]["absent"] += is_absent
-        else:
-            logger.error(f"Date {date_str} not found in the initial mapping.")
-    for date in agentHourlyPerformanceMapping:
-        shift_count = agentHourlyPerformanceMapping[date]["shiftCount"]
-        absent = agentHourlyPerformanceMapping[date]["absent"]
-        logger.info(f"Date: {date}, Shift Count: {shift_count}, Absent: {absent}")
-    execution_time = time.time() - start_time
-    logger.info(
-        f"Total execution time for Agent Hourly Performance Mapping: {execution_time:.4f} seconds"
     )
 
     return agentHourlyPerformanceMapping

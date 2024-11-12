@@ -163,27 +163,57 @@
       }
       
     });
-    // Attach a click event handler to the search button
-  $("#searchButton").on("click", function () {
-    // Check if a date is selected
-    var searchDate = $("#searchDate").val();
-    if (searchDate) {
+  });
+  // Attach a click event handler to the search button
+  $('#searchButton').on('click', function () {
+    console.log("clicked");
+    // Get the selected skill and search date values
+    var selectedSkill = $('#skillSelect').val();
+    var searchDate = $('#search_date').val();
+    var employeeSelect = $("#employeeSelect").val();
+    console.log(selectedSkill,searchDate,employeeSelect)
+    var checkIfSelected = false
+    if (selectedSkill && searchDate && employeeSelect){
+      checkIfSelected = true
+    }
+    
+    // Check if both skill and date are selected
+    if (checkIfSelected) {
       // Show loading screen
       $("#loadingScreen").removeClass("hidden");
+        // Perform AJAX call
+        $.ajax({
+            url: '{% url ajaxUrl %}',  // Replace with your actual endpoint
+            method: 'POST',
+            data: {
+              intervalType: intervalType,
+              skill: selectedSkill,
+              date: searchDate,
+              month: searchMonth
+            },
+            dataType: 'json',
+            success: function (data) {
+                // Clear existing DataTable data
+                
+                table.clear();
 
-      // Trigger DataTable's built-in AJAX with updated parameters
-      table.draw();
-
-      // Hide loading screen after draw
-      table.on('draw', function () {
-        $("#loadingScreen").addClass("hidden");
-      });
+                // Add new data to DataTable
+                table.rows.add(data).draw();
+                
+            },
+            error: function (error) {
+                console.error('Error fetching data:', error);
+            },
+            complete: function () {
+                // Hide loading screen when AJAX call is complete
+                $("#loadingScreen").addClass("hidden");
+            }
+        });
     } else {
-      alert("Please select a Search Date");
+        // Show an alert or perform any other handling if skill and date are not selected
+        alert('Please select Employee, Skill and Search Date');
     }
-  });
-  });
-  
+});
 </script>
 {% endblock %}
 

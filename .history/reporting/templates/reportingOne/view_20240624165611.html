@@ -1,7 +1,5 @@
 {% extends 'base.html' %} {% block main %}
-<div id="loadingScreen" class="loading-screen hidden">
-  <div class="loading-spinner"></div>
-</div>
+
 <h6 id="usertype" class="invisible">{{ user.userType }}</h6>
 <h6 id="userName" class="invisible">{{ user.name }}</h6>
 {% include 'breadcrumb.html' %}
@@ -210,8 +208,6 @@
       }
       // Check if both skill and date are selected
       if (checkIfSelected) {
-        // Show loading screen
-        $("#loadingScreen").removeClass("hidden");
           // Perform AJAX call
           $.ajax({
               url: '{% url ajaxUrl %}',  // Replace with your actual endpoint
@@ -234,10 +230,6 @@
               },
               error: function (error) {
                   console.error('Error fetching data:', error);
-              },
-              complete: function () {
-                  // Hide loading screen when AJAX call is complete
-                  $("#loadingScreen").addClass("hidden");
               }
           });
       } else {

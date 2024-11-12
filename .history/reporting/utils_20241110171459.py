@@ -250,17 +250,15 @@ def getAvayaCDRMappingByMonth(month, year, skill):
 
 
 def getAgentHourlyPerformanceMapping(date, skill):
-    """Get Agent Hourly Performance Mapping with Execution Time
+    """Get Agent Hourly Performance Mapping
 
     Args:
         date (datetime): date
         skill (Skill): selected skill
 
     Returns:
-        dict: Agent Hourly Performance Mapping, list of field names, execution time
+        dict: Agent Hourly Performance Mapping
     """
-    start_time = time.time()  # Start timer
-
     agentHourlyPerformances = AgentHourlyPerformance.objects.filter(
         date=date,
         skill=skill,
@@ -295,14 +293,6 @@ def getAgentHourlyPerformanceMapping(date, skill):
     agentHourlyPerformanceMapping = {
         performance["hour"]: performance for performance in aggregated_data
     }
-
-    end_time = time.time()  # End timer
-    execution_time = end_time - start_time  # Calculate execution time
-
-    # Log the execution time
-    logger.info(
-        f"Execution time for getAgentHourlyPerformanceMapping: {execution_time:.4f} seconds"
-    )
 
     return agentHourlyPerformanceMapping, fieldNames
 
@@ -906,6 +896,7 @@ def getAgentHourlyPerformanceMappingWithRosterByMonthAI(month, year, skill):
 
         shift_count = record["shift_count"] or 0
         is_absent = record["is_absent"] or 0
+        
 
         # Ensure the date exists in agentHourlyPerformanceMapping
         if date_str in agentHourlyPerformanceMapping:
@@ -916,7 +907,7 @@ def getAgentHourlyPerformanceMappingWithRosterByMonthAI(month, year, skill):
     for date in agentHourlyPerformanceMapping:
         shift_count = agentHourlyPerformanceMapping[date]["shiftCount"]
         absent = agentHourlyPerformanceMapping[date]["absent"]
-        logger.info(f"Date: {date}, Shift Count: {shift_count}, Absent: {absent}")
+        #logger.info(f"Date: {date}, Shift Count: {shift_count}, Absent: {absent}")
     execution_time = time.time() - start_time
     logger.info(
         f"Total execution time for Agent Hourly Performance Mapping: {execution_time:.4f} seconds"

@@ -163,27 +163,46 @@
       }
       
     });
-    // Attach a click event handler to the search button
-  $("#searchButton").on("click", function () {
-    // Check if a date is selected
-    var searchDate = $("#searchDate").val();
-    if (searchDate) {
-      // Show loading screen
-      $("#loadingScreen").removeClass("hidden");
+  });
+  // Function to open the accept modal
+  function openAcceptModal(acceptUrl) {
+    var confirmModal = document.getElementById("confirmModal");
+    var confirmButton = confirmModal.querySelector(".btn-success");
 
-      // Trigger DataTable's built-in AJAX with updated parameters
-      table.draw();
+    // Set the "Confirm" button's href attribute to the accept URL
+    confirmButton.setAttribute("href", acceptUrl);
 
-      // Hide loading screen after draw
-      table.on('draw', function () {
-        $("#loadingScreen").addClass("hidden");
-      });
-    } else {
-      alert("Please select a Search Date");
+    // Open the accept modal
+    confirmModal.style.display = "block";
+  }
+
+  // Function to open the reject modal
+  function openRejectModal(rejectUrl) {
+    var rejectModal = document.getElementById("rejectModal");
+    var rejectButton = rejectModal.querySelector(".btn-danger");
+
+    // Set the "Confirm" button's href attribute to the reject URL
+    rejectButton.setAttribute("href", rejectUrl);
+
+    // Open the reject modal
+    rejectModal.style.display = "block";
+  }
+
+  document.addEventListener("click", function (e) {
+    //console.log(e.target);
+    if (e.target.getAttribute("data-target") == "#rejectModal") {
+      e.preventDefault();
+      var rejectUrl = e.target.getAttribute("href");
+      openRejectModal(rejectUrl);
     }
   });
+
+  // Close the modals if the user clicks outside of them
+  window.addEventListener("click", function (event) {
+    if (event.target.classList.contains("modal")) {
+      event.target.style.display = "none";
+    }
   });
-  
 </script>
 {% endblock %}
 

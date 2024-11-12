@@ -1004,60 +1004,57 @@ class viewReportingThreeListJson(BaseDatatableView):
     ]
 
     def get_initial_queryset(self):
-        # Log the request
         # Start timing the execution
         start_time = time.time()
-        queryset = None
-        if self.request.user.is_WFM() or self.request.user.is_Supervisor():
 
-            search_employee = int(self.request.GET.get("search_employee"))
-            search_skill = int(self.request.GET.get("search_skill"))
+        # Log the start of the query processing
+        logger.info("Starting to fetch initial queryset with filters")
+
+        try:
+            # Access query parameters from the request
+            search_employee = self.request.GET.get("search_employee")
+            search_skill = self.request.GET.get("search_skill")
             search_date = self.request.GET.get("search_date")
+
+            # Log the received parameters
             logger.info(
                 f"Received parameters - Employee: {search_employee}, Skill: {search_skill}, Date: {search_date}"
             )
-            # Annotate the queryset to get the sum of fields GroupEnumed by date and employee
+
+            # Start with the base queryset
+            queryset = AgentHourlyPerformance.objects.all()
+
+            # Apply filters based on the parameters provided
+            if search_employee:
+                queryset = queryset.filter(employee__id=search_employee)
+                logger.info(f"Applied filter on employee: {search_employee}")
+            if search_skill:
+                queryset = queryset.filter(skill__id=search_skill)
+                logger.info(f"Applied filter on skill: {search_skill}")
             if search_date:
-                queryset = AgentHourlyPerformance.objects.filter(date=search_date)
-                if search_employee != 0:
-                    queryset = queryset.filter(employee=search_employee)
-                if search_skill != 0:
-                    queryset = queryset.filter(skill=search_skill)
-                queryset = queryset.values(
-                    "date", "employee__user__employee_id", "employee__user__name"
-                ).annotate(
-                    total_staffed_time=Sum("staffed_time"),
-                    total_ready_time=Sum("ready_time"),
-                    total_short_break=Sum("short_break"),
-                    total_lunch_break=Sum("lunch_break"),
-                    total_training=Sum("training"),
-                    total_meeting=Sum("meeting"),
-                    total_cfs_meeting=Sum("cfs_meeting"),
-                    total_one_to_one=Sum("one_to_one"),
-                    total_outbound_callback=Sum("outbound_callback"),
-                )
-            else:
-                queryset = AgentHourlyPerformance.objects.none()
+                queryset = queryset.filter(date=search_date)
+                logger.info(f"Applied filter on date: {search_date}")
 
-        else:
-            queryset = AgentHourlyPerformance.objects.none()
+            # Log the success of the queryset filtering
+            logger.info("Successfully applied all filters to queryset")
 
+        except ValidationError as ve:
+            # Log any validation errors
+            logger.error(f"Validation error while filtering queryset: {ve}")
+            raise
+        except Exception as e:
+            # Log unexpected exceptions
+            logger.error(f"Unexpected error in get_initial_queryset: {e}")
+            raise
+
+        # Calculate and log the execution time
         execution_time = time.time() - start_time
         logger.info(f"get_initial_queryset executed in {execution_time:.4f} seconds")
+
         return queryset
 
     def filter_queryset(self, qs):
         # print(f"employee:{self.request.GET.get('search_employee')}",f"skill:{self.request.GET.get('search_skill')}",f"date:{self.request.GET.get('search_date')}",)
-        # search_employee = int(self.request.GET.get("search_employee"))
-        # search_skill = int(self.request.GET.get("search_skill"))
-        # search_date = self.request.GET.get("search_date")
-        # # print(search_employee, search_date, search_skill)
-        # if search_employee != 0:
-        #     qs = qs.filter(employee=search_employee)
-        # if search_skill != 0:
-        #     qs = qs.filter(skill=search_skill)
-        # if search_date:
-        #     qs = qs.filter(date=search_date)
         return qs
 
     def prepare_results(self, qs):

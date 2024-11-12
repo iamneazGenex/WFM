@@ -9,7 +9,6 @@ from django.db.models import Sum, F, Case, When, Value, IntegerField, Q
 import datetime
 import calendar
 import time
-from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -211,13 +210,6 @@ def getAvayaCDRMappingByMonth(month, year, skill):
     Returns:
         dict: Avaya CDR mapping
     """
-    # Start the timer to calculate execution time
-    start_time = time.time()
-
-    logger.info(
-        f"Starting to fetch Avaya CDR data for Month: {month}, Year: {year}, Skill: {skill.name}"
-    )
-
     avayaCDRResult = (
         AvayaCDR.objects.filter(date__month=month, date__year=year, skill=skill)
         .values("date")
@@ -227,8 +219,6 @@ def getAvayaCDRMappingByMonth(month, year, skill):
             handlingTime=Sum("acd_time") + Sum("acw_time") + Sum("hold_time"),
         )
     )
-    logger.info(f"Fetched {avayaCDRResult.count()} records from the database.")
-
     avayaCDRMapping = {
         item["date"].strftime("%Y-%m-%d"): {
             "offeredCalls": item["offeredCalls"],
@@ -237,30 +227,20 @@ def getAvayaCDRMappingByMonth(month, year, skill):
         }
         for item in avayaCDRResult
     }
-    logger.info(
-        f"Data mapped successfully. Number of days processed: {len(avayaCDRMapping)}"
-    )
-    # Calculate execution time
-    execution_time = time.time() - start_time
-    logger.info(
-        f"Execution time for fetching and processing Avaya CDR data: {execution_time:.4f} seconds"
-    )
 
     return avayaCDRMapping
 
 
 def getAgentHourlyPerformanceMapping(date, skill):
-    """Get Agent Hourly Performance Mapping with Execution Time
+    """Get Agent Hourly Performance Mapping
 
     Args:
         date (datetime): date
         skill (Skill): selected skill
 
     Returns:
-        dict: Agent Hourly Performance Mapping, list of field names, execution time
+        dict: Agent Hourly Performance Mapping
     """
-    start_time = time.time()  # Start timer
-
     agentHourlyPerformances = AgentHourlyPerformance.objects.filter(
         date=date,
         skill=skill,
@@ -295,14 +275,6 @@ def getAgentHourlyPerformanceMapping(date, skill):
     agentHourlyPerformanceMapping = {
         performance["hour"]: performance for performance in aggregated_data
     }
-
-    end_time = time.time()  # End timer
-    execution_time = end_time - start_time  # Calculate execution time
-
-    # Log the execution time
-    logger.info(
-        f"Execution time for getAgentHourlyPerformanceMapping: {execution_time:.4f} seconds"
-    )
 
     return agentHourlyPerformanceMapping, fieldNames
 
@@ -375,7 +347,7 @@ def getAgentHourlyPerformanceMappingWithRosterNew(date, skill):
     return agentHourlyPerformanceMapping
 
 
-def getAgentHourlyPerformanceMappingWithRosterOld(date, skill):
+def getAgentHourlyPerformanceMappingWithRoster(date, skill):
     """Get Agent Hourly Performance Mapping
 
     Args:
@@ -486,7 +458,7 @@ def getAgentHourlyPerformanceMappingWithRosterOld(date, skill):
     return agentHourlyPerformanceMapping
 
 
-def getAgentHourlyPerformanceMappingWithRoster(date, skill):
+def getAgentHourlyPerformanceMappingWithRosterChange(date, skill):
     """Get Agent Hourly Performance Mapping
 
     Args:
@@ -724,8 +696,8 @@ def getAgentHourlyPerformanceMappingWithRosterExact(date, skill):
     return agentHourlyPerformanceMapping
 
 
-def getAgentHourlyPerformanceMappingWithRosterByMonthOld(month, year, skill):
-    """Get Agent Hourly Performance Mapping for the given month and year
+def getAgentHourlyPerformanceMappingWithRosterByMonth(month, year, skill):
+    """Get Agent Hourly Performance Mapping
 
     Args:
         month (int): month
@@ -735,192 +707,41 @@ def getAgentHourlyPerformanceMappingWithRosterByMonthOld(month, year, skill):
     Returns:
         dict: Agent Hourly Performance Mapping
     """
-    start_time = time.time()  # Start the timer to calculate execution time
-    logger.info(
-        f"Starting to generate Agent Hourly Performance Mapping for Month: {month}, Year: {year}, Skill: {skill}"
-    )
-
     agentHourlyPerformanceMapping = {}
+    # if hour == 1:
+    #     #print(f"Hour - {hour}")
 
-    # Generate the date table data for the given month and year
+    # Filter agentHourlyPerformances for the current hour
+    # Fetch related ShiftLegend objects
     tableData = generate_date_table_data(month, year)
-    logger.info(f"Generated date table data for {len(tableData)} days.")
-
-    # Iterate through each date in the table data
     for item in tableData:
         date = item["date"]
         shiftCount = 0
         absent = 0
         try:
-            # Fetch AgentHourlyPerformance for the specific date and skill
             agentHourlyPerformances = AgentHourlyPerformance.objects.filter(
                 date=date, skill=skill
             ).select_related("roster__shiftLegend")
 
-            # Get the distinct roster IDs for the current date
             unique_roster_ids = agentHourlyPerformances.values_list(
                 "roster_id", flat=True
             ).distinct()
 
-            # Sum the shift count and absenteeism for the unique rosters
-            for roster_id in unique_roster_ids:
-                if roster_id:
-                    roster = Roster.objects.get(id=roster_id)
+            for item in unique_roster_ids:
+                if item:
+                    roster = Roster.objects.get(id=item)
                     shiftCount += roster.shiftLegend.shift_count
                     absent += roster.is_absent
 
-            # Update the mapping for the date
             agentHourlyPerformanceMapping[date] = {
                 "shiftCount": shiftCount,
                 "absent": absent,
             }
-
-            logger.info(
-                f"Processed date {date} | ShiftCount: {shiftCount} | Absent: {absent}"
-            )
-
         except Exception as e:
-            logger.error(f"Error processing date {date}: {str(e)}")
             agentHourlyPerformanceMapping[date] = {
                 "shiftCount": 0,
                 "absent": 0,
             }
-
-    # Calculate the execution time
-    execution_time = time.time() - start_time
-    logger.info(
-        f"Execution time for Agent Hourly Performance Mapping: {execution_time:.4f} seconds"
-    )
-
-    return agentHourlyPerformanceMapping
-
-
-def getAgentHourlyPerformanceMappingWithRosterByMonth(month, year, skill):
-    """Get Agent Hourly Performance Mapping for the given month and year
-
-    Args:
-        month (int): month
-        year (int): year
-        skill (Skill): selected skill
-
-    Returns:
-        dict: Agent Hourly Performance Mapping
-    """
-    start_time = time.time()  # Start the timer to calculate execution time
-    logger.info(
-        f"Starting to generate Agent Hourly Performance Mapping for Month: {month}, Year: {year}, Skill: {skill}"
-    )
-
-    agentHourlyPerformanceMapping = {}
-
-    # Generate the date table data for the given month and year
-    tableData = generate_date_table_data(month, year)
-    logger.info(f"Generated date table data for {len(tableData)} days.")
-
-    # Iterate through each date in the table data
-    for item in tableData:
-        item_start_time = time.time()
-        date = item["date"]
-        try:
-            distinct_roster_ids = (
-                AgentHourlyPerformance.objects.filter(
-                    date=date, skill=skill, roster_id__isnull=False
-                )
-                .values_list("roster_id", flat=True)
-                .distinct()
-            )
-
-            # Step 2: Sum the shift_count and is_absent for these distinct rosters
-            totals = Roster.objects.filter(id__in=distinct_roster_ids).aggregate(
-                total_shift_count=Sum("shiftLegend__shift_count"),
-                total_absent=Sum("is_absent"),
-            )
-
-            # Access the total shift count and total absent directly
-            total_shift_count = totals["total_shift_count"] or 0  # Default to 0 if None
-            total_absent = totals["total_absent"] or 0  # Default to 0 if None
-            # Update the mapping for the date
-            agentHourlyPerformanceMapping[date] = {
-                "shiftCount": total_shift_count,
-                "absent": total_absent,
-            }
-
-            logger.info(
-                f"Processed date {date} | ShiftCount: {total_shift_count} | Absent: {total_absent}"
-            )
-
-        except Exception as e:
-            logger.error(f"Error processing date {date}: {str(e)}")
-            agentHourlyPerformanceMapping[date] = {
-                "shiftCount": 0,
-                "absent": 0,
-            }
-        item_execution_time = time.time() - item_start_time
-        logger.info(f"Execution time for {date}: {item_execution_time:.4f} seconds")
-    # Calculate the execution time
-    execution_time = time.time() - start_time
-    logger.info(
-        f"Execution time for Agent Hourly Performance Mapping: {execution_time:.4f} seconds"
-    )
-
-    return agentHourlyPerformanceMapping
-
-
-def getAgentHourlyPerformanceMappingWithRosterByMonthAI(month, year, skill):
-    """Get Agent Hourly Performance Mapping for the given month and year"""
-
-    start_time = time.time()
-    logger.info(
-        f"Generating Agent Hourly Performance Mapping for Month: {month}, Year: {year}, Skill: {skill}"
-    )
-
-    tableData = generate_date_table_data(month, year)
-    dates = [item["date"] for item in tableData]
-
-    # Initialize mapping with all dates from tableData
-    agentHourlyPerformanceMapping = {
-        date: {"shiftCount": 0, "absent": 0} for date in dates
-    }
-
-    # Fetch all AgentHourlyPerformance records in a single query
-    agentHourlyPerformances = (
-        AgentHourlyPerformance.objects.filter(
-            date__in=dates, skill=skill, roster_id__isnull=False
-        )
-        .select_related("roster__shiftLegend")
-        .values("date", "roster_id")
-        .annotate(
-            shift_count=Sum("roster__shiftLegend__shift_count", distinct=True),
-            is_absent=Sum("roster__is_absent", distinct=True),
-        )
-    )
-
-    # Accumulate shift count and absent status per date
-    for record in agentHourlyPerformances:
-        date = record["date"]
-
-        # Ensure the date is in the correct format (e.g., string)
-        date_str = (
-            date.strftime("%Y-%m-%d") if isinstance(date, datetime.date) else date
-        )
-
-        shift_count = record["shift_count"] or 0
-        is_absent = record["is_absent"] or 0
-
-        # Ensure the date exists in agentHourlyPerformanceMapping
-        if date_str in agentHourlyPerformanceMapping:
-            agentHourlyPerformanceMapping[date_str]["shiftCount"] += shift_count
-            agentHourlyPerformanceMapping[date_str]["absent"] += is_absent
-        else:
-            logger.error(f"Date {date_str} not found in the initial mapping.")
-    for date in agentHourlyPerformanceMapping:
-        shift_count = agentHourlyPerformanceMapping[date]["shiftCount"]
-        absent = agentHourlyPerformanceMapping[date]["absent"]
-        logger.info(f"Date: {date}, Shift Count: {shift_count}, Absent: {absent}")
-    execution_time = time.time() - start_time
-    logger.info(
-        f"Total execution time for Agent Hourly Performance Mapping: {execution_time:.4f} seconds"
-    )
 
     return agentHourlyPerformanceMapping
 
@@ -955,25 +776,9 @@ def generate_hour_table_data():
 
 
 def generate_date_table_data(month, year):
-    """Generate date table data for the given month and year
-
-    Args:
-        month (int): month
-        year (int): year
-
-    Returns:
-        list: Table data with date intervals
-    """
-    # Start the timer to calculate execution time
-    start_time = time.time()
-
-    logger.info(
-        f"Starting to generate date table data for Month: {month}, Year: {year}"
-    )
 
     # Get the number of days in the given month using calendar.monthrange
     num_days = calendar.monthrange(year, month)[1]
-    logger.info(f"Number of days in {month}/{year}: {num_days}")
 
     # Generate table data with dates for the given month
     table_data = []
@@ -981,13 +786,5 @@ def generate_date_table_data(month, year):
         # Create a new date object for each iteration
         date_obj = datetime.date(year, month, day)
         table_data.append({"interval": day, "date": date_obj.strftime("%Y-%m-%d")})
-
-    logger.info(f"Generated {len(table_data)} rows of date table data.")
-
-    # Calculate execution time
-    execution_time = time.time() - start_time
-    logger.info(
-        f"Execution time for generating date table data: {execution_time:.4f} seconds"
-    )
 
     return table_data

@@ -1007,7 +1007,6 @@ class viewReportingThreeListJson(BaseDatatableView):
         # Log the request
         # Start timing the execution
         start_time = time.time()
-        queryset = None
         if self.request.user.is_WFM() or self.request.user.is_Supervisor():
 
             search_employee = int(self.request.GET.get("search_employee"))
@@ -1018,12 +1017,12 @@ class viewReportingThreeListJson(BaseDatatableView):
             )
             # Annotate the queryset to get the sum of fields GroupEnumed by date and employee
             if search_date:
-                queryset = AgentHourlyPerformance.objects.filter(date=search_date)
+                qs = AgentHourlyPerformance.objects.filter(date=search_date)
                 if search_employee != 0:
-                    queryset = queryset.filter(employee=search_employee)
+                    qs = qs.filter(employee=search_employee)
                 if search_skill != 0:
-                    queryset = queryset.filter(skill=search_skill)
-                queryset = queryset.values(
+                    qs = qs.filter(skill=search_skill)
+                qs = qs.values(
                     "date", "employee__user__employee_id", "employee__user__name"
                 ).annotate(
                     total_staffed_time=Sum("staffed_time"),
@@ -1037,14 +1036,11 @@ class viewReportingThreeListJson(BaseDatatableView):
                     total_outbound_callback=Sum("outbound_callback"),
                 )
             else:
-                queryset = AgentHourlyPerformance.objects.none()
+                qs = AgentHourlyPerformance.objects.none()
 
+            return qs
         else:
-            queryset = AgentHourlyPerformance.objects.none()
-
-        execution_time = time.time() - start_time
-        logger.info(f"get_initial_queryset executed in {execution_time:.4f} seconds")
-        return queryset
+            return AgentHourlyPerformance.objects.none()
 
     def filter_queryset(self, qs):
         # print(f"employee:{self.request.GET.get('search_employee')}",f"skill:{self.request.GET.get('search_skill')}",f"date:{self.request.GET.get('search_date')}",)
